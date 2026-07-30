@@ -17,7 +17,7 @@
 | REQ-005 | 兼容 DYZ 活动和历史数据，但不共库、不双写、不复用运行标识 | IMPLEMENTED | DYZ兼容规范、活动配置包版本门禁；待固定样例包验证 |
 | REQ-006 | 学校、并发、上传、保留、浏览器、备份目标和消息渠道分层配置 | IMPLEMENTED | 安全运维、动态引擎；容量/恢复等待服务器验证 |
 | REQ-007 | LOCAL、TEST、STAGE、PROD 环境严格隔离 | IMPLEMENTED | 工程规范、安全运维、Compose 分层文件 |
-| REQ-008 | Git 使用 `main + feature/REQ-* + 发布标签`，不设长期 `develop` | IMPLEMENTED | 工程规范、Codex流程；尚未初始化或提交 Git |
+| REQ-008 | Git 使用 `main + feature/REQ-* + 发布标签`，不设长期 `develop` | IMPLEMENTED | `main` 已建立本地提交历史；无远端、标签或上游；后续提交与推送仍需独立授权 |
 | REQ-009 | Synology 裸仓库目标为 `C:\Users\A\Documents\SynologyDrive\GIT\CREHN\CREHN.git` | CONFIRMED | 工程规范；创建/推送另行授权 |
 | REQ-010 | 192.168.2.229 构建测试，专用 ECS 2 只接收同一不可变产物 | IMPLEMENTING | 独立Compose、镜像归档、SHA-256、主机指纹和发布门禁；等待服务器预检与运行验证 |
 | REQ-011 | 初期只启用站内消息；短信和邮件在真实供应商配置前关闭 | IMPLEMENTED | 安全运维、学校审核/项目审核/结果发布站内消息 |

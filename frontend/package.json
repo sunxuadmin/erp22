@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/package",
   "name": "crehn-admin",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.9.0",
   "description": "创意河南艺术设计大赛管理端",
   "license": "MIT",
   "type": "module",

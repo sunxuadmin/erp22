@@ -11,7 +11,8 @@
 - 192.168.2.229 写操作：未授权
 - ECS 2 连接与部署：未授权
 - DNS、80/443、安全组和防火墙：未授权
-- Git提交与推送：未授权
+- 现有Git仓库：2026-07-31提交前只读审计时，`main` 已有5个本地提交（非本任务执行）
+- 新增Git提交与推送：未授权
 
 ## 目标
 
@@ -65,7 +66,7 @@
 - [x] 项目A基线包含容器ID、镜像、健康、端口、挂载、重启和OOM状态；
 - [x] 备份仅将校验通过且带SUCCESS标记的目录计入最近3次；
 - [x] PowerShell、Bash、JSON和YAML完成当前环境可执行的静态检查；
-- [x] 未执行构建、容器、SQL、服务器、ECS 2和Git操作。
+- [x] 本任务未执行构建、容器、SQL、服务器、ECS 2、Git提交或推送。
 
 ## 实际变更与证据
 
@@ -86,7 +87,7 @@
 - `deploy/linux/crehn-deploy.sh`：统一实现只读预检、TEST顺序构建、TEST部署、TEST健康验收、生产预检、生产发布、数据库计划/首次初始化、回滚和备份维护。
 - `deploy/linux/install-assets.sh`：只负责已授权的源码/部署资产暂存；TEST传源码，PROD只传部署资产和已验证镜像归档。
 - `deploy/scripts/invoke-deployment.ps1`：Windows统一调用；SSH密钥或`SSH_ASKPASS`密码认证、主机指纹固定、TEST/ECS 2目标分离。
-- 资产暂存使用 `git archive` 从明确提交生成，不打包当前未提交工作区；CREHN尚未建立Git工作树或提交号不匹配时直接阻断。
+- 资产暂存使用 `git archive` 从明确提交生成，不打包当前未提交工作区；提交号不匹配或提交未包含完整构建输入时直接阻断。
 - 新版本运行环境先保存为带版本文件，发布成功后才晋级为`test.env`/`prod.env`；发布前备份读取旧生效环境、旧容器镜像和旧Compose，避免把待发布配置误当回滚点。
 - `deploy/scripts/verify-release.ps1`：校验清单版本、提交号、架构、镜像ID和归档SHA-256。
 - 项目A基线比较使用Compose项目标签记录容器ID、镜像、健康、端口、挂载、重启和OOM状态；找不到项目A时直接阻断。
@@ -125,5 +126,5 @@
 - 数据库首次初始化、迁移、备份和恢复：`NOT_RUN`，需要各自授权。
 - 管理员和普通角色浏览器冒烟：`NEEDS_BROWSER`。
 - ECS 2 IP、规格、系统、Docker/Compose、端口、安全组、域名和证书：`NEEDS_SERVER`；未连接ECS 2。
-- 当前CREHN目录尚不是Git工作树，因此无法生成真实提交号；构建入口会继续阻断`UNVERSIONED`，Git初始化/提交仍需独立授权。
-- Git提交、推送、TEST资产暂存、TEST构建、TEST部署、SQL、ECS 2资产暂存和生产发布均未获本轮授权。
+- 2026-07-31本次就绪修复提交前，`main` 已有5个本地提交，提交为 `08d3ba25bebbfab2949ad9873614d36db15cd0d5`，但无远端；后续构建必须使用经确认且包含完整构建输入的新提交。
+- 新增Git提交、推送、TEST资产暂存、TEST构建、TEST部署、SQL、ECS 2资产暂存和生产发布均未获本轮授权。

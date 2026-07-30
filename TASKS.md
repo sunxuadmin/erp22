@@ -4,6 +4,7 @@
 
 - [2026-07-30 部署前本地工程实现](docs/tasks/active/2026-07-30-predeployment-local-implementation.md)
 - [2026-07-30 项目B独立Compose部署资产](docs/tasks/active/2026-07-30-project-b-isolated-compose-assets.md)
+- [2026-07-31 Git提交前就绪修复](docs/tasks/active/2026-07-31-git-precommit-readiness-fix.md)
 
 任务卡模板：[docs/tasks/active/TEMPLATE.md](docs/tasks/active/TEMPLATE.md)
 

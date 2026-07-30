@@ -1,6 +1,7 @@
 {
   "name": "crehn-portal",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.9.0",
   "private": true,
   "type": "module",
   "scripts": {
