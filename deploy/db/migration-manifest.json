@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "policy": "ordered-manual-until-ci-runner-is-approved",
+  "baseline": [
+    {
+      "path": "backend/script/sql/ry_vue_5.X.sql",
+      "kind": "framework-baseline"
+    }
+  ],
+  "businessStructure": [
+    "backend/script/sql/art_review_core.sql",
+    "backend/script/sql/art_review_config_rules.sql",
+    "deploy/db/migrations/V001__crehn_identity_workflow_cms.sql",
+    "deploy/db/migrations/V002__crehn_role_keys.sql",
+    "backend/script/sql/art_review_menu.sql",
+    "backend/script/sql/art_review_config_menu.sql",
+    "backend/script/sql/art_review_m47_audit_message.sql",
+    "backend/script/sql/art_review_m50_review.sql",
+    "backend/script/sql/art_review_m60_result_publish.sql",
+    "backend/script/sql/art_review_m61_award_export_score.sql",
+    "backend/script/sql/art_review_m68_recycle_audit_scope.sql",
+    "backend/script/sql/art_review_m70_school_project_group_menu.sql",
+    "backend/script/sql/art_review_m75_workbench_layout.sql",
+    "backend/script/sql/art_review_m97_review_score_visibility_schema.sql",
+    "backend/script/sql/art_review_m100_review_score_sheet_template_schema.sql",
+    "backend/script/sql/art_review_m101_review_score_sheet_library_schema.sql",
+    "backend/script/sql/art_review_m103_assignment_school_scope_schema.sql",
+    "backend/script/sql/art_review_m105_review_assignment_project_exclusion_schema.sql",
+    "backend/script/sql/art_review_m106_review_score_sheet_signature_schema.sql",
+    "backend/script/sql/art_review_m107_review_score_sheet_withdrawal_schema.sql",
+    "backend/script/sql/art_review_m109_review_score_warning_config_schema.sql",
+    "backend/script/sql/art_review_m111_review_score_summary_custom_formula_schema.sql",
+    "backend/script/sql/art_review_m112_review_score_sheet_optional_signature.sql",
+    "backend/script/sql/art_review_m117_review_assignment_project_filter_schema.sql",
+    "backend/script/sql/art_review_m73_flatten_school_project_menu.sql",
+    "backend/script/sql/art_review_m74_project_view_menu.sql",
+    "backend/script/sql/art_review_m76_menu_icons_i18n.sql",
+    "backend/script/sql/art_review_m82_activity_menu_name.sql",
+    "backend/script/sql/art_review_m83_hide_project_view_menu.sql",
+    "backend/script/sql/art_review_m93_report_progress_menu.sql",
+    "backend/script/sql/art_review_m100_review_score_sheet_menu.sql",
+    "backend/script/sql/art_review_m108_review_score_sheet_signed_sheet_menu.sql",
+    "backend/script/sql/art_review_m110_review_management_signature_admin.sql",
+    "backend/script/sql/art_review_m111_review_score_summary_export_menu.sql",
+    "backend/script/sql/art_review_m113_review_management_menu_reconcile.sql",
+    "backend/script/sql/art_review_m114_review_management_menu_hierarchy.sql",
+    "backend/script/sql/art_review_m115_review_management_menu_full_hierarchy.sql",
+    "backend/script/sql/art_review_m116_detail_display_config_permission.sql",
+    "backend/script/sql/art_review_m118_review_workbench_menu_name.sql",
+    "deploy/db/migrations/V003__crehn_legacy_home_schema.sql",
+    "deploy/db/migrations/V004__crehn_menu_role_grants.sql"
+  ],
+  "excluded": [
+    "backend/script/sql/art_review_seed_test.sql",
+    "backend/script/sql/art_review_runtime_activity_config.sql",
+    "backend/script/sql/art_review_runtime_menu_config.sql",
+    "backend/script/sql/art_review_m79_home_page_config.sql",
+    "backend/script/sql/art_review_m80_home_module_builder.sql",
+    "all DYZ-specific menu, style and activity data scripts not explicitly listed"
+  ]
+}
