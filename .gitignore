@@ -1,0 +1,15 @@
+.pnpm-store/
+.tmp/
+**/node_modules/
+**/dist/
+**/target/
+**/.vite/
+**/coverage/
+**/*.log
+deploy/.env
+deploy/env/*.env
+deploy/release/
+deploy/evidence/
+deploy/runtime/
+*.tar
+*.zip
