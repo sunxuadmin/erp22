@@ -1,0 +1,13 @@
+-- Refresh the historical default workbench style from frosted/blurred to a
+-- clean blue-white government-style admin shell. This only targets the old shipped default
+-- shape so intentionally customized workbench styles are left alone.
+
+update sys_config
+set config_value = '{"enabled":true,"preset":"sky","pageBackground":"linear-gradient(180deg,#f5f9ff 0%,#f8fbff 44%,#ffffff 100%)","cardBackground":"#ffffff","cardBorder":"#d8e6f5","accentColor":"#2563eb","headingColor":"#0f2f5f","calendarBackground":"linear-gradient(180deg,#2563eb 0%,#0f62b9 100%)","shadow":"0 4px 14px rgba(37,99,235,0.05)","sBg":"#f4f8ff","sBl":0,"sIt":"transparent","sHv":"#e7f0ff","sBd":"#d9e6f6"}',
+    update_time = sysdate(),
+    remark = 'Workbench home background/card/sidebar style config JSON'
+where config_key = 'crehn.workbench.style'
+  and config_value like '%"preset":"sky"%'
+  and config_value like '%"sBl":18%'
+  and config_value like '%rgba(255,255,255,0.58)%'
+  and config_value like '%0 18px 38px rgba(14,116,144,0.10)%';

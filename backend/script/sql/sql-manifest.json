@@ -1,0 +1,684 @@
+{
+  "version": 1,
+  "rules": {
+    "requiredForStrictExecution": true,
+    "notes": "DYZ project SQL files must declare purpose, touched tables, deploy policy, and risk before normal deployment can auto-discover or explicitly execute them."
+  },
+  "entries": [
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m69_review_permission_scope.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Review assignment project scope field and audit withdraw-return permission.",
+      "touches": ["review_assignment", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds a field and menu grants; does not overwrite submitted project data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m610_school_result_message_only.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Limit school result permission to message/result view only.",
+      "touches": ["sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes role-menu grants for school result access."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m70_school_project_group_menu.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "School project grouped menu and related permissions.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes menu visibility and role grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m71_auditor_upload_summary_scope.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Auditor upload summary/result menu scope adjustment.",
+      "touches": ["sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes auditor menu grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m71_project_member_upload_fields.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Project member and uploaded file metadata fields.",
+      "touches": ["project_member", "project_file"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds metadata fields; should not overwrite existing uploads."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m72_file_requirement_tip_text.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "File requirement tip text field support.",
+      "touches": ["category_file_requirement"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds/updates support for file requirement prompt text."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m73_flatten_school_project_menu.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Flatten school project menu structure.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes menu hierarchy and grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m74_project_view_menu.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Project view menu and permissions.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes project view access permissions."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m75_workbench_layout.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Workbench layout table and default role components.",
+      "touches": ["sys_workbench_layout", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed for table/menu setup.",
+      "risk": "Creates default workbench rows when missing; review before production if layouts were manually customized."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m76_menu_icons_i18n.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Menu icon and display-name refinements.",
+      "touches": ["sys_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes menu display text/icons."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m78_home_config_menu.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Home configuration menu and permission setup.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes menu and grants for home configuration."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m79_home_page_config.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Home page configuration tables and default admin menu.",
+      "touches": ["home_site_config", "home_content_card", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed for schema/default rows.",
+      "risk": "Inserts default home rows when missing; review if production homepage content is manually curated."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m80_home_module_builder.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Home module builder support.",
+      "touches": ["home_site_config", "home_content_card", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "May add homepage builder defaults or permissions."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_runtime_menu_config.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Runtime menu and role-menu reconciliation.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed only for reviewed menu reconciliation.",
+      "risk": "Can change many menu visibility/grant rows; inspect before production."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m83_hide_project_view_menu.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Hide project view menu from normal navigation.",
+      "touches": ["sys_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes menu visibility."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m84_home_config_oss_permissions.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Home configuration OSS permission grants.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes permissions around home OSS resources."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m85_home_login_state_config.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Home login-state configuration support.",
+      "touches": ["home_site_config", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "May add homepage login-state config defaults."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m86_home_custom_css.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Home custom CSS configuration support.",
+      "touches": ["home_site_config"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds config field/default support for homepage CSS."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_check_home_config_columns.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Compatibility check/addition for home configuration columns.",
+      "touches": ["home_site_config", "home_content_card"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Schema compatibility check for homepage config tables."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m46_admin_ops.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Admin operations menu/permission setup.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes admin operations menu and grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m47_audit_message.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Audit message support for art review workflow.",
+      "touches": ["sys_menu", "sys_role_menu", "art review message tables"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds message-related schema/menu support."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m50_review.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Review assignment, score, and review workflow tables.",
+      "touches": ["review_assignment", "review_score", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed for schema/menu setup.",
+      "risk": "Creates review workflow tables and default permissions."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m60_result_publish.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Review result publish menu and permissions.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes result publish menu and grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m61_award_export_score.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Award, export, and score management menu/permission support.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes result management permissions."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m62_visibility_summary.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Visibility summary menu and permission support.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes summary menu and grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m88_workbench_style_config_value.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Expand system config storage for workbench style JSON.",
+      "touches": ["sys_config"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Schema/config-capacity change for workbench style JSON."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m89_workbench_config_diagnostics.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Workbench configuration diagnostics support.",
+      "touches": ["sys_config", "sys_workbench_layout"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds diagnostics support for workbench configuration."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m90_workbench_fresh_default_style.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Fresh default workbench style preset.",
+      "touches": ["sys_config"],
+      "deployPolicy": "Do not auto-run in normal deployment unless intentionally refreshing workbench style.",
+      "risk": "Can change runtime workbench style configuration."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m91_workbench_lively_sky_style.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Lively sky workbench style preset.",
+      "touches": ["sys_config"],
+      "deployPolicy": "Do not auto-run in normal deployment unless intentionally refreshing workbench style.",
+      "risk": "Can change runtime workbench style configuration."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m92_workbench_clean_government_blue_style.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Clean government-blue workbench style preset.",
+      "touches": ["sys_config"],
+      "deployPolicy": "Do not auto-run in normal deployment unless intentionally refreshing workbench style.",
+      "risk": "Can change runtime workbench style configuration."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m93_report_progress_menu.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Report progress menu and permission setup.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Changes report progress navigation and grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m94_report_rule_safe_init.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Report rule tables and safe menu initialization.",
+      "touches": ["report_rule_package", "report_rule_item", "activity_report_rule", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Creates report-rule tables and menu grants; does not update activity/category runtime config."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m95_home_card_rich_detail.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Rich detail fields for homepage content cards.",
+      "touches": ["home_content_card"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Adds fields/default support for homepage cards."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m96_ops_role_login_alias.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Ops-admin role, login alias field, and first-create permission baseline.",
+      "touches": ["sys_user", "sys_role", "sys_menu", "sys_role_menu", "sys_config"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed.",
+      "risk": "Creates the ops-admin baseline only for a newly created crehn_ops role and no longer overwrites existing manual grants."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m97_review_score_visibility_schema.sql",
+      "category": "RequiredSchemaSql",
+      "summary": "Review assignment score visibility schema migration.",
+      "touches": ["review_assignment"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that reads score_visibility_policy.",
+      "risk": "Adds the backend compatibility field without overwriting existing review assignments."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m97_review_workbench_visibility.sql",
+      "category": "BusinessRuntimeSql",
+      "summary": "Review score visibility backfill, score adjustment permission, legacy ops read-only result access, and ops workbench runtime configuration.",
+      "touches": ["review_assignment", "sys_menu", "sys_role_menu", "sys_workbench_layout"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only after separate review and database backup.",
+      "risk": "Updates existing review_assignment rows and workbench layout; legacy ops grants are skipped after the B-2 configurable baseline marker exists. Requires the schema migration first."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m98_merge_legacy_quota_rules.sql",
+      "category": "BusinessRuntimeSql",
+      "summary": "Merge legacy activity_quota_rule rows into activity_report_rule, disable legacy quota rows, rename report-rule menu labels, and retire legacy quota menu grants.",
+      "touches": ["activity_quota_rule", "activity_report_rule", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only after separate review and database backup.",
+      "risk": "Migrates and soft-deletes runtime quota configuration rows; review affected activities before production."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m99_ops_admin_baseline.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "One-time B-2 crehn_ops baseline cloned from current crehn_admin grants and bound to crehn_admin as its menu-permission upper bound.",
+      "touches": ["sys_role", "sys_role_menu", "sys_config"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed after the standard confirmation and database backup.",
+      "risk": "The first effective run replaces existing crehn_ops grants with the crehn_admin baseline; a transaction and persistent marker prevent partial or repeated overwrites."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m100_review_score_sheet_template_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000000,
+      "summary": "Required shared review score-sheet template table.",
+      "touches": ["review_score_sheet_template"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that reads review_score_sheet_template.",
+      "risk": "Creates one additive template table only; it does not change review assignments, scores, or runtime template data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m100_review_score_sheet_menu.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1000000,
+      "summary": "Initial review score-sheet template menu, reviewer export permission, and explicit default grants.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Run only as a reviewed initial or focused ProgramMigration after backup and permission review; it is excluded from recurring automatic releases because duplicate-key updates restore its original root-menu defaults.",
+      "risk": "Adds template edit grants to crehn_admin, crehn_ops, and crehn_expert, and submitted-score export only to crehn_expert; a later reviewed hierarchy/access reconciliation is required for the final live menu policy."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m101_review_score_sheet_library_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000001,
+      "summary": "Additive multi-template, default-template, and flexible footer configuration fields for review score sheets.",
+      "touches": ["review_score_sheet_template"],
+      "deployPolicy": "Run on local and Aliyun databases after backup before publishing the multi-template backend.",
+      "risk": "Adds nullable configuration fields and one lookup index only; existing templates, assignments, and scores are unchanged."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m102_review_score_sheet_library_defaults.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1000002,
+      "summary": "Name the legacy score-sheet template and mark it as default only when its tenant has no default template.",
+      "touches": ["review_score_sheet_template"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed after the M10.1 required schema migration and database backup.",
+      "risk": "Updates only legacy template metadata when blank; it does not change template content, review assignments, or scores."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m103_assignment_school_scope_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000003,
+      "summary": "Additive school whitelist and blacklist scope fields for audit and review assignments.",
+      "touches": ["audit_assignment", "review_assignment"],
+      "deployPolicy": "Run on local and Aliyun databases after backup before publishing the assignment-scope backend.",
+      "risk": "Adds four nullable or defaulted configuration columns only; existing assignments remain all-school and business data is unchanged."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m104_audit_scope_role_boundary.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1000004,
+      "summary": "Convert the unreachable nested audit-assignment route into an in-page permission entry and remove role-wide audit-scope bypass from personal auditors and project viewers.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed after the standard confirmation and database backup.",
+      "risk": "Personal auditors without an active audit_assignment will no longer see audit projects; crehn_admin and explicitly authorized management roles keep full scope."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m105_review_assignment_project_exclusion_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000005,
+      "summary": "Additive excluded-project scope for category-wide review assignments so individual project reviewers can be removed without disabling the whole category.",
+      "touches": ["review_assignment"],
+      "deployPolicy": "Run on local and Aliyun databases after backup before publishing project-level review assignment maintenance.",
+      "risk": "Adds one nullable configuration column only; existing review assignments and scores keep their current behavior."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m106_review_score_sheet_signature_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000006,
+      "summary": "Additive personal handwritten-signature library plus immutable signed score-sheet headers and score-item snapshots.",
+      "touches": ["review_score_sheet_signature", "review_score_sheet_signed", "review_score_sheet_signed_item"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing the signed score-sheet backend.",
+      "risk": "Creates only additive signature-library and snapshot tables plus indexes; it does not write existing score data. Active signature hashes and active score items are unique, preserving reuse and a future void-and-resign path."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m107_review_score_sheet_withdrawal_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000007,
+      "summary": "Additive signed score-sheet withdrawal audit fields and management lookup index.",
+      "touches": ["review_score_sheet_signed"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that supports signed-score-sheet withdrawal.",
+      "risk": "Adds nullable withdrawal audit fields and one lookup index only; it does not alter existing signed snapshots, review scores, or active-score occupancy."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m108_review_score_sheet_signed_sheet_menu.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1000008,
+      "summary": "Initial signed score-sheet summary/my-history menus and explicit administrator/expert withdrawal grants.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Run only as a reviewed initial or focused ProgramMigration after backup and permission review; it is excluded from recurring automatic releases because duplicate-key updates restore its original root-menu defaults.",
+      "risk": "Adds or updates six signed-sheet menu permission rows. crehn_admin receives global management and withdrawal; crehn_expert receives only own-history/export and withdrawal; a later reviewed hierarchy reconciliation is required for the final live menu policy."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m109_review_score_warning_config_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1000009,
+      "summary": "Additive activity/category scoped score discrepancy warning rules with selectable safe formulas, thresholds and display text.",
+      "touches": ["review_score_warning_config"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that reads score warning configuration.",
+      "risk": "Creates one additive configuration table only; existing assignments, scores, generated results and published results are unchanged until a result is regenerated."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m110_review_management_signature_admin.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100000,
+      "summary": "Reviewer-management menu grouping, signed-score summary and privileged teacher-signature library controls with a shrinkable crehn_admin_signature role.",
+      "touches": ["review_score_sheet_signature", "sys_menu", "sys_role", "sys_role_menu", "sys_config"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing signature-library administration. The one-time child-role baseline preserves later manual reductions.",
+      "risk": "Adds signature library status audit fields, reorganizes existing management menu parents, grants new functions to crehn_admin, and creates a restricted default-tenant crehn_admin_signature role. It never changes score records, signed-sheet snapshots, or OSS objects."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m111_review_score_summary_custom_formula_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1100001,
+      "summary": "Additive storage for a restricted score-discrepancy formula expression.",
+      "touches": ["review_score_warning_config"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that accepts custom score-warning expressions.",
+      "risk": "Adds one nullable formula expression column only; the backend still validates expressions against a fixed variable and operator allow-list."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m111_review_score_summary_export_menu.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100001,
+      "summary": "Adds a dedicated score-summary export action under the existing reviewer-management menu.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Run as a local ProgramMigration after backup and permission review; crehn_ops is explicitly denied and crehn_admin_signature is not re-expanded after its baseline.",
+      "risk": "Adds one export permission to crehn_admin only and does not change score, signature, result, or role-scope data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m112_review_score_sheet_optional_signature.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100002,
+      "summary": "Allow template-configured optional reviewer signatures while retaining immutable signed and unsigned score-sheet submission modes.",
+      "touches": ["review_score_sheet_signed"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that accepts unsigned score-sheet submissions.",
+      "risk": "Makes only the three handwritten-signature snapshot columns nullable and adds a defaulted submission mode; active-score occupancy, withdrawal audit, and result locks are unchanged."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m113_review_management_menu_reconcile.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100003,
+      "summary": "Reconcile the reviewer-management menu hierarchy and remove shared score-sheet template page/edit access from review experts.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Run on local and Aliyun databases after backup; users must sign out and back in to refresh their dynamic menus.",
+      "risk": "Moves only the score-sheet template and signed-sheet summary menus under reviewer management. Review experts retain hidden template-read permission for score submission, but lose the template page and all shared-template write actions."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m114_review_management_menu_hierarchy.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100004,
+      "aliyunAutoApply": true,
+      "summary": "Controlled finalizer that keeps the score-sheet template and signed-sheet summary under reviewer management after initialization migrations.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Run automatically on local and Aliyun databases after backup. It is transaction-bound, repeatable, and contains no role-access deletion; M11.3 remains the separate reviewed access-revocation migration.",
+      "risk": "Moves only menu 17930 and 17990 under 17960, preserves the signed-sheet summary name, and adds the parent directory to non-expert roles that already have either child page."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m115_review_management_menu_full_hierarchy.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100005,
+      "aliyunAutoApply": true,
+      "summary": "Controlled finalizer that keeps the complete administrator review-management menu tree present and nested under its directory.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "Run automatically on local and Aliyun databases after backup. It is transaction-bound, repeatable, and contains no schema DDL or role-access deletion; M11.0 remains the separate reviewed schema and child-role baseline migration.",
+      "risk": "Creates or reconciles only the score summary, signed-sheet summary and signature-library menu records; moves the existing assignment, template and result pages under 17960; and grants these administrative entries only to crehn_admin."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m116_detail_display_config_permission.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100006,
+      "summary": "Add a dedicated audit/review detail-display configuration permission with a one-time administrator-role baseline.",
+      "touches": ["sys_menu", "sys_role_menu", "sys_config"],
+      "deployPolicy": "Run on local and Aliyun databases only after backup and explicit ProgramMigration approval; users must sign out and back in to refresh permission menus.",
+      "risk": "Initially grants the new display-only configuration permission to crehn_admin, crehn_ops and crehn_admin_signature. A persistent baseline marker prevents later role-management reductions from being restored by a controlled replay."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m117_review_assignment_project_filter_schema.sql",
+      "category": "RequiredSchemaSql",
+      "migrationOrder": 1100007,
+      "summary": "Additive persisted project-tag filter JSON for server-enforced review assignment scopes.",
+      "touches": ["review_assignment"],
+      "deployPolicy": "Run on local and Aliyun databases after backup before publishing a backend that reads project_filter_json.",
+      "risk": "Adds one nullable configuration column only; existing assignments have no filter and retain their current project scope and score history."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m118_review_workbench_menu_name.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100008,
+      "aliyunAutoApply": true,
+      "summary": "Rename the reviewer task menu from My Review to Review Workbench without changing its route or permission.",
+      "touches": ["sys_menu"],
+      "deployPolicy": "Run automatically on local and Aliyun databases after backup. It is transaction-bound, repeatable, and changes no route, permission, or role grant.",
+      "risk": "Updates only menu_id 17920/17921 when their existing route, parent and permission markers match; no role grants or review data are changed."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m119_workbench_layout_backfill.sql",
+      "category": "ProgramMigrationSql",
+      "migrationOrder": 1100009,
+      "aliyunAutoApply": true,
+      "summary": "Backfill missing project-upload overview workbench layouts for eligible active roles.",
+      "touches": ["sys_workbench_layout"],
+      "deployPolicy": "Run automatically on local and Aliyun databases after backup. It is transaction-bound, repeatable, and inserts only missing default layouts.",
+      "risk": "Creates only missing project_upload_overview defaults for active eligible roles; existing layouts and manually customized runtime configuration are not updated."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m912_ops_permission_scope.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Bind crehn_ops to crehn_admin as its menu-permission upper bound and remove only grants outside that bound.",
+      "touches": ["sys_role", "sys_role_menu"],
+      "deployPolicy": "Normal ProgramMigration deployment is allowed after the required permission-scope schema migration and standard database backup.",
+      "risk": "Can only shrink crehn_ops grants that crehn_admin no longer has; it never copies newly added crehn_admin grants into crehn_ops."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m910_login_alias_schema.sql",
+      "category": "RequiredSchemaSql",
+      "summary": "Required additive sys_user login_alias column and unique index for the deployed authentication code.",
+      "touches": ["sys_user"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that queries login_alias.",
+      "risk": "Adds a nullable column and unique index only; contains no account, role, menu, permission, configuration, or business-data writes."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m911_role_permission_scope_schema.sql",
+      "category": "RequiredSchemaSql",
+      "summary": "Required additive role menu-permission upper-bound column and lookup index.",
+      "touches": ["sys_role"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that reads permission_scope_role_id.",
+      "risk": "Adds one nullable role reference field and index only; it does not change any role grant or business data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/sys_role_close_warning_schema.sql",
+      "migrationOrder": 900010.5,
+      "category": "RequiredSchemaSql",
+      "summary": "Required additive role-level browser close warning switch.",
+      "touches": ["sys_role"],
+      "deployPolicy": "Run on local and Aliyun databases after backup and before publishing a backend that reads close_warning_enabled.",
+      "risk": "Adds one boolean-compatible field with an enabled default; it does not overwrite role grants, account assignments, or business data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_config_rules.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Runtime templates, notice templates, upload rules, school field schema, and workbench config defaults.",
+      "touches": ["school_field_schema", "notice_template", "upload_rule_template", "category_field_schema", "sys_config"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only when intentionally refreshing runtime templates/config.",
+      "risk": "Can change production runtime templates and prompts."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_submission_templates.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Default activity/category submission templates and file requirements.",
+      "touches": ["activity", "activity_category", "category_field_schema", "category_file_requirement", "upload_rule_template"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only after template review and database backup.",
+      "risk": "Deletes/rebuilds template category rows in configured ID ranges and can affect runtime submission templates."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m45_upload_validation.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Upload validation rule/template adjustments.",
+      "touches": ["upload_rule_template"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only when intentionally changing upload validation templates.",
+      "risk": "Updates runtime upload validation templates."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m63_showcase_standard_template.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Showcase standard upload template.",
+      "touches": ["upload_rule_template"],
+      "deployPolicy": "Do not auto-run in normal deployment unless template refresh is intended.",
+      "risk": "Adds runtime upload template data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m77_home_stage_notice.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Home/workbench stage notice text updates.",
+      "touches": ["notice_template"],
+      "deployPolicy": "Do not auto-run in normal deployment unless notice template refresh is intended.",
+      "risk": "Updates runtime notice template text."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m81_activity_config_options.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Activity category option and file requirement template additions; legacy quota seeds are retired.",
+      "touches": ["activity_category", "category_field_schema", "category_file_requirement"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only after runtime activity/template review.",
+      "risk": "Can add/update activity category templates and quota rule defaults."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m82_activity_menu_name.sql",
+      "category": "ProgramRuntimeConfigSql",
+      "summary": "Activity display-name cleanup.",
+      "touches": ["activity"],
+      "deployPolicy": "Do not auto-run in normal deployment unless activity naming migration is intended.",
+      "risk": "Updates runtime activity rows."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m68_recycle_audit_scope.sql",
+      "category": "BusinessRuntimeSql",
+      "summary": "Project recycle fields, audit assignment table, menus, and sample audit assignment row.",
+      "touches": ["project", "audit_assignment", "sys_menu", "sys_role_menu"],
+      "deployPolicy": "Do not auto-run in normal deployment because it can insert runtime audit assignment data.",
+      "risk": "May create sample audit_assignment rows for fixed users/activity if they exist."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_m87_file_review_messages_zh.sql",
+      "category": "BusinessRuntimeSql",
+      "summary": "Chinese file review message backfill.",
+      "touches": ["project", "project_file"],
+      "deployPolicy": "Do not auto-run in normal deployment. Execute only as an intentional data backfill.",
+      "risk": "Updates existing project and file review message data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_runtime_activity_config.sql",
+      "category": "BusinessRuntimeSql",
+      "summary": "Full runtime activity/category/template snapshot; legacy quota dump is retired.",
+      "touches": ["activity", "activity_category", "category_field_schema", "category_file_requirement", "activity_school_scope", "notice_template", "upload_rule_template", "school_field_schema"],
+      "deployPolicy": "Never auto-run in normal deployment. Use only for deliberate restore/reseed after review.",
+      "risk": "Deletes and reinserts runtime activity configuration; can overwrite production operation data."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_seed_test.sql",
+      "category": "TestSeedSql",
+      "summary": "Test accounts, test activity, test school/project data.",
+      "touches": ["sys_user", "sys_role", "activity", "activity_category", "project", "school_info"],
+      "deployPolicy": "Never run in production or normal deployment.",
+      "risk": "Creates test data and can pollute production."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_core.sql",
+      "category": "ProgramInitializationSql",
+      "summary": "Core crehn tables and base fields for new database setup.",
+      "touches": ["sys_user", "registration_code", "activity", "activity_category", "category_field_schema", "category_file_requirement", "project", "project_file", "project_audit_record"],
+      "deployPolicy": "New-server or empty-database initialization only.",
+      "risk": "Creates base schema; not a normal update path."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_menu.sql",
+      "category": "ProgramInitializationSql",
+      "summary": "Initial crehn menu tree and grants.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "New-server initialization only.",
+      "risk": "Can reset/duplicate initial menu assumptions if misused."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/art_review_config_menu.sql",
+      "category": "ProgramInitializationSql",
+      "summary": "Initial configuration menu for crehn setup.",
+      "touches": ["sys_menu", "sys_role_menu"],
+      "deployPolicy": "New-server initialization only.",
+      "risk": "Can change initial menu assumptions if misused."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/ry_vue_5.X.sql",
+      "category": "ProgramInitializationSql",
+      "summary": "RuoYi-Vue-Plus base database initialization.",
+      "touches": ["framework base tables"],
+      "deployPolicy": "Framework/new-server initialization only.",
+      "risk": "Do not run against an existing business database as a normal update."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/ry_job.sql",
+      "category": "ProgramInitializationSql",
+      "summary": "RuoYi job module base initialization.",
+      "touches": ["job framework tables"],
+      "deployPolicy": "Framework/new-server initialization only.",
+      "risk": "Do not run against an existing business database as a normal update."
+    },
+    {
+      "path": "framework-ruoyi-vue-plus/script/sql/ry_workflow.sql",
+      "category": "ProgramInitializationSql",
+      "summary": "RuoYi workflow module base initialization.",
+      "touches": ["workflow framework tables"],
+      "deployPolicy": "Framework/new-server initialization only.",
+      "risk": "Do not run against an existing business database as a normal update."
+    }
+  ]
+}

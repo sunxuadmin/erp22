@@ -1,0 +1,13 @@
+.git
+.idea
+**/.env
+**/.env.*
+**/*.env
+**/target
+**/*.log
+script/sql/oracle
+script/sql/postgres
+script/sql/sqlserver
+script/sql/art_review_seed_test.sql
+script/sql/art_review_runtime_activity_config.sql
+script/sql/art_review_runtime_menu_config.sql
