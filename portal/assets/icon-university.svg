@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="g" x1="18" y1="16" x2="142" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C77FF"/>
+      <stop offset="0.48" stop-color="#16D0DF"/>
+      <stop offset="1" stop-color="#32C777"/>
+    </linearGradient>
+    <linearGradient id="w" x1="38" y1="36" x2="118" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.35"/>
+    </linearGradient>
+    <filter id="s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <circle cx="80" cy="80" r="62" fill="url(#g)" opacity="0.94"/>
+  <circle cx="80" cy="80" r="48" fill="#fff" opacity="0.13"/>
+  <path d="M46 88c24-27 51-43 82-47-14 21-22 43-24 66-22-2-40-8-58-19Z" fill="url(#w)"/>
+  <path d="M50 100c23 8 49 10 78 5-17 18-38 30-62 35-8-12-13-25-16-40Z" fill="#fff" opacity="0.32"/>
+  <path d="M34 76c20-9 45-13 75-11-23 11-42 28-58 49-9-10-14-23-17-38Z" fill="#fff" opacity="0.58"/>
+  <path d="M34 53l7 15 15 7-15 7-7 15-7-15-15-7 15-7Z" fill="#fff" opacity="0.85" filter="url(#s)"/>
+</svg>

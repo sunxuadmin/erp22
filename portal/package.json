@@ -1,0 +1,21 @@
+{
+  "name": "crehn-portal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --base ./",
+    "build": "vue-tsc --noEmit && vite build --base ./ --configLoader runner",
+    "build:static": "vue-tsc --noEmit && vite build --base ./ --configLoader runner && powershell -ExecutionPolicy Bypass -File ./scripts/build-static.ps1",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "vue": "3.5.30"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.7",
+    "vue-tsc": "^3.2.5"
+  }
+}
