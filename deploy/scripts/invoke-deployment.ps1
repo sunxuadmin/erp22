@@ -247,15 +247,27 @@ function Invoke-SshCommand {
     $sshArgs = @('-p', [string]$Target.Port) + $Session.Common +
         @("$($Target.User)@$($Target.Host)") + $RemoteArguments
     Invoke-WithSshAuth -Target $Target -Operation {
+        $sshExitCode = $null
         if ($StandardInputFile) {
             $standardInput = [System.IO.File]::ReadAllText($StandardInputFile).Replace("`r`n", "`n")
+            if ($standardInput.Length -gt 0 -and $standardInput[0] -eq [char]0xFEFF) {
+                $standardInput = $standardInput.Substring(1)
+            }
             $standardInput = $standardInput.TrimEnd([char[]]"`r`n") + "`n#"
-            $standardInput | & ssh @sshArgs
+            $standardInputTemp = Join-Path ([System.IO.Path]::GetTempPath()) ("crehn-ssh-stdin-" + [Guid]::NewGuid().ToString('N') + '.sh')
+            try {
+                [System.IO.File]::WriteAllText($standardInputTemp, $standardInput, [System.Text.UTF8Encoding]::new($false))
+                $sshProcess = Start-Process -FilePath 'ssh' -ArgumentList $sshArgs -RedirectStandardInput $standardInputTemp -NoNewWindow -PassThru -Wait
+                $sshExitCode = $sshProcess.ExitCode
+            } finally {
+                Remove-Item -LiteralPath $standardInputTemp -Force -ErrorAction SilentlyContinue
+            }
         } else {
             & ssh @sshArgs
+            $sshExitCode = $LASTEXITCODE
         }
-        if ($LASTEXITCODE -ne 0) {
-            throw "FAILED remote command exited with code $LASTEXITCODE"
+        if ($sshExitCode -ne 0) {
+            throw "FAILED remote command exited with code $sshExitCode"
         }
     }
 }
@@ -458,7 +470,12 @@ function Stage-Assets {
                 '--release-archive', "$remoteTemp/release.tar"
             )
         }
-        Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments $installArguments -StandardInputFile $linuxInstallScript
+        $remoteInstallArguments = if ($Production) {
+            $installArguments
+        } else {
+            @('sudo', '-n') + $installArguments
+        }
+        Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments $remoteInstallArguments -StandardInputFile $linuxInstallScript
         Write-Status PASS "assets staged for $($Runtime.Project); no build, container, or SQL action was implied"
     } finally {
         Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue
@@ -510,6 +527,9 @@ function Invoke-InstalledAction {
         $arguments += @('--database-operation', 'initialize')
     } elseif ($Action -eq 'DatabasePlan') {
         $arguments += @('--database-operation', 'plan')
+    }
+    if (-not $production -and $RemoteAction -eq 'build-local') {
+        $arguments = @('sudo', '-n') + $arguments
     }
     Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments $arguments
 }

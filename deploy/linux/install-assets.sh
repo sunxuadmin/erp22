@@ -59,6 +59,9 @@ tar -xzf "${ARCHIVE}" -C "${STAGING}"
   fail "Staged archive does not contain deploy/compose.yml"
 [[ -f "${STAGING}/deploy/linux/crehn-deploy.sh" ]] ||
   fail "Staged archive does not contain the Linux deployment entry"
+if [[ "${MODE}" == "test-source" ]]; then
+  sed -i 's/\r$//' "${STAGING}/deploy/linux/"*.sh
+fi
 chmod 0755 "${STAGING}/deploy/linux/"*.sh
 
 if [[ -e "${PREVIOUS}" ]]; then
