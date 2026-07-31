@@ -3,7 +3,7 @@ set -Eeuo pipefail
 umask 077
 
 readonly EXIT_BLOCKED=3
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-${PWD}/crehn-deploy.sh}")" && pwd)"
 readonly DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly BASE_COMPOSE="${DEPLOY_DIR}/compose.yml"
 readonly TEST_COMPOSE="${DEPLOY_DIR}/compose.test.yml"
@@ -273,11 +273,9 @@ check_candidate_ports() {
   done
 }
 
-capture_project_baseline() {
+inspect_project_containers() {
   local project="$1"
-  local output="$2"
   local ids
-  : >"${output}"
   [[ -n "${project}" ]] || return 0
   ids="$(docker ps -aq --filter "label=com.docker.compose.project=${project}" | sort)"
   if [[ -z "${ids}" ]]; then
@@ -286,8 +284,14 @@ capture_project_baseline() {
   while IFS= read -r id; do
     docker inspect --format \
       '{{.Id}}|{{.Name}}|{{.Config.Image}}|{{.Image}}|{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}|{{.RestartCount}}|{{.State.OOMKilled}}|{{json .HostConfig.PortBindings}}|{{json .Mounts}}|{{json .NetworkSettings.Networks}}' \
-      "${id}" >>"${output}"
+      "${id}"
   done <<<"${ids}"
+}
+
+capture_project_baseline() {
+  local project="$1"
+  local output="$2"
+  inspect_project_containers "${project}" >"${output}"
 }
 
 check_protected_entry() {
@@ -311,14 +315,13 @@ preflight() {
   host_snapshot
   check_candidate_ports
 
-  local baseline
-  baseline="$(mktemp)"
-  capture_project_baseline "${PREFLIGHT_PROTECTED_PROJECT}" "${baseline}"
-  if [[ -s "${baseline}" ]]; then
-    status PASS "protected_project=${PREFLIGHT_PROTECTED_PROJECT} containers=$(wc -l <"${baseline}")"
-    sed 's/^/[PASS] protected_container=/' "${baseline}"
+  local baseline baseline_count
+  baseline="$(inspect_project_containers "${PREFLIGHT_PROTECTED_PROJECT}")"
+  if [[ -n "${baseline}" ]]; then
+    baseline_count="$(printf '%s\n' "${baseline}" | awk 'NF { count++ } END { print count + 0 }')"
+    status PASS "protected_project=${PREFLIGHT_PROTECTED_PROJECT} containers=${baseline_count}"
+    printf '%s\n' "${baseline}" | sed 's/^/[PASS] protected_container=/'
   fi
-  rm -f "${baseline}"
   check_protected_entry web "${PREFLIGHT_PROTECTED_WEB_URL}"
   check_protected_entry storage "${PREFLIGHT_PROTECTED_STORAGE_URL}"
 

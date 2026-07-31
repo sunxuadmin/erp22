@@ -140,18 +140,41 @@ function Resolve-TargetContext {
 function New-SshSessionArguments {
     param([hashtable]$Target)
 
-    foreach ($commandName in @('ssh', 'scp', 'ssh-keyscan', 'ssh-keygen')) {
+    foreach ($commandName in @('ssh', 'scp', 'ssh-keygen')) {
         if (-not (Get-Command $commandName -ErrorAction SilentlyContinue)) {
             throw "BLOCKED required OpenSSH command is unavailable: $commandName"
         }
     }
 
     $knownHosts = Join-Path ([System.IO.Path]::GetTempPath()) ("crehn-known-hosts-" + [Guid]::NewGuid().ToString('N'))
-    $scanOutput = & ssh-keyscan -p $Target.Port -- $Target.Host 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $scanOutput) {
+    $probeArgs = @(
+        '-p', [string]$Target.Port,
+        '-o', 'IdentitiesOnly=yes',
+        '-o', 'StrictHostKeyChecking=accept-new',
+        '-o', "UserKnownHostsFile=$knownHosts",
+        '-o', 'GlobalKnownHostsFile=NUL',
+        '-o', 'ConnectTimeout=10',
+        '-o', 'BatchMode=yes',
+        '-o', 'PreferredAuthentications=none',
+        '-o', 'PubkeyAuthentication=no',
+        '-o', 'PasswordAuthentication=no',
+        '-o', 'KbdInteractiveAuthentication=no',
+        "$($Target.User)@$($Target.Host)",
+        'exit'
+    )
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        # The unauthenticated probe is expected to write diagnostics and exit nonzero.
+        $ErrorActionPreference = 'Continue'
+        $null = & ssh @probeArgs 2>$null
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if (-not (Test-Path -LiteralPath $knownHosts) -or
+        (Get-Item -LiteralPath $knownHosts).Length -eq 0) {
+        Remove-Item -LiteralPath $knownHosts -Force -ErrorAction SilentlyContinue
         throw "BLOCKED unable to read SSH host keys from $($Target.Host):$($Target.Port)"
     }
-    [System.IO.File]::WriteAllLines($knownHosts, [string[]]$scanOutput, [System.Text.UTF8Encoding]::new($false))
     $fingerprints = & ssh-keygen -lf $knownHosts -E sha256
     if ($LASTEXITCODE -ne 0 -or -not ($fingerprints -match [regex]::Escape($Target.Fingerprint))) {
         Remove-Item -LiteralPath $knownHosts -Force -ErrorAction SilentlyContinue
@@ -225,7 +248,9 @@ function Invoke-SshCommand {
         @("$($Target.User)@$($Target.Host)") + $RemoteArguments
     Invoke-WithSshAuth -Target $Target -Operation {
         if ($StandardInputFile) {
-            Get-Content -LiteralPath $StandardInputFile -Raw | & ssh @sshArgs
+            $standardInput = [System.IO.File]::ReadAllText($StandardInputFile).Replace("`r`n", "`n")
+            $standardInput = $standardInput.TrimEnd([char[]]"`r`n") + "`n#"
+            $standardInput | & ssh @sshArgs
         } else {
             & ssh @sshArgs
         }
