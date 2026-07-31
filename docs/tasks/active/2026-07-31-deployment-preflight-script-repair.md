@@ -3,11 +3,11 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED / COMMIT_APPROVED / PUSH_NOT_AUTHORIZED / BUILD_BLOCKED_BY_SWAP`
+- 当前状态：`VERIFIED / COMMIT_NOT_AUTHORIZED / PUSH_NOT_AUTHORIZED / BUILD_NOT_AUTHORIZED`
 - 脚本修改：已于2026-07-31确认
 - 192.168.2.229修复后只读预检：已于2026-07-31授权并完成
 - Swap配置、资产暂存、构建、容器和SQL：未授权
-- Git本地提交：已授权；Git推送：未授权
+- 本次BOM修复的Git本地提交与推送：未授权
 
 ## 目标
 
@@ -19,6 +19,7 @@
 - Git for Windows的 `ssh-keyscan` 虽可工作，但不应让部署入口依赖另一套可执行文件；
 - 修复前 `deploy/linux/crehn-deploy.sh` 的预检使用 `mktemp` 和删除临时文件，不符合只读预检约束；
 - 部署阶段仍需要保存项目A部署前后基线文件并执行逐字节比较，不能删除现有证据能力。
+- 使用真实 `test.env` 重跑预检时，远端 Bash 将 UTF-8 BOM 误作为首行命令；本次虽未影响返回码，但标准输入脚本必须在发送前移除 BOM。
 
 ## 范围
 
@@ -27,6 +28,7 @@
   - 将握手得到的主机密钥写入本地临时known-hosts；
   - 继续使用 `ssh-keygen` 核对用户已确认的SHA256指纹；
   - 实际SSH/SCP会话继续强制 `StrictHostKeyChecking=yes`。
+  - 标准输入脚本在 LF 规范化后移除开头 UTF-8 BOM，并保留安全结尾。
 - `deploy/linux/crehn-deploy.sh`：
   - 提取唯一的容器基线输出实现；
   - 只读预检在内存中统计和显示基线，不创建临时文件；
@@ -51,12 +53,13 @@
 - [x] Bash语法检查通过；
 - [x] Git差异检查和敏感信息检查通过；
 - [x] 仅执行已授权的192.168.2.229只读预检，未执行服务器写操作、构建、容器变更、SQL、Git提交或推送。
+- [x] 使用真实 `test.env` 的标准输入预检不再出现 UTF-8 BOM 命令诊断。
 
 ## 实际变更与证据
 
 ### 修改文件及原因
 
-- `deploy/scripts/invoke-deployment.ps1`：移除 `ssh-keyscan` 依赖，改为通过禁止所有认证方式的普通SSH握手把服务端主机密钥写入本地临时known-hosts；随后继续用 `ssh-keygen -E sha256` 与已确认指纹匹配，正式SSH/SCP参数继续使用 `StrictHostKeyChecking=yes`；兼容Windows PowerShell 5.1对原生程序标准错误的处理，并为标准输入脚本增加LF规范化和安全结尾，避免PowerShell追加的CRLF被远端Bash解释为命令；
+- `deploy/scripts/invoke-deployment.ps1`：移除 `ssh-keyscan` 依赖，改为通过禁止所有认证方式的普通SSH握手把服务端主机密钥写入本地临时known-hosts；随后继续用 `ssh-keygen -E sha256` 与已确认指纹匹配，正式SSH/SCP参数继续使用 `StrictHostKeyChecking=yes`；兼容Windows PowerShell 5.1对原生程序标准错误的处理；标准输入脚本先规范为LF、移除源内容的开头BOM并追加安全结尾，随后以无BOM UTF-8本地临时文件重定向到 `ssh`，避免PowerShell管道向原生命令写入BOM，临时文件在会话结束时精确清理；
 - `deploy/linux/crehn-deploy.sh`：新增唯一的 `inspect_project_containers` 标准输出实现；只读预检在内存中统计与显示容器基线，部署阶段的 `capture_project_baseline` 继续写入前后证据文件；允许 `bash -s` 标准输入运行时在 `BASH_SOURCE[0]` 未定义的情况下完成只读预检；
 - `TASKS.md`：登记本活动任务；
 - 本任务卡：记录授权边界、实现范围、验证证据和剩余风险。
@@ -80,6 +83,9 @@
 - 项目A Web 18181和MinIO 19000健康入口：`PASS`；
 - 本地临时known-hosts和ASKPASS文件：最终检查无遗留；
 - 远端预检通过标准输入运行，修复后的 `preflight` 不调用 `mktemp`、删除或普通文件写入；未创建CREHN目录、容器、网络、卷或Swap；
+- 使用真实 `deploy/env/test.env` 的首次预检虽返回0，但发现PowerShell标准输入传输附加UTF-8 BOM，远端Bash在脚本初始化前输出一次无效命令诊断；随后确认源脚本原始字节不含BOM，改用无BOM UTF-8临时标准输入文件重定向；
+- BOM修复本地验证：PowerShell AST通过；开头BOM移除模拟通过；无BOM临时输入文件原始前缀为 `#!/`；原生进程重定向冒烟通过；`git diff --check`通过；
+- BOM修复后使用真实 `test.env` 重跑229 `PreflightLocal`：返回码0，无BOM诊断；主机为4核、6063 MiB内存、4095 MiB Swap、根分区剩余41173 MiB；28181、29000、29001符合 `crehn-test` 归属约束；项目A当前5个容器均 `running/healthy`、重启0、`OOMKilled=false`，Web与MinIO入口健康；入口输出 `preflight-local completed without changing the host`；
 - 构建、资产暂存、容器变更和SQL：`NOT_RUN`；
 - Git本地提交：`AUTHORIZED`；Git推送：`NOT_RUN`。
 
@@ -91,6 +97,5 @@
 
 ### 尚未处理的风险
 
-- 现有约6 GiB内存、0 Swap的TEST主机仍不满足已确认的4 GiB Swap构建门槛，构建继续阻断；
-- 真实 `deploy/env/test.env` 尚未创建；仓库模板只用于本次只读预检，不能用于构建或部署，后续需要单独准备受限运行环境文件；
-- 修改尚未提交或推送，需要用户单独授权。
+- Swap和真实 `deploy/env/test.env` 前置条件现已具备，但资产暂存与构建仍需分别获得授权；
+- BOM修复、TEST环境生成任务记录和索引尚未提交；Git提交与推送需要用户单独授权。

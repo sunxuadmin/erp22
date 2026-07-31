@@ -6,7 +6,7 @@
 
 ## 1. 文档目标
 
-本目录用于约束 CREHN 的长期产品设计、工程实现、DYZ 兼容、数据迁移和验收。CREHN 采用与 DYZ 相同的 RuoYi-Vue-Plus 技术栈重新建立，但必须拥有独立代码、数据库、对象存储、运行配置、租户与账号体系。
+本目录用于约束 CREHN 的长期产品设计、工程实现、DYZ 兼容、数据迁移和验收。CREHN 采用与 DYZ 相同的 RuoYi-Vue-Plus 技术栈重新建立，但必须拥有独立代码、数据库、对象存储、运行配置、用户与账号体系。
 
 ## 2. 唯一事实来源与优先级
 
@@ -61,7 +61,7 @@
 
 - CREHN 能导入 DYZ 活动配置并转换为 CREHN 标准模型；
 - 历史作品、文件、审核、评分和结果可通过独立迁移批次导入；
-- 不共享数据库，不实时双写，不复用 DYZ 数字主键、用户密码、租户 ID、角色 ID、OSS ID 或临时访问 URL；
+- 不共享数据库，不实时双写，不复用 DYZ 数字主键、用户密码、用户 ID、角色 ID、OSS ID 或临时访问 URL；
 - DYZ 与 CREHN 分别独立部署、独立升级和独立回滚。
 
 功能覆盖见 [CREHN_DYZ_FUNCTION_COVERAGE.md](../01-产品设计/CREHN_DYZ_FUNCTION_COVERAGE.md)，协议规则见 [CREHN_DYZ_COMPATIBILITY_V1.md](../02-工程规范/CREHN_DYZ_COMPATIBILITY_V1.md)。
