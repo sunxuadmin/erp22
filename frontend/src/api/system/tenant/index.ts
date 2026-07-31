@@ -2,7 +2,7 @@ import request from '@/utils/request';
 import { TenantForm, TenantQuery, TenantVO } from './types';
 import { AxiosPromise } from 'axios';
 
-// 查询租户列表
+// 查询用户列表
 export function listTenant(query: TenantQuery): AxiosPromise<TenantVO[]> {
   return request({
     url: '/system/tenant/list',
@@ -11,7 +11,7 @@ export function listTenant(query: TenantQuery): AxiosPromise<TenantVO[]> {
   });
 }
 
-// 查询租户详细
+// 查询用户详细
 export function getTenant(id: string | number): AxiosPromise<TenantVO> {
   return request({
     url: '/system/tenant/' + id,
@@ -19,7 +19,7 @@ export function getTenant(id: string | number): AxiosPromise<TenantVO> {
   });
 }
 
-// 新增租户
+// 新增用户
 export function addTenant(data: TenantForm) {
   return request({
     url: '/system/tenant',
@@ -32,7 +32,7 @@ export function addTenant(data: TenantForm) {
   });
 }
 
-// 修改租户
+// 修改用户
 export function updateTenant(data: TenantForm) {
   return request({
     url: '/system/tenant',
@@ -41,7 +41,7 @@ export function updateTenant(data: TenantForm) {
   });
 }
 
-// 租户状态修改
+// 用户状态修改
 export function changeTenantStatus(id: string | number, tenantId: string | number, status: string) {
   const data = {
     id,
@@ -55,7 +55,7 @@ export function changeTenantStatus(id: string | number, tenantId: string | numbe
   });
 }
 
-// 删除租户
+// 删除用户
 export function delTenant(id: string | number | Array<string | number>) {
   return request({
     url: '/system/tenant/' + id,
@@ -63,7 +63,7 @@ export function delTenant(id: string | number | Array<string | number>) {
   });
 }
 
-// 动态切换租户
+// 动态切换用户
 export function dynamicTenant(tenantId: string | number) {
   return request({
     url: '/system/tenant/dynamic/' + tenantId,
@@ -71,7 +71,7 @@ export function dynamicTenant(tenantId: string | number) {
   });
 }
 
-// 清除动态租户
+// 清除动态用户
 export function dynamicClear() {
   return request({
     url: '/system/tenant/dynamic/clear',
@@ -79,7 +79,7 @@ export function dynamicClear() {
   });
 }
 
-// 同步租户套餐
+// 同步用户套餐
 export function syncTenantPackage(tenantId: string | number, packageId: string | number) {
   const data = {
     tenantId,
@@ -92,7 +92,7 @@ export function syncTenantPackage(tenantId: string | number, packageId: string |
   });
 }
 
-// 同步租户字典
+// 同步用户字典
 export function syncTenantDict() {
   return request({
     url: '/system/tenant/syncTenantDict',
@@ -100,7 +100,7 @@ export function syncTenantDict() {
   });
 }
 
-// 同步租户字典
+// 同步用户字典
 export function syncTenantConfig() {
   return request({
     url: '/system/tenant/syncTenantConfig',

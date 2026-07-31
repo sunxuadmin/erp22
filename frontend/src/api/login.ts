@@ -128,7 +128,7 @@ export function getInfo(): AxiosPromise<UserInfo> {
   });
 }
 
-// 获取租户列表
+// 获取用户列表
 export function getTenantList(isToken: boolean): AxiosPromise<TenantInfo> {
   return request({
     url: '/auth/tenant/list',

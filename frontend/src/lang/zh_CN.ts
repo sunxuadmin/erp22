@@ -16,7 +16,7 @@ export default {
     switchRegisterPage: '立即注册',
     rule: {
       tenantId: {
-        required: '请输入您的租户编号'
+        required: '请输入您的用户编号'
       },
       username: {
         required: '请输入您的账号'
@@ -49,7 +49,7 @@ export default {
     switchLoginPage: '使用已有账户登录',
     rule: {
       tenantId: {
-        required: '请输入您的租户编号'
+        required: '请输入您的用户编号'
       },
       username: {
         required: '请输入您的账号',
@@ -77,7 +77,7 @@ export default {
     document: '项目文档',
     message: '消息',
     layoutSize: '布局大小',
-    selectTenant: '选择租户',
+    selectTenant: '选择用户',
     layoutSetting: '布局设置',
     personalCenter: '个人中心',
     logout: '退出登录'

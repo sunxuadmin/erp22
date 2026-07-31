@@ -50,7 +50,7 @@ export interface VerifyCodeResult {
 }
 
 /**
- * 租户
+ * 用户
  */
 export interface TenantVO {
   companyName: string;
