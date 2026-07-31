@@ -33,7 +33,7 @@ public class SocialLoginConfigProperties {
     private Boolean unionId;
 
     /**
-     * Microsoft Entra ID（原微软 AAD）中的租户 ID
+     * Microsoft Entra ID（原微软 AAD）中的用户 ID
      */
     private String tenantId;
 

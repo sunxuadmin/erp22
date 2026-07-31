@@ -13,7 +13,7 @@ import org.dromara.system.domain.SysTenant;
 import java.util.Date;
 
 /**
- * 租户业务对象 sys_tenant
+ * 用户业务对象 sys_tenant
  *
  * @author Michelle.Chung
  */
@@ -30,7 +30,7 @@ public class SysTenantBo extends BaseEntity {
     private Long id;
 
     /**
-     * 租户编号
+     * 用户编号
      */
     private String tenantId;
 
@@ -91,9 +91,9 @@ public class SysTenantBo extends BaseEntity {
     private String remark;
 
     /**
-     * 租户套餐编号
+     * 用户套餐编号
      */
-    @NotNull(message = "租户套餐不能为空", groups = { AddGroup.class })
+    @NotNull(message = "用户套餐不能为空", groups = { AddGroup.class })
     private Long packageId;
 
     /**
@@ -107,7 +107,7 @@ public class SysTenantBo extends BaseEntity {
     private Long accountCount;
 
     /**
-     * 租户状态（0正常 1停用）
+     * 用户状态（0正常 1停用）
      */
     private String status;
 

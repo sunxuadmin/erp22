@@ -114,7 +114,7 @@ public class SysLoginService {
                 return;
             }
             if (TenantHelper.isEnable() && LoginHelper.isSuperAdmin()) {
-                // 超级管理员 登出清除动态租户
+                // 超级管理员 登出清除动态用户
                 TenantHelper.clearDynamic();
             }
             recordLogininfor(loginUser.getTenantId(), loginUser.getUsername(), Constants.LOGOUT, MessageUtils.message("user.logout.success"));
@@ -130,7 +130,7 @@ public class SysLoginService {
     /**
      * 记录登录信息
      *
-     * @param tenantId 租户ID
+     * @param tenantId 用户ID
      * @param username 用户名
      * @param status   状态
      * @param message  消息内容
@@ -223,9 +223,9 @@ public class SysLoginService {
     }
 
     /**
-     * 校验租户
+     * 校验用户
      *
-     * @param tenantId 租户ID
+     * @param tenantId 用户ID
      */
     public void checkTenant(String tenantId) {
         if (!TenantHelper.isEnable()) {
@@ -239,14 +239,14 @@ public class SysLoginService {
         }
         SysTenantVo tenant = tenantService.queryByTenantId(tenantId);
         if (ObjectUtil.isNull(tenant)) {
-            log.info("登录租户：{} 不存在.", tenantId);
+            log.info("登录用户：{} 不存在.", tenantId);
             throw new TenantException("tenant.not.exists");
         } else if (SystemConstants.DISABLE.equals(tenant.getStatus())) {
-            log.info("登录租户：{} 已被停用.", tenantId);
+            log.info("登录用户：{} 已被停用.", tenantId);
             throw new TenantException("tenant.blocked");
         } else if (ObjectUtil.isNotNull(tenant.getExpireTime())
             && new Date().after(tenant.getExpireTime())) {
-            log.info("登录租户：{} 已超过有效期.", tenantId);
+            log.info("登录用户：{} 已超过有效期.", tenantId);
             throw new TenantException("tenant.expired");
         }
     }

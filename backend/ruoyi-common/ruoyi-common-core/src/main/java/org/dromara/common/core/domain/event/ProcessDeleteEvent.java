@@ -17,7 +17,7 @@ public class ProcessDeleteEvent implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 租户ID
+     * 用户ID
      */
     private String tenantId;
 

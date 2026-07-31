@@ -9,7 +9,7 @@ start transaction;
 insert into sys_menu
 (menu_id, menu_name, parent_id, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_dept, create_by, create_time, update_by, update_time, remark)
 values
-(17930, '评分表模板', 17000, 14, 'review-score-sheet', 'crehn/review-score-sheet/index', null, 1, 0, 'C', '0', '0', 'crehn:reviewSheetTemplate:list', 'document', 103, 1, sysdate(), null, null, '全租户共用的评审打分表模板')
+(17930, '评分表模板', 17000, 14, 'review-score-sheet', 'crehn/review-score-sheet/index', null, 1, 0, 'C', '0', '0', 'crehn:reviewSheetTemplate:list', 'document', 103, 1, sysdate(), null, null, '全用户共用的评审打分表模板')
 on duplicate key update
     menu_name = values(menu_name),
     parent_id = values(parent_id),

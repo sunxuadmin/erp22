@@ -118,7 +118,7 @@ security:
     - /warm-flow-ui/config
     - /system/workbench/asset
 
-# 多租户配置
+# 多用户配置
 tenant:
   # 是否开启
   enable: true

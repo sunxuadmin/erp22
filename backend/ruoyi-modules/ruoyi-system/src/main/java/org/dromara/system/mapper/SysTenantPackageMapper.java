@@ -5,7 +5,7 @@ import org.dromara.system.domain.SysTenantPackage;
 import org.dromara.system.domain.vo.SysTenantPackageVo;
 
 /**
- * 租户套餐Mapper接口
+ * 用户套餐Mapper接口
  *
  * @author Michelle.Chung
  */

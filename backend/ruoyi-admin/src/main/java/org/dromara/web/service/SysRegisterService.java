@@ -204,7 +204,7 @@ public class SysRegisterService {
     /**
      * 记录登录信息
      *
-     * @param tenantId 租户ID
+     * @param tenantId 用户ID
      * @param username 用户名
      * @param status   状态
      * @param message  消息内容

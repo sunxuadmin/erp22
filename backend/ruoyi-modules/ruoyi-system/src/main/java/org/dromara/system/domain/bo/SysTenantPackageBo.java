@@ -12,7 +12,7 @@ import jakarta.validation.constraints.*;
 import org.dromara.common.mybatis.core.domain.BaseEntity;
 
 /**
- * 租户套餐业务对象 sys_tenant_package
+ * 用户套餐业务对象 sys_tenant_package
  *
  * @author Michelle.Chung
  */
@@ -23,9 +23,9 @@ import org.dromara.common.mybatis.core.domain.BaseEntity;
 public class SysTenantPackageBo extends BaseEntity {
 
     /**
-     * 租户套餐id
+     * 用户套餐id
      */
-    @NotNull(message = "租户套餐id不能为空", groups = { EditGroup.class })
+    @NotNull(message = "用户套餐id不能为空", groups = { EditGroup.class })
     private Long packageId;
 
     /**

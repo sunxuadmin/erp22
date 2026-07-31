@@ -26,7 +26,7 @@ where not exists (select 1 from sys_config where config_key = 'crehn.register.re
 create table if not exists registration_code
 (
     id            bigint(20)   not null comment 'ID',
-    tenant_id     varchar(20)  default '000000' comment '租户编号',
+    tenant_id     varchar(20)  default '000000' comment '用户编号',
     code          varchar(64)  not null comment '注册码',
     code_type     varchar(32)  not null comment '类型 school/expert/admin',
     activity_id   bigint(20)   default null comment '绑定活动',
@@ -55,7 +55,7 @@ create table if not exists registration_code
 create table if not exists registration_code_usage
 (
     id            bigint(20)   not null comment 'ID',
-    tenant_id     varchar(20)  default '000000' comment '租户编号',
+    tenant_id     varchar(20)  default '000000' comment '用户编号',
     code_id       bigint(20)   not null comment '注册码ID',
     user_id       bigint(20)   default null comment '绑定账号ID',
     used_at       datetime     not null comment '使用时间',
@@ -75,7 +75,7 @@ create table if not exists registration_code_usage
 create table activity
 (
     id           bigint(20)   not null comment '活动ID',
-    tenant_id    varchar(20)  default '000000' comment '租户编号',
+    tenant_id    varchar(20)  default '000000' comment '用户编号',
     activity_name varchar(128) not null comment '活动名称',
     menu_name    varchar(64)  default null comment '学校端菜单显示名称',
     edition      varchar(64)  default null comment '届次',
@@ -98,7 +98,7 @@ create table activity
 create table activity_category
 (
     id            bigint(20)   not null comment '类别ID',
-    tenant_id     varchar(20)  default '000000' comment '租户编号',
+    tenant_id     varchar(20)  default '000000' comment '用户编号',
     activity_id   bigint(20)   not null comment '活动ID',
     parent_id     bigint(20)   default 0 comment '父类别ID',
     category_code varchar(64)  not null comment '类别编码',
@@ -119,7 +119,7 @@ create table activity_category
 create table category_field_schema
 (
     id              bigint(20)   not null comment '字段配置ID',
-    tenant_id       varchar(20)  default '000000' comment '租户编号',
+    tenant_id       varchar(20)  default '000000' comment '用户编号',
     category_id     bigint(20)   not null comment '类别ID',
     field_key       varchar(64)  not null comment '字段键，英文编码',
     field_label     varchar(128) not null comment '字段名称',
@@ -142,7 +142,7 @@ create table category_field_schema
 create table category_file_requirement
 (
     id              bigint(20)   not null comment '附件要求ID',
-    tenant_id       varchar(20)  default '000000' comment '租户编号',
+    tenant_id       varchar(20)  default '000000' comment '用户编号',
     category_id     bigint(20)   not null comment '类别ID',
     file_type_code  varchar(64)  not null comment '附件类型编码',
     file_type_name  varchar(128) not null comment '附件类型名称',
@@ -165,7 +165,7 @@ create table category_file_requirement
 create table project
 (
     id                    bigint(20)   not null comment '项目ID',
-    tenant_id             varchar(20)  default '000000' comment '租户编号',
+    tenant_id             varchar(20)  default '000000' comment '用户编号',
     activity_id           bigint(20)   not null comment '活动ID',
     school_id             bigint(20)   not null comment '学校ID',
     category_id           bigint(20)   not null comment '类别ID',
@@ -191,7 +191,7 @@ create table project
 create table project_file
 (
     id             bigint(20)   not null comment '项目附件ID',
-    tenant_id      varchar(20)  default '000000' comment '租户编号',
+    tenant_id      varchar(20)  default '000000' comment '用户编号',
     project_id     bigint(20)   not null comment '项目ID',
     requirement_id bigint(20)   default null comment '附件要求ID',
     oss_id         bigint(20)   default null comment 'OSS文件ID',
@@ -219,7 +219,7 @@ create table project_file
 create table project_audit_record
 (
     id           bigint(20)  not null comment '审核记录ID',
-    tenant_id    varchar(20) default '000000' comment '租户编号',
+    tenant_id    varchar(20) default '000000' comment '用户编号',
     project_id   bigint(20)  not null comment '项目ID',
     from_status  varchar(32) not null comment '原状态',
     to_status    varchar(32) not null comment '新状态',

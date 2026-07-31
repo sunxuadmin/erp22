@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 租户基类
+ * 用户基类
  *
  * @author Michelle.Chung
  */
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 public class TenantEntity extends BaseEntity {
 
     /**
-     * 租户编号
+     * 用户编号
      */
     private String tenantId;
 

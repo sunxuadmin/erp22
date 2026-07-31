@@ -26,7 +26,7 @@ public class ProfileUserVo implements Serializable {
     private Long userId;
 
     /**
-     * 租户ID
+     * 用户ID
      */
     private String tenantId;
 

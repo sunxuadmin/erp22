@@ -12,7 +12,7 @@
     <artifactId>ruoyi-common-tenant</artifactId>
 
     <description>
-        ruoyi-common-tenant 租户模块
+        ruoyi-common-tenant 用户模块
     </description>
 
     <dependencies>

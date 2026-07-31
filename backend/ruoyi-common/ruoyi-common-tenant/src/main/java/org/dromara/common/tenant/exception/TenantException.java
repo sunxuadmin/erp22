@@ -5,7 +5,7 @@ import org.dromara.common.core.exception.base.BaseException;
 import java.io.Serial;
 
 /**
- * 租户异常类
+ * 用户异常类
  *
  * @author Lion Li
  */

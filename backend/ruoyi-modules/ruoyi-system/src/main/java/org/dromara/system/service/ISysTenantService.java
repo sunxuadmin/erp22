@@ -9,54 +9,54 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 租户Service接口
+ * 用户Service接口
  *
  * @author Michelle.Chung
  */
 public interface ISysTenantService {
 
     /**
-     * 查询租户
+     * 查询用户
      */
     SysTenantVo queryById(Long id);
 
     /**
-     * 基于租户ID查询租户
+     * 基于用户ID查询用户
      */
     SysTenantVo queryByTenantId(String tenantId);
 
     /**
-     * 查询租户列表
+     * 查询用户列表
      */
     TableDataInfo<SysTenantVo> queryPageList(SysTenantBo bo, PageQuery pageQuery);
 
     /**
-     * 查询租户列表
+     * 查询用户列表
      */
     List<SysTenantVo> queryList(SysTenantBo bo);
 
     /**
-     * 新增租户
+     * 新增用户
      */
     Boolean insertByBo(SysTenantBo bo);
 
     /**
-     * 修改租户
+     * 修改用户
      */
     Boolean updateByBo(SysTenantBo bo);
 
     /**
-     * 修改租户状态
+     * 修改用户状态
      */
     int updateTenantStatus(SysTenantBo bo);
 
     /**
-     * 校验租户是否允许操作
+     * 校验用户是否允许操作
      */
     void checkTenantAllowed(String tenantId);
 
     /**
-     * 校验并批量删除租户信息
+     * 校验并批量删除用户信息
      */
     Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid);
 
@@ -76,17 +76,17 @@ public interface ISysTenantService {
     boolean checkExpireTime(String tenantId);
 
     /**
-     * 同步租户套餐
+     * 同步用户套餐
      */
     Boolean syncTenantPackage(String tenantId, Long packageId);
 
     /**
-     * 同步租户字典
+     * 同步用户字典
      */
     void syncTenantDict();
 
     /**
-     * 同步租户参数配置
+     * 同步用户参数配置
      */
     void syncTenantConfig();
 }

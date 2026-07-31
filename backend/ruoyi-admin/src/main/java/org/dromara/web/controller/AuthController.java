@@ -127,7 +127,7 @@ public class AuthController {
         } else if (!SystemConstants.NORMAL.equals(client.getStatus())) {
             return R.fail(MessageUtils.message("auth.grant.type.blocked"));
         }
-        // 校验租户
+        // 校验用户
         loginService.checkTenant(loginBody.getTenantId());
         // 登录
         LoginVo loginVo = IAuthStrategy.login(body, client, grantType);
@@ -468,9 +468,9 @@ public class AuthController {
     }
 
     /**
-     * 登录页面租户下拉框
+     * 登录页面用户下拉框
      *
-     * @return 租户列表
+     * @return 用户列表
      */
     @RateLimiter(time = 60, count = 20, limitType = LimitType.IP)
     @GetMapping("/tenant/list")
@@ -479,7 +479,7 @@ public class AuthController {
         LoginTenantVo result = new LoginTenantVo();
         boolean enable = TenantHelper.isEnable();
         result.setTenantEnabled(enable);
-        // 如果未开启租户这直接返回
+        // 如果未开启用户这直接返回
         if (!enable) {
             return R.ok(result);
         }
@@ -487,7 +487,7 @@ public class AuthController {
         List<SysTenantVo> tenantList = tenantService.queryList(new SysTenantBo());
         List<TenantListVo> voList = MapstructUtils.convert(tenantList, TenantListVo.class);
         try {
-            // 如果只超管返回所有租户
+            // 如果只超管返回所有用户
             if (LoginHelper.isSuperAdmin()) {
                 result.setVoList(voList);
                 return R.ok(result);

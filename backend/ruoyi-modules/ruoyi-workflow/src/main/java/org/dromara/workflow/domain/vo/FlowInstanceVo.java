@@ -28,7 +28,7 @@ public class FlowInstanceVo {
     private Date updateTime;
 
     /**
-     * 租户ID
+     * 用户ID
      */
     private String tenantId;
 

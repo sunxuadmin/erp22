@@ -5,7 +5,7 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 
 /**
- * 租户列表
+ * 用户列表
  *
  * @author Lion Li
  */
@@ -14,7 +14,7 @@ import lombok.Data;
 public class TenantListVo {
 
     /**
-     * 租户编号
+     * 用户编号
      */
     private String tenantId;
 
