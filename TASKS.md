@@ -6,6 +6,7 @@
 - [2026-07-30 项目B独立Compose部署资产](docs/tasks/active/2026-07-30-project-b-isolated-compose-assets.md)
 - [2026-07-31 Git提交前就绪修复](docs/tasks/active/2026-07-31-git-precommit-readiness-fix.md)
 - [2026-07-31 Synology裸仓库初始化](docs/tasks/active/2026-07-31-synology-bare-repository-init.md)
+- [2026-07-31 TEST服务器只读预检](docs/tasks/active/2026-07-31-test-server-readonly-preflight.md)
 
 任务卡模板：[docs/tasks/active/TEMPLATE.md](docs/tasks/active/TEMPLATE.md)
 
