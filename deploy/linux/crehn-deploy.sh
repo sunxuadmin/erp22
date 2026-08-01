@@ -544,7 +544,31 @@ backup_create() {
   status PASS "backup_complete=${CREATED_BACKUP_PATH}"
 }
 
+wait_for_application_health() {
+  local attempt backend_id web_id backend_health web_health
+  for ((attempt = 1; attempt <= 40; attempt++)); do
+    backend_id="$("${COMPOSE[@]}" ps -q backend 2>/dev/null || true)"
+    web_id="$("${COMPOSE[@]}" ps -q web 2>/dev/null || true)"
+    backend_health=""
+    web_health=""
+    if [[ -n "${backend_id}" ]]; then
+      backend_health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "${backend_id}" 2>/dev/null || true)"
+    fi
+    if [[ -n "${web_id}" ]]; then
+      web_health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "${web_id}" 2>/dev/null || true)"
+    fi
+    if [[ "${backend_health}" == "healthy" && "${web_health}" == "healthy" ]]; then
+      status PASS "application_health_ready attempts=${attempt}"
+      return 0
+    fi
+    sleep 3
+  done
+  status WARN "application_health_wait_timeout attempts=40"
+  return 1
+}
+
 verify_services() {
+  wait_for_application_health || return 1
   local id service status_value health exit_code restart_count failed=0
   while IFS= read -r id; do
     [[ -n "${id}" ]] || continue
