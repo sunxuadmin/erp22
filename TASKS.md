@@ -11,6 +11,7 @@
 - [2026-07-31 TEST真实环境文件生成](docs/tasks/active/2026-07-31-test-runtime-env-generation.md)
 - [2026-07-31 TEST资产暂存sudo提权](docs/tasks/active/2026-07-31-test-asset-staging-sudo.md)
 - [2026-07-31 TEST顺序镜像构建](docs/tasks/active/2026-07-31-test-sequential-image-build.md)
+- [2026-08-01 TEST数据库初始化脚本修复](docs/tasks/active/2026-08-01-test-database-initialization-script-repair.md)
 - [2026-08-01 角色工作台可视化配置规范](docs/tasks/active/2026-08-01-role-workbench-visual-configuration-spec.md)
 - [2026-08-01 角色工作台配置基础实现](docs/tasks/active/2026-08-01-role-workbench-configuration-foundation.md)
 

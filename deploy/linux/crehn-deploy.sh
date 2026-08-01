@@ -723,9 +723,11 @@ database_action() {
     blocked "Database initialization marker already exists"
   mkdir -p "${DATA_ROOT}/mariadb" "${STATE_ROOT}"
   "${COMPOSE[@]}" up -d --no-build --pull never db
-  local attempts=60 table_count
+  local attempts=60 table_count init_file
+  local -a init_files=()
   until container_is_running db && "${COMPOSE[@]}" exec -T db sh -c \
-    'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb-admin -uroot ping --silent' >/dev/null 2>&1; do
+    'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb -N -uroot "$MARIADB_DATABASE" -e "select 1;"' \
+    >/dev/null 2>&1; do
     attempts=$((attempts - 1))
     [[ "${attempts}" -gt 0 ]] || fail "Database did not become ready"
     sleep 2
@@ -735,22 +737,26 @@ database_action() {
   [[ "${table_count}" == "0" ]] ||
     blocked "Target database is not empty; initialization refused"
 
-  while IFS= read -r init_file; do
+  mapfile -t init_files < <(
+    "${COMPOSE[@]}" exec -T db find /opt/crehn/init -maxdepth 1 -type f | sort
+  )
+  [[ "${#init_files[@]}" -gt 0 ]] || blocked "Database initialization file list is empty"
+  for init_file in "${init_files[@]}"; do
     status PASS "database_apply=$(basename "${init_file}")"
     case "${init_file}" in
       *.sql)
-        "${COMPOSE[@]}" exec -T db sh -c \
-          'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb -uroot "$MARIADB_DATABASE"' \
-          < <("${COMPOSE[@]}" exec -T db cat "${init_file}")
+        "${COMPOSE[@]}" exec -T db cat "${init_file}" </dev/null |
+          "${COMPOSE[@]}" exec -T db sh -c \
+            'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb -uroot "$MARIADB_DATABASE"'
         ;;
-      *.sh) "${COMPOSE[@]}" exec -T db bash "${init_file}" ;;
+      *.sh) "${COMPOSE[@]}" exec -T db bash "${init_file}" </dev/null ;;
       *) blocked "Unsupported database initialization file: ${init_file}" ;;
     esac
-  done < <("${COMPOSE[@]}" exec -T db find /opt/crehn/init -maxdepth 1 -type f | sort)
+  done
   printf 'project=%s\nversion=%s\nrevision=%s\ncompleted=%s\n' \
     "${COMPOSE_PROJECT}" "${VERSION}" "${SOURCE_REVISION}" \
     "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >"${STATE_ROOT}/database-initialized"
-  status PASS "database initialization completed"
+  status PASS "database initialization completed files=${#init_files[@]}"
 }
 
 rollback_action() {
