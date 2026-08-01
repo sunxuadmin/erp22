@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-006`、`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED / COMMIT_APPROVED / BUILD_BLOCKED_BY_SWAP`
+- 当前状态：`VERIFIED / COMMITTED / SWAP_BLOCKER_RESOLVED / ARCHIVE_READY`
 - 192.168.2.229只读连接与检查：已授权
 - 当前SSH账号加入 `docker` 组：已于2026-07-31单独授权
 - 其他服务器写操作、资产暂存、构建、容器和SQL：未授权

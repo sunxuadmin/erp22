@@ -3,9 +3,9 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED / COMMIT_NOT_AUTHORIZED / BUILD_NOT_AUTHORIZED`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY`
 - 用户已授权：TEST资产暂存，以及仅在TEST资产安装步骤使用已验证的 `sudo -n`
-- 构建、容器、SQL、生产操作、Git提交和推送：未授权
+- 本任务相关修复和记录已进入本地提交；新的构建、容器、SQL、生产操作和推送未授权
 
 ## 目标
 

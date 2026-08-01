@@ -3,10 +3,10 @@
 ## 状态
 
 - 需求：`REQ-008`、`REQ-010`
-- 当前状态：`COMMIT_APPROVED`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY`
 - 文件修改：已授权
 - Git精准暂存与本地提交：已于2026-07-31获得授权
-- Synology裸仓库创建、远端配置与推送：未授权
+- Synology裸仓库和远端配置已由后续独立任务完成；新的推送未授权
 - 构建、容器、SQL和服务器操作：未授权
 
 ## 目标

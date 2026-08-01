@@ -3,11 +3,11 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED / COMMIT_NOT_AUTHORIZED / PUSH_NOT_AUTHORIZED / BUILD_NOT_AUTHORIZED`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY / PUSH_NOT_AUTHORIZED`
 - 脚本修改：已于2026-07-31确认
 - 192.168.2.229修复后只读预检：已于2026-07-31授权并完成
 - Swap配置、资产暂存、构建、容器和SQL：未授权
-- 本次BOM修复的Git本地提交与推送：未授权
+- 本次修复和任务记录已进入本地提交；新的Git推送未授权
 
 ## 目标
 

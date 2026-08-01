@@ -3,8 +3,8 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED_LOCAL / COMMIT_APPROVED / BUILD_NOT_AUTHORIZED`
-- Git提交：已授权（本地分类提交，不推送）
+- 当前状态：`VERIFIED_LOCAL / COMMITTED / NEEDS_0.1.2_BUILD / PUSH_NOT_AUTHORIZED`
+- Git提交：已完成（`e9de0e8`，未推送）
 - 数据库执行：未授权
 - 部署：未授权
 
@@ -16,7 +16,7 @@
 
 - `0.1.1-test`数据库初始化在`002_bootstrap_admin.sh`失败，远端暂存源文件和镜像内文件均包含CRLF；
 - `003_bootstrap_test_oss.sh`同样包含CRLF；
-- 修订`5f543a06d861d5bb2afca9734c7c2a8d4e80aed3`中的两个Git对象和本地工作文件均为LF；
+- 修订`4ce245ce7bd4ddd11245af93f45e93d3579099e5`中的两个Git对象和本地工作文件均为LF；
 - 默认`git archive`导出哈希与Git对象不同并包含CRLF；使用`git -c core.autocrlf=false archive`后导出哈希与Git对象完全一致。
 
 ## 范围
