@@ -49,4 +49,5 @@ COPY backend/script/sql/art_review_m116_detail_display_config_permission.sql /op
 COPY backend/script/sql/art_review_m118_review_workbench_menu_name.sql /opt/crehn/init/074_review_workbench_name.sql
 COPY deploy/db/migrations/V003__crehn_legacy_home_schema.sql /opt/crehn/init/090_crehn_legacy_home_schema.sql
 COPY deploy/db/migrations/V004__crehn_menu_role_grants.sql /opt/crehn/init/091_crehn_menu_role_grants.sql
+COPY deploy/db/migrations/V005__crehn_workbench_role_key.sql /opt/crehn/init/092_crehn_workbench_role_key.sql
 RUN chmod 0755 /opt/crehn/init/*.sh

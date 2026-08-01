@@ -673,6 +673,14 @@
       "risk": "Do not run against an existing business database as a normal update."
     },
     {
+      "path": "deploy/db/migrations/V005__crehn_workbench_role_key.sql",
+      "category": "ProgramMigrationSql",
+      "summary": "Add stable role_key ownership for workbench layouts, copy role-shell configuration to stable keys, and complete the result-admin and audit-supervisor roles.",
+      "touches": ["sys_workbench_layout", "sys_config", "sys_role", "sys_role_menu"],
+      "deployPolicy": "Manual database migration only after backup, orphan-layout readback, and explicit SQL authorization; never auto-apply during application deployment.",
+      "risk": "Adds indexes and roles, backfills layout ownership, and copies role-shell configuration. The NOT NULL conversion intentionally blocks on orphan layouts; numeric shell keys remain for old-version rollback."
+    },
+    {
       "path": "framework-ruoyi-vue-plus/script/sql/ry_workflow.sql",
       "category": "ProgramInitializationSql",
       "summary": "RuoYi workflow module base initialization.",
