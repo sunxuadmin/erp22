@@ -18,6 +18,8 @@ public class SysWorkbenchLayout extends TenantEntity {
 
     private Long roleId;
 
+    private String roleKey;
+
     private String componentKey;
 
     private String title;

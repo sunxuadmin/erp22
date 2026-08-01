@@ -82,6 +82,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
     private static final long CONFIG_PACKAGE_MANIFEST_MAX_SIZE = 5L * 1024 * 1024;
     private static final int CONFIG_PACKAGE_MAX_ENTRIES = 200;
     private static final Pattern WORKBENCH_ASSET_KEY_PATTERN = Pattern.compile("\\d{4}/\\d{2}/[a-f0-9]{32}\\.(?:png|jpg|jpeg|webp)");
+    private static final Pattern ROLE_KEY_PATTERN = Pattern.compile("[a-z][a-z0-9_]{1,63}");
     private static final long WORKBENCH_ASSET_MAX_SIZE = 5L * 1024 * 1024;
     private static final Map<String, String> WORKBENCH_ASSET_CONTENT_TYPES = Map.of(
         "png", "image/png",
@@ -159,14 +160,14 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         if (role == null || role.getRoleId() == null) {
             return normalizeRoleShellConfig(Map.of(), "", false);
         }
-        return readRoleShellConfig(role.getRoleId(), role.getRoleKey());
+        return readRoleShellConfig(role.getRoleKey());
     }
 
     @Override
     public Map<String, Object> queryRoleShellConfig(Long roleId) {
         roleService.checkRoleDataScope(roleId);
         SysRole role = requireRole(roleId);
-        return readRoleShellConfig(roleId, role.getRoleKey());
+        return readRoleShellConfig(role.getRoleKey());
     }
 
     @Override
@@ -184,7 +185,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         if (configJson.length() > 1000) {
             throw new ServiceException("角色系统布局配置过长，请控制在 1000 字符以内");
         }
-        saveRoleShellConfigValue(roleId, role, configJson);
+        saveRoleShellConfigValue(role, configJson);
         return true;
     }
 
@@ -197,7 +198,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         defaultSource.put("navbarTitle", "");
         Map<String, Object> defaults = normalizeRoleShellConfig(defaultSource, role.getRoleKey(), true);
         defaults.remove("configured");
-        saveRoleShellConfigValue(roleId, role, JsonUtils.toJsonString(defaults));
+        saveRoleShellConfigValue(role, JsonUtils.toJsonString(defaults));
         return true;
     }
 
@@ -412,7 +413,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
             if (role.getRoleKey() == null || role.getRoleKey().isBlank()) {
                 continue;
             }
-            Map<String, Object> shell = new LinkedHashMap<>(readRoleShellConfig(role.getRoleId(), role.getRoleKey()));
+            Map<String, Object> shell = new LinkedHashMap<>(readRoleShellConfig(role.getRoleKey()));
             boolean configured = Boolean.TRUE.equals(shell.remove("configured"));
             SysWorkbenchConfigPackageVo.RoleConfig roleConfig = new SysWorkbenchConfigPackageVo.RoleConfig();
             roleConfig.setRoleKey(role.getRoleKey());
@@ -474,7 +475,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
             collectAssetKeys(importedRole.getShell(), requiredAssets);
             collectAssetKeys(importedRole.getLayouts(), requiredAssets);
             int changedBefore = preview.getChangedCount();
-            Map<String, Object> currentShell = new LinkedHashMap<>(readRoleShellConfig(targetRole.getRoleId(), targetRole.getRoleKey()));
+            Map<String, Object> currentShell = new LinkedHashMap<>(readRoleShellConfig(targetRole.getRoleKey()));
             currentShell.remove("configured");
             addMapDifferences(preview, "shell", importedRole.getRoleKey(), targetRole.getRoleName(), "角色系统布局", currentShell,
                 importedRole.getShell(), true);
@@ -885,8 +886,8 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
             .orElse(defaultValue);
     }
 
-    private Map<String, Object> readRoleShellConfig(Long roleId, String roleKey) {
-        String configKey = roleShellConfigKey(roleId);
+    private Map<String, Object> readRoleShellConfig(String roleKey) {
+        String configKey = roleShellConfigKey(roleKey);
         List<SysConfigVo> configs = findExactConfigs(configKey);
         SysConfigVo latest = configs.stream()
             .max(Comparator.comparing(SysConfigVo::getConfigId, Comparator.nullsFirst(Long::compareTo)))
@@ -898,26 +899,27 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
             @SuppressWarnings("unchecked")
             Map<String, Object> parsed = JsonUtils.parseObject(latest.getConfigValue(), Map.class);
             return normalizeRoleShellConfig(parsed == null ? Map.of() : parsed, roleKey, true);
-        } catch (RuntimeException ignored) {
-            return normalizeRoleShellConfig(Map.of(), roleKey, false);
+        } catch (RuntimeException e) {
+            throw new ServiceException("角色工作台配置 JSON 无法解析：" + roleKey);
         }
     }
 
-    private void saveRoleShellConfigValue(Long roleId, SysRole role, String configJson) {
+    private void saveRoleShellConfigValue(SysRole role, String configJson) {
         SysConfigBo bo = new SysConfigBo();
-        bo.setConfigName("工作台-角色系统布局-" + blankToDefault(role.getRoleName(), String.valueOf(roleId)));
-        bo.setConfigKey(roleShellConfigKey(roleId));
+        bo.setConfigName("工作台-角色系统布局-" + blankToDefault(role.getRoleName(), role.getRoleKey()));
+        bo.setConfigKey(roleShellConfigKey(role.getRoleKey()));
         bo.setConfigValue(configJson);
         bo.setConfigType("Y");
         bo.setRemark("管理员按角色统一下发的导航、主题、圆角、顶部单位名称、页面路径和首页导航显隐配置");
         saveExactConfig(bo);
     }
 
-    private String roleShellConfigKey(Long roleId) {
-        if (roleId == null) {
-            throw new ServiceException("角色不能为空");
+    private String roleShellConfigKey(String roleKey) {
+        String normalizedRoleKey = normalize(roleKey);
+        if (!ROLE_KEY_PATTERN.matcher(normalizedRoleKey).matches()) {
+            throw new ServiceException("角色编码不合法，无法保存工作台配置");
         }
-        return ROLE_SHELL_CONFIG_KEY_PREFIX + roleId;
+        return ROLE_SHELL_CONFIG_KEY_PREFIX + normalizedRoleKey;
     }
 
     private Map<String, Object> normalizeRoleShellConfig(Map<String, Object> source, String roleKey, boolean configured) {
@@ -996,8 +998,8 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
             @SuppressWarnings("unchecked")
             Map<String, Object> parsed = JsonUtils.parseObject(value, Map.class);
             return parsed == null ? Map.of() : parsed;
-        } catch (RuntimeException ignored) {
-            return Map.of();
+        } catch (RuntimeException e) {
+            throw new ServiceException("工作台顶部标题配置 JSON 无法解析");
         }
     }
 
@@ -1226,7 +1228,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         roleService.checkRoleDataScope(roleId);
         SysRole role = requireRole(roleId);
         String roleKey = normalize(role.getRoleKey());
-        workbenchLayoutMapper.delete(new LambdaQueryWrapper<SysWorkbenchLayout>().eq(SysWorkbenchLayout::getRoleId, roleId));
+        workbenchLayoutMapper.delete(new LambdaQueryWrapper<SysWorkbenchLayout>().eq(SysWorkbenchLayout::getRoleKey, roleKey));
         if (CollUtil.isEmpty(layouts)) {
             return true;
         }
@@ -1243,6 +1245,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
             }
             SysWorkbenchLayout row = new SysWorkbenchLayout();
             row.setRoleId(roleId);
+            row.setRoleKey(roleKey);
             row.setComponentKey(component.getComponentKey());
             row.setTitle(blankToDefault(layout.getTitle(), component.getDefaultTitle()));
             row.setWidth(normalizeWidth(layout.getWidth(), component.getDefaultWidth()));
@@ -1260,6 +1263,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
     public Boolean restoreRoleComponentDefault(Long roleId, String componentKey) {
         roleService.checkRoleDataScope(roleId);
         SysRole role = requireRole(roleId);
+        String roleKey = normalize(role.getRoleKey());
         String key = normalize(componentKey);
         SysWorkbenchComponentVo component = COMPONENTS.get(key);
         if (component == null || !isAllowedForRole(component, role.getRoleKey())) {
@@ -1270,7 +1274,7 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         }
         List<SysWorkbenchLayout> rows = workbenchLayoutMapper.selectList(
             new LambdaQueryWrapper<SysWorkbenchLayout>()
-                .eq(SysWorkbenchLayout::getRoleId, roleId)
+                .eq(SysWorkbenchLayout::getRoleKey, roleKey)
                 .eq(SysWorkbenchLayout::getComponentKey, key)
         );
         for (SysWorkbenchLayout row : rows) {
@@ -1281,9 +1285,10 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
     }
 
     private List<SysWorkbenchLayoutVo> materializeLayout(Long roleId, String roleKey) {
-        List<SysWorkbenchLayout> saved = roleId == null ? List.of() : workbenchLayoutMapper.selectList(
+        String normalizedRoleKey = normalize(roleKey);
+        List<SysWorkbenchLayout> saved = normalizedRoleKey.isBlank() ? List.of() : workbenchLayoutMapper.selectList(
             new LambdaQueryWrapper<SysWorkbenchLayout>()
-                .eq(SysWorkbenchLayout::getRoleId, roleId)
+                .eq(SysWorkbenchLayout::getRoleKey, normalizedRoleKey)
                 .orderByAsc(SysWorkbenchLayout::getSortOrder)
                 .orderByAsc(SysWorkbenchLayout::getId));
         if (CollUtil.isEmpty(saved)) {
@@ -1345,7 +1350,12 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         if (loginUser == null || CollUtil.isEmpty(loginUser.getRoles())) {
             return null;
         }
-        List<String> priority = List.of("crehn_school", "school", "crehn_admin", "admin", "superadmin", "crehn_ops", "ops", "crehn_auditor", "auditor", "crehn_project_viewer", "crehn_expert", "expert");
+        List<String> priority = List.of(
+            "crehn_school", "school", "crehn_admin", "crehn_sub_admin", "admin", "superadmin",
+            "crehn_ops", "ops", "crehn_auditor", "auditor", "crehn_reviewer", "reviewer", "crehn_expert", "expert",
+            "crehn_score_summary", "crehn_result_admin", "crehn_cms_editor", "crehn_cms_publisher",
+            "crehn_audit_supervisor", "crehn_participant", "crehn_project_viewer", "project_viewer"
+        );
         return loginUser.getRoles().stream()
             .min(Comparator.comparingInt(role -> rolePriority(role.getRoleKey(), priority)))
             .orElse(loginUser.getRoles().get(0));
@@ -1409,12 +1419,12 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         put(map, "school_stage_notice", "学校活动公告", "notice", "学校活动公告", "1/1", "crehn:project:list", List.of("crehn_school", "school"));
         put(map, "admin_stage_notice", "管理员公告", "notice", "管理员公告", "1/1", "crehn:result:summary", List.of("crehn_admin", "admin", "crehn_ops", "ops"));
         put(map, "audit_stage_notice", "审核公告", "notice", "审核公告", "1/1", "crehn:audit:list", List.of("crehn_auditor", "auditor", "crehn_admin"));
-        put(map, "review_stage_notice", "评审公告", "notice", "评审公告", "1/1", "crehn:review:task", List.of("crehn_expert", "expert"));
+        put(map, "review_stage_notice", "评审公告", "notice", "评审公告", "1/1", "crehn:review:task", List.of("crehn_reviewer", "reviewer", "crehn_expert", "expert"));
         put(map, "school_submission", "节目和作品报送", "business", "节目和作品报送", "1/1", "crehn:project:list", List.of("crehn_school", "school"));
         put(map, "school_project_submit", "学校数据看板", "dashboard", "学校数据看板", "1/1", "crehn:project:list", List.of("crehn_school", "school"));
         put(map, PROJECT_SUBMIT_COMPONENT_KEY, "统一提交列表", "list", "统一提交", "1/1", "crehn:project:list", List.of("crehn_school", "school"));
         put(map, AUDIT_WORKBENCH_COMPONENT_KEY, "审核工作台", "business", "审核工作台", "1/1", "crehn:audit:list", List.of("crehn_auditor", "auditor"));
-        put(map, REVIEW_WORKBENCH_COMPONENT_KEY, "评分工作台", "business", "评分工作台", "1/1", "crehn:review:task", List.of("crehn_expert", "expert"));
+        put(map, REVIEW_WORKBENCH_COMPONENT_KEY, "评分工作台", "business", "评分工作台", "1/1", "crehn:review:task", List.of("crehn_reviewer", "reviewer", "crehn_expert", "expert"));
         put(map, "audit_overview", "我的审核概览", "stats", "我的审核概览", "1/2", "crehn:audit:list", List.of("crehn_admin"));
         put(map, "audit_pending", "待审核项目", "list", "待审核项目", "1/2", "crehn:audit:list", List.of("crehn_admin"));
         put(map, "admin_project_summary", "报送总览", "stats", "报送总览", "1/2", "crehn:result:summary", List.of("crehn_admin", "admin", "crehn_ops", "ops"));
@@ -1422,8 +1432,10 @@ public class SysWorkbenchLayoutServiceImpl implements ISysWorkbenchLayoutService
         put(map, "project_upload_overview", "作品上传总览", "stats", "作品上传总览", "1/1", "", List.of("crehn_admin", "admin", "crehn_ops", "ops", "crehn_project_viewer"));
         put(map, "quota_ratio_overview", "名额比例监控", "stats", "名额比例监控", "1/2", "crehn:result:summary", List.of("crehn_admin", "admin", "crehn_ops", "ops"));
         put(map, "universal_dashboard", "通用数据看板", "dashboard", "数据看板", "1/1", "", List.of(
-            "crehn_school", "school", "crehn_admin", "admin", "crehn_ops", "ops",
-            "crehn_auditor", "auditor", "crehn_expert", "expert", "crehn_project_viewer", "project_viewer"));
+            "crehn_school", "school", "crehn_participant", "crehn_admin", "crehn_sub_admin", "admin", "crehn_ops", "ops",
+            "crehn_auditor", "auditor", "crehn_reviewer", "reviewer", "crehn_expert", "expert", "crehn_score_summary",
+            "crehn_result_admin", "crehn_cms_editor", "crehn_cms_publisher", "crehn_audit_supervisor",
+            "crehn_project_viewer", "project_viewer"));
         return map;
     }
 
