@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVED`
 - 用户已授权：TEST资产暂存，以及仅在TEST资产安装步骤使用已验证的 `sudo -n`
 - 本任务相关修复和记录已进入本地提交；新的构建、容器、SQL、生产操作和推送未授权
 

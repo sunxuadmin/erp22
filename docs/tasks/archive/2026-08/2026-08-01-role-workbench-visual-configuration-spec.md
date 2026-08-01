@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-013`
-- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY（代码实现与浏览器验收由后续任务承接）`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVED（代码实现与浏览器验收由后续任务承接）`
 - Git提交：已完成（`f04c46b`）
 - 数据库执行：未授权
 - 部署：未授权

@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-013`
-- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY（逐页登记和运行时实现未开始）`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVED（逐页登记和运行时实现未开始）`
 - Git提交：已完成（`cebe101`，未推送）
 - 数据库执行：未授权
 - 部署：未授权

@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`VERIFIED / SECRET_PRESERVED / ARCHIVE_READY`
+- 当前状态：`VERIFIED / SECRET_PRESERVED / ARCHIVED`
 - 用户已授权：本机临时安装最小 BCrypt 工具，并通过隐藏输入生成真实 `deploy/env/test.env`
 - 真实环境文件保持Git忽略且不得提交；新的推送、构建、容器、SQL和生产操作未授权
 

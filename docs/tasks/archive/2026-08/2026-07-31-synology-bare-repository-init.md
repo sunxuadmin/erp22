@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-008`、`REQ-009`
-- 当前状态：`VERIFIED / COMMITTED / ARCHIVE_READY`
+- 当前状态：`VERIFIED / COMMITTED / ARCHIVED`
 - Synology裸仓库创建：已授权
 - `origin`配置与首次推送：已授权
 - 本任务记录的Git提交与推送：已于2026-07-31获得授权
