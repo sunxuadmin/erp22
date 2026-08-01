@@ -15,7 +15,9 @@ services:
     mem_limit: ${CREHN_MINIO_MEMORY_LIMIT:-512m}
     networks: [data]
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null"]
+      # pgsty/minio is intentionally minimal and does not include curl/wget/nc.
+      # Port 9000 is the MinIO API listener; the shell and cat are present in the image.
+      test: ["CMD-SHELL", "case \"$$(cat /proc/net/tcp)\" in *:2328*) exit 0;; *) exit 1;; esac"]
       interval: 10s
       timeout: 5s
       retries: 30
