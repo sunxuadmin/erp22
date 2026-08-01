@@ -15,6 +15,7 @@
 - [2026-08-01 角色工作台可视化配置规范](docs/tasks/active/2026-08-01-role-workbench-visual-configuration-spec.md)
 - [2026-08-01 角色工作台配置基础实现](docs/tasks/active/2026-08-01-role-workbench-configuration-foundation.md)
 - [2026-08-01 全业务页面受控配置覆盖规范](docs/tasks/active/2026-08-01-all-business-page-configurability-spec.md)
+- [2026-08-01 Windows Git归档LF修复](docs/tasks/active/2026-08-01-windows-git-archive-lf-repair.md)
 
 任务卡模板：[docs/tasks/active/TEMPLATE.md](docs/tasks/active/TEMPLATE.md)
 

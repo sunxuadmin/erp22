@@ -403,7 +403,7 @@ function New-SourceArchive {
     } else {
         @('backend', 'frontend', 'portal', 'deploy', '.dockerignore')
     }
-    $gitOutput = & git -C $projectRoot archive --format=tar.gz --output=$archive $resolvedRevision -- @paths 2>&1
+    $gitOutput = & git -c core.autocrlf=false -C $projectRoot archive --format=tar.gz --output=$archive $resolvedRevision -- @paths 2>&1
     if ($LASTEXITCODE -ne 0) {
         Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue
         throw "FAILED git archive could not stage revision $resolvedRevision`: $gitOutput"
