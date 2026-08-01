@@ -5,6 +5,9 @@
 .tmp
 **/.env
 **/.env.*
+# These tracked files contain public Vite build-time settings, not runtime secrets.
+!frontend/.env.production
+!portal/.env.production
 deploy/env/*.env
 **/node_modules
 **/dist

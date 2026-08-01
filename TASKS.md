@@ -12,6 +12,7 @@
 - [2026-08-01 TEST 0.1.2重建与数据库恢复](docs/tasks/active/2026-08-01-test-0.1.2-rebuild-database-recovery.md)
 - [2026-08-01 TEST MinIO健康检查修复](docs/tasks/active/2026-08-01-test-minio-healthcheck-repair.md)
 - [2026-08-01 TEST部署健康检查等待修复](docs/tasks/active/2026-08-01-test-deploy-health-wait-repair.md)
+- [2026-08-02 TEST管理端构建上下文修复](docs/tasks/active/2026-08-02-test-admin-build-context-repair.md)
 
 任务卡模板：[docs/tasks/active/TEMPLATE.md](docs/tasks/active/TEMPLATE.md)
 
