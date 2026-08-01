@@ -2108,8 +2108,26 @@ const selectedRoleName = computed(
   () => roleOptions.value.find((item) => String(item.roleId) === String(selectedRoleId.value))?.roleName || '当前角色'
 );
 const selectedRoleKey = computed(() => String(roleOptions.value.find((item) => String(item.roleId) === String(selectedRoleId.value))?.roleKey || ''));
+const compactRoleLabels: Record<string, string> = {
+  superadmin: '超管',
+  crehn_admin: '管理',
+  crehn_sub_admin: '次管',
+  crehn_auditor: '审核',
+  crehn_reviewer: '评分',
+  crehn_score_summary: '汇总',
+  crehn_school: '学校',
+  crehn_participant: '参赛',
+  crehn_result_admin: '结果',
+  crehn_cms_editor: '编辑',
+  crehn_cms_publisher: '发布',
+  crehn_audit_supervisor: '监督'
+};
 const compactRoleLabel = (role: WorkbenchRoleOptionVO) => {
-  const fullLabel = `${role.roleName} ${role.roleKey || ''}`.toLowerCase();
+  const normalizedRoleKey = String(role.roleKey || '')
+    .trim()
+    .toLowerCase();
+  if (compactRoleLabels[normalizedRoleKey]) return compactRoleLabels[normalizedRoleKey];
+  const fullLabel = `${role.roleName} ${normalizedRoleKey}`.toLowerCase();
   if (fullLabel.includes('超级') || fullLabel.includes('super')) return '超管';
   if (fullLabel.includes('签字') || fullLabel.includes('sign')) return '签字';
   if (fullLabel.includes('运维') || fullLabel.includes('operation') || fullLabel.includes('ops')) return '运维';

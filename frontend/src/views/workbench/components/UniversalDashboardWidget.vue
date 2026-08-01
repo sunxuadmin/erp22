@@ -580,7 +580,9 @@ const loadData = async () => {
             ? await loadReviewData()
             : runtimeRole.value === 'viewer'
               ? await loadViewerData()
-              : await loadAdminData();
+              : runtimeRole.value === 'admin'
+                ? await loadAdminData()
+                : { metrics: {}, series: {}, lists: {} };
   } catch (error: any) {
     data.value = { metrics: {}, series: {}, lists: {} };
     loadError.value = error?.message || '看板数据暂时不可用，请稍后刷新';

@@ -1,4 +1,4 @@
-export type DashboardRoleType = 'school' | 'admin' | 'auditor' | 'reviewer' | 'viewer';
+export type DashboardRoleType = 'school' | 'admin' | 'auditor' | 'reviewer' | 'viewer' | 'generic';
 export type DashboardSourceKind = 'metric' | 'series' | 'list';
 export type DashboardBlockType = 'metric' | 'progress' | 'donut' | 'bar' | 'line' | 'ranking' | 'list' | 'action';
 export type DashboardActionType = 'none' | 'school_create' | 'school_submit' | 'school_projects' | 'audit_list' | 'review_list' | 'project_overview';
@@ -260,7 +260,8 @@ const roleSourceOptions: Record<DashboardRoleType, DashboardSourceOption[]> = {
     { key: 'viewer.status_distribution', label: '项目状态分布', kind: 'series', description: '当前查看范围状态分布' },
     { key: 'viewer.category_distribution', label: '类别项目分布', kind: 'series', description: '当前查看范围类别分布' },
     { key: 'viewer.group_distribution', label: '大类项目分布', kind: 'series', description: '当前查看范围大类分布' }
-  ]
+  ],
+  generic: []
 };
 
 const roleActionOptions: Record<DashboardRoleType, DashboardActionOption[]> = {
@@ -277,7 +278,8 @@ const roleActionOptions: Record<DashboardRoleType, DashboardActionOption[]> = {
   ],
   auditor: [...commonActions, { value: 'audit_list', label: '进入审核列表', description: '进入本人有权访问的审核列表' }],
   reviewer: [...commonActions, { value: 'review_list', label: '进入评分列表', description: '进入本人评分任务列表' }],
-  viewer: [...commonActions, { value: 'project_overview', label: '进入项目总览', description: '进入只读项目总览' }]
+  viewer: [...commonActions, { value: 'project_overview', label: '进入项目总览', description: '进入只读项目总览' }],
+  generic: commonActions
 };
 
 const blockTypeOptions: Array<{ value: DashboardBlockType; label: string; sourceKind?: DashboardSourceKind }> = [
@@ -387,16 +389,26 @@ const defaultBlocks: Record<DashboardRoleType, DashboardBlockConfig[]> = {
     block('viewer-category', 'bar', '类别项目分布', 'viewer.category_distribution', 8, 300),
     block('viewer-group', 'line', '大类项目对比', 'viewer.group_distribution', 8, 280),
     block('viewer-action', 'action', '项目查看入口', undefined, 4, 160, '#475569', { type: 'project_overview', label: '进入项目总览' })
-  ]
+  ],
+  generic: []
 };
 
 export const resolveDashboardRole = (roleKeys?: string | string[], schoolId?: string | number): DashboardRoleType => {
-  const values = (Array.isArray(roleKeys) ? roleKeys : [roleKeys || '']).map((item) => String(item || '').toLowerCase());
-  if (schoolId || values.some((item) => item.includes('school'))) return 'school';
-  if (values.some((item) => item.includes('expert'))) return 'reviewer';
+  const values = (Array.isArray(roleKeys) ? roleKeys : [roleKeys || ''])
+    .map((item) =>
+      String(item || '')
+        .trim()
+        .toLowerCase()
+    )
+    .filter(Boolean);
+  if (values.some((item) => item.includes('school'))) return 'school';
+  if (values.some((item) => item.includes('audit_supervisor') || item.includes('score_summary') || item.includes('result_admin'))) return 'viewer';
+  if (values.some((item) => item.includes('admin') || item === 'superadmin' || item.includes('ops'))) return 'admin';
+  if (values.some((item) => item.includes('reviewer') || item.includes('expert'))) return 'reviewer';
   if (values.some((item) => item.includes('auditor'))) return 'auditor';
   if (values.some((item) => item.includes('project_viewer') || item.includes('project-viewer'))) return 'viewer';
-  return 'admin';
+  if (values.some((item) => item.includes('participant') || item.includes('cms_editor') || item.includes('cms_publisher'))) return 'generic';
+  return values.length === 0 && schoolId ? 'school' : 'generic';
 };
 
 const defaultThemeForRole = (role: DashboardRoleType) => {
@@ -429,7 +441,9 @@ export const defaultUniversalDashboardConfig = (role: DashboardRoleType): Univer
             ? '仅展示当前评审员已分配的评分任务'
             : role === 'viewer'
               ? '只读项目数据概览'
-              : '学校报送、项目审核和类别分布概览',
+              : role === 'generic'
+                ? '当前角色暂未配置数据组件'
+                : '学校报送、项目审核和类别分布概览',
     refreshLabel: '刷新',
     emptyChartText: '暂无统计数据',
     emptyRankingText: '暂无排行数据',

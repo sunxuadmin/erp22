@@ -50,7 +50,7 @@
               :class="{ 'is-selected': activeSection === 'brand', 'is-muted': !form.sidebarLogo }"
               @click="activeSection = 'brand'"
             >
-              <span v-if="form.sidebarLogo" class="preview-logo">D</span>
+              <span v-if="form.sidebarLogo" class="preview-logo">C</span>
               <span v-if="form.sidebarLogo && form.brandTitleMode !== 'hidden'" class="preview-brand__text">{{ brandPreviewText }}</span>
               <span v-else class="preview-placeholder">品牌区已隐藏</span>
             </button>
@@ -71,7 +71,7 @@
                 :class="{ 'is-selected': activeSection === 'brand', 'is-muted': !form.sidebarLogo }"
                 @click="activeSection = 'brand'"
               >
-                <span v-if="form.sidebarLogo" class="preview-logo">D</span>
+                <span v-if="form.sidebarLogo" class="preview-logo">C</span>
                 <span v-if="form.sidebarLogo && form.brandTitleMode !== 'hidden'">{{ brandPreviewText }}</span>
                 <span v-else class="preview-placeholder">品牌区</span>
               </button>
