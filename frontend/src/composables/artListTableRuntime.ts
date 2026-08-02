@@ -55,7 +55,7 @@ export const artListActionColumnMinimumWidth = (
   pageConfig: ArtListRuntimePageConfig,
   appearance: ArtListTableAppearanceConfig
 ) => {
-  const slots = artListActionSlots[pageKey];
+  const slots = artListActionSlots[pageKey] ?? artListActionSlots.project;
   const slotLabelLengths = slots.map((slot) => Math.max(...slot.map((semantic) => labelLength(pageConfig.actionLabels[semantic]))));
   const uniformLabelLength = Math.max(...slotLabelLengths);
   const labelWidths = appearance.rowActionAppearance.uniformWidth ? slots.map(() => uniformLabelLength) : slotLabelLengths;

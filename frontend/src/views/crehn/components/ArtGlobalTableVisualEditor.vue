@@ -926,8 +926,12 @@ const editorDescription = computed(() =>
   mode.value === 'appearance' ? '表格颜色、状态与操作样式全角色共享，保存后统一生效' : '按页面默认或活动末级类别维护列、文字、固定位置和预览效果'
 );
 
-const currentPage = computed(() => draft.value!.layout.pages[pageKey.value]);
-const currentPageLabel = computed(() => artListTablePageOptions.find((item) => item.key === pageKey.value)?.label || '业务表格');
+const normalizedPageKey = computed<ArtListTablePageKey>(() => {
+  const candidate = String(pageKey.value || '');
+  return artListTablePageOptions.some((item) => item.key === candidate) ? (candidate as ArtListTablePageKey) : 'project';
+});
+const currentPage = computed(() => draft.value?.layout?.pages?.[normalizedPageKey.value] || defaultArtListTableLayout().pages[normalizedPageKey.value]);
+const currentPageLabel = computed(() => artListTablePageOptions.find((item) => item.key === normalizedPageKey.value)?.label || '业务表格');
 const categories = computed<CategoryOption[]>(() => {
   const source = rawCategories.value.filter((item) => item.delFlag !== '1');
   const parentIds = new Set(source.map((item) => String(item.parentId || '')).filter((id) => id && id !== '0'));
@@ -955,7 +959,7 @@ const selectedColumnRuntimeMinimum = computed(() => {
   const column = selectedColumn.value;
   if (!column || !draft.value) return 48;
   if (column.key === 'actions') {
-    return artListActionColumnMinimumWidth(pageKey.value, currentPage.value, draft.value.appearance);
+    return artListActionColumnMinimumWidth(normalizedPageKey.value, currentPage.value, draft.value.appearance);
   }
   if (['status', 'scoreStatus'].includes(column.key)) {
     return artListStatusColumnMinimumWidth(currentPage.value, draft.value.appearance);
@@ -968,7 +972,7 @@ const selectedColumnDefaultWidthMinimum = computed(() =>
 const selectedColumnMinimumWidthMinimum = computed(() =>
   ['status', 'scoreStatus'].includes(selectedColumn.value?.key || '') ? selectedColumnRuntimeMinimum.value : 48
 );
-const isReviewGroupColumn = (column?: ArtReviewListColumnConfig) => pageKey.value === 'review' && column?.key === 'groupOrNature';
+const isReviewGroupColumn = (column?: ArtReviewListColumnConfig) => normalizedPageKey.value === 'review' && column?.key === 'groupOrNature';
 const isVisibilityLocked = (column?: ArtReviewListColumnConfig) => isReviewGroupColumn(column);
 const isDeletionLocked = (column?: ArtReviewListColumnConfig) => column?.key === 'actions' || isReviewGroupColumn(column);
 const selectedColumnVisibilityLocked = computed(() => isVisibilityLocked(selectedColumn.value));
@@ -985,7 +989,7 @@ const groupOptionSourceText = computed(() => {
   if (groupRuleOptions.value.length > 0) return categoryId.value ? '来自当前活动及末级类别的报送规则。' : '来自当前活动的报送规则。';
   return '当前范围没有配置顶层组别，暂时展示系统建议组别。';
 });
-const defaultsForPage = computed(() => defaultArtListTableLayout().pages[pageKey.value].columns);
+const defaultsForPage = computed(() => defaultArtListTableLayout().pages[normalizedPageKey.value].columns);
 const availableBuiltinColumns = computed(() =>
   defaultsForPage.value.filter((item) => !activeColumns.value.some((column) => column.key === item.key && !column.deleted))
 );
@@ -1000,10 +1004,10 @@ const availableFormFields = computed(() =>
 );
 const visibleRuntimeColumns = computed<ArtListRuntimeColumn[]>(() => {
   if (!draft.value) return [];
-  return toArtListRuntimeColumns(pageKey.value, visibleColumns.value, currentPage.value, draft.value.appearance);
+  return toArtListRuntimeColumns(normalizedPageKey.value, visibleColumns.value, currentPage.value, draft.value.appearance);
 });
 const previewSelectionColumn = computed<PreviewStructuralColumn | ArtListRuntimeColumn | undefined>(() => {
-  if (pageKey.value === 'review') {
+  if (normalizedPageKey.value === 'review') {
     return {
       key: 'selection',
       label: '选择',
@@ -1015,7 +1019,7 @@ const previewSelectionColumn = computed<PreviewStructuralColumn | ArtListRuntime
       resizable: false
     };
   }
-  return pageKey.value === 'schoolSubmit' ? visibleRuntimeColumns.value.find((column) => column.key === 'selection') : undefined;
+  return normalizedPageKey.value === 'schoolSubmit' ? visibleRuntimeColumns.value.find((column) => column.key === 'selection') : undefined;
 });
 const previewSerialColumn = computed<PreviewStructuralColumn | ArtListRuntimeColumn | undefined>(() => {
   if (!currentPage.value.serialVisible) return undefined;
@@ -1050,7 +1054,7 @@ const previewResolvedColumnWidth = (key: string) => {
   return previewWidthColumns.value.find((column) => column.key === key)?.width;
 };
 const previewStatusLabel = computed(() =>
-  pageKey.value === 'review' ? currentPage.value.statusLabels.scored : currentPage.value.statusLabels.pending
+  normalizedPageKey.value === 'review' ? currentPage.value.statusLabels.scored : currentPage.value.statusLabels.pending
 );
 const previewActionDefinitions: Record<
   ArtListTablePageKey,
@@ -1078,17 +1082,17 @@ const previewActionDefinitions: Record<
   ]
 };
 const previewActions = computed(() =>
-  previewActionDefinitions[pageKey.value].map((action) => ({
+  previewActionDefinitions[normalizedPageKey.value].map((action) => ({
     ...action,
     label: currentPage.value.actionLabels[action.semantic]
   }))
 );
 const previewAppearance = computed(() => {
   const appearance = draft.value?.appearance || defaultListTableAppearance();
-  const page = draft.value?.layout.pages[pageKey.value];
+  const page = draft.value?.layout?.pages?.[normalizedPageKey.value];
   return resolveArtListTableAppearance(appearance, {
     statusLabels: page ? Object.values(page.statusLabels) : [],
-    actionLabels: page ? artListActionSlots[pageKey.value].flat().map((semantic) => page.actionLabels[semantic]) : []
+    actionLabels: page ? artListActionSlots[normalizedPageKey.value].flat().map((semantic) => page.actionLabels[semantic]) : []
   });
 });
 const previewTableStyle = computed(() => {
@@ -1574,7 +1578,7 @@ const restoreDefaults = async (confirm = true) => {
   if (mode.value === 'appearance') {
     draft.value.appearance = defaultListTableAppearance();
   } else if (mode.value === 'layout') {
-    draft.value.layout.pages[pageKey.value] = defaultArtListTableLayout().pages[pageKey.value];
+    draft.value.layout.pages[normalizedPageKey.value] = defaultArtListTableLayout().pages[normalizedPageKey.value];
   } else {
     draft.value = {
       appearance: defaultListTableAppearance(),
