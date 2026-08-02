@@ -716,7 +716,10 @@ export const artListTablePageOptions: Array<{ key: ArtListTablePageKey; label: s
   { key: 'schoolSubmit', label: '学校统一提交' },
   { key: 'audit', label: '项目审核' },
   { key: 'review', label: '专家评分' },
-  { key: 'projectView', label: '上报进度' }
+  { key: 'projectView', label: '上报进度' },
+  { key: 'reviewAssignment', label: '评审分配' },
+  { key: 'scoreSummary', label: '评分汇总' },
+  { key: 'signedSheets', label: '签名表汇总' }
 ];
 
 const tableColumn = (key: string, label: string, width: number, minWidth: number, visible = true): ArtReviewListColumnConfig => ({
@@ -830,6 +833,41 @@ export const defaultArtListTableLayout = (): ArtListTableLayoutConfig => ({
       tableColumn('submittedAt', '提交时间', 170, 110),
       tableColumn('status', '状态', 110, 76),
       tableColumn('actions', '操作', 130, 130)
+    ]),
+    reviewAssignment: defaultTablePage('暂无评审分配记录', [
+      tableColumn('selection', '选择', 58, 52),
+      tableColumn('activityName', '活动', 180, 120),
+      tableColumn('categoryName', '类别', 150, 90),
+      tableColumn('reviewerNames', '评审人员', 220, 120),
+      tableColumn('schoolScopeMode', '学校范围', 160, 100),
+      tableColumn('scoreMode', '评分模式', 110, 86),
+      tableColumn('exclusiveMode', '互斥模式', 120, 90),
+      tableColumn('scoreVisibilityPolicy', '评分可见', 120, 90),
+      tableColumn('taskStats', '任务/历史评分', 180, 120),
+      tableColumn('visibility', '可见性', 190, 120),
+      tableColumn('status', '状态', 100, 76),
+      tableColumn('actions', '操作', 180, 180)
+    ]),
+    scoreSummary: defaultTablePage('暂无评分汇总记录', [
+      tableColumn('projectName', '节目名称', 240, 140),
+      tableColumn('categoryName', '类别', 150, 90),
+      tableColumn('programForm', '形式', 120, 80),
+      tableColumn('groupOrNature', '甲乙组/个人', 140, 90),
+      tableColumn('schoolName', '学校', 180, 100),
+      tableColumn('currentAverageScore', '当前平均分', 120, 90),
+      tableColumn('warningText', '评分提示', 120, 90),
+      tableColumn('actions', '操作', 140, 140)
+    ]),
+    signedSheets: defaultTablePage('当前筛选下还没有签名表', [
+      tableColumn('activityName', '活动', 160, 110),
+      tableColumn('categoryName', '类别', 110, 80),
+      tableColumn('reviewerName', '签字老师', 120, 90),
+      tableColumn('total', '评分数', 88, 70),
+      tableColumn('submissionMode', '提交方式', 100, 82),
+      tableColumn('signedAt', '提交时间', 158, 110),
+      tableColumn('status', '状态', 92, 76),
+      tableColumn('withdrawalAudit', '撤回审计', 245, 140),
+      tableColumn('actions', '操作', 252, 220)
     ])
   }
 });

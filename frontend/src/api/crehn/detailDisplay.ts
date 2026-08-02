@@ -399,7 +399,15 @@ export interface ArtReviewWorkbenchDisplayConfig {
   categoryColumns: Record<string, ArtReviewListColumnConfig[]>;
 }
 
-export type ArtListTablePageKey = 'project' | 'schoolSubmit' | 'audit' | 'review' | 'projectView';
+export type ArtListTablePageKey =
+  | 'project'
+  | 'schoolSubmit'
+  | 'audit'
+  | 'review'
+  | 'projectView'
+  | 'reviewAssignment'
+  | 'scoreSummary'
+  | 'signedSheets';
 
 export interface ArtListTablePageConfig {
   emptyText: string;

@@ -471,7 +471,7 @@
           <aside class="global-table-panel global-appearance-form">
             <el-form label-position="top">
               <el-form-item label="启用全局颜色覆盖">
-                <el-switch v-model="draft.appearance.globalColorOverride" active-text="覆盖五类表格" inactive-text="使用页面默认颜色" />
+                <el-switch v-model="draft.appearance.globalColorOverride" active-text="覆盖八类表格" inactive-text="使用页面默认颜色" />
               </el-form-item>
               <el-alert
                 v-if="draft.appearance.globalColorOverride"
@@ -921,7 +921,7 @@ let appearancePreviewScrollStart = 0;
 const setHeaderInputRef = (instance: unknown) => {
   headerInputRef.value = (instance || undefined) as InputInstance | undefined;
 };
-const editorTitle = computed(() => (mode.value === 'appearance' ? '颜色与公共样式' : '五类页面与类别表格'));
+const editorTitle = computed(() => (mode.value === 'appearance' ? '颜色与公共样式' : '八类页面与类别表格'));
 const editorDescription = computed(() =>
   mode.value === 'appearance' ? '表格颜色、状态与操作样式全角色共享，保存后统一生效' : '按页面默认或活动末级类别维护列、文字、固定位置和预览效果'
 );
@@ -1079,6 +1079,16 @@ const previewActionDefinitions: Record<
   projectView: [
     { semantic: 'view', icon: 'View' },
     { semantic: 'delete', icon: 'Delete' }
+  ],
+  reviewAssignment: [
+    { semantic: 'view', icon: 'View' },
+    { semantic: 'edit', icon: 'Edit' },
+    { semantic: 'delete', icon: 'Delete' }
+  ],
+  scoreSummary: [{ semantic: 'view', icon: 'View' }],
+  signedSheets: [
+    { semantic: 'view', icon: 'View' },
+    { semantic: 'withdraw', icon: 'RefreshLeft' }
   ]
 };
 const previewActions = computed(() =>
@@ -1183,6 +1193,31 @@ const appearancePreviewScenes = computed<AppearancePreviewScene[]>(() => {
       rows: buildAppearancePreviewRows('projectView', commonPreviewStatuses, () => [
         buildAppearancePreviewAction('projectView', 'view'),
         buildAppearancePreviewAction('projectView', 'delete')
+      ])
+    },
+    {
+      key: 'reviewAssignment',
+      label: '评审分配',
+      description: '查看、编辑、停用',
+      rows: buildAppearancePreviewRows('reviewAssignment', commonPreviewStatuses, () => [
+        buildAppearancePreviewAction('reviewAssignment', 'view'),
+        buildAppearancePreviewAction('reviewAssignment', 'edit'),
+        buildAppearancePreviewAction('reviewAssignment', 'delete')
+      ])
+    },
+    {
+      key: 'scoreSummary',
+      label: '评分汇总',
+      description: '只读查看',
+      rows: buildAppearancePreviewRows('scoreSummary', commonPreviewStatuses, () => [buildAppearancePreviewAction('scoreSummary', 'view')])
+    },
+    {
+      key: 'signedSheets',
+      label: '签名表汇总',
+      description: '查看、撤回',
+      rows: buildAppearancePreviewRows('signedSheets', commonPreviewStatuses, () => [
+        buildAppearancePreviewAction('signedSheets', 'view'),
+        buildAppearancePreviewAction('signedSheets', 'withdraw')
       ])
     }
   ];
@@ -1561,8 +1596,8 @@ const restoreDefaults = async (confirm = true) => {
     mode.value === 'appearance'
       ? '确认把全局颜色与公共样式恢复为系统默认草稿？页面布局不会改变，保存后才会生效。'
       : mode.value === 'layout'
-        ? '确认把五类表格列方案恢复为系统默认草稿？全局颜色不会改变，保存后才会生效。'
-        : '确认把全局颜色和五类表格列方案恢复为系统默认草稿？保存后才会生效。';
+        ? '确认把八类表格列方案恢复为系统默认草稿？全局颜色不会改变，保存后才会生效。'
+        : '确认把全局颜色和八类表格列方案恢复为系统默认草稿？保存后才会生效。';
   if (confirm) {
     try {
       await ElMessageBox.confirm(confirmation, '恢复系统默认', {
@@ -1604,7 +1639,7 @@ const saveAll = async () => {
   if (!draft.value || !isDirty.value) return;
   if (draft.value.appearance.globalColorOverride) {
     try {
-      await ElMessageBox.confirm('保存后将全局覆盖五类业务表格的颜色样式，确认继续？', '全局覆盖颜色', {
+      await ElMessageBox.confirm('保存后将全局覆盖八类业务表格的颜色样式，确认继续？', '全局覆盖颜色', {
         confirmButtonText: '保存并覆盖',
         cancelButtonText: '取消',
         type: 'warning'
@@ -1618,7 +1653,7 @@ const saveAll = async () => {
     const saved = await saveArtListTableConfig(draft.value);
     draft.value = JSON.parse(JSON.stringify(saved));
     originalSnapshot.value = JSON.stringify(draft.value);
-    ElMessage.success(draft.value.appearance.globalColorOverride ? '全局表格设置已保存，颜色已覆盖五类表格' : '全局表格设置已保存');
+    ElMessage.success(draft.value.appearance.globalColorOverride ? '全局表格设置已保存，颜色已覆盖八类表格' : '全局表格设置已保存');
   } finally {
     saving.value = false;
   }

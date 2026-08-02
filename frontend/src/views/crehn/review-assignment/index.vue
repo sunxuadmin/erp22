@@ -124,30 +124,30 @@
           title="评分任务支持按活动合并维护人员和类别。移除只停用任务：评分草稿保留但不计入结果，已提交评分继续保留并参与结果聚合。"
         />
         <el-table v-loading="loading" border :data="assignmentList">
-          <el-table-column label="活动" prop="activityName" min-width="180" show-overflow-tooltip />
-          <el-table-column label="类别" prop="categoryName" min-width="140" show-overflow-tooltip />
-          <el-table-column label="评审账号" min-width="150">
+          <el-table-column v-if="assignmentColumnVisible('activityName')" :label="assignmentColumnLabel('activityName', '活动')" prop="activityName" :min-width="assignmentColumnWidth('activityName', 180)" show-overflow-tooltip />
+          <el-table-column v-if="assignmentColumnVisible('categoryName')" :label="assignmentColumnLabel('categoryName', '类别')" prop="categoryName" :min-width="assignmentColumnWidth('categoryName', 140)" show-overflow-tooltip />
+          <el-table-column v-if="assignmentColumnVisible('reviewerNames')" :label="assignmentColumnLabel('reviewerNames', '评审账号')" :min-width="assignmentColumnWidth('reviewerNames', 150)">
             <template #default="scope">{{ reviewerLabel(scope.row) }}</template>
           </el-table-column>
-          <el-table-column label="学校范围" min-width="160">
+          <el-table-column v-if="assignmentColumnVisible('schoolScopeMode')" :label="assignmentColumnLabel('schoolScopeMode', '学校范围')" :min-width="assignmentColumnWidth('schoolScopeMode', 160)">
             <template #default="scope">
               <el-tag size="small" :type="schoolScopeType(scope.row.schoolScopeMode)">{{ schoolScopeLabel(scope.row) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="评分模式" width="110">
+          <el-table-column v-if="assignmentColumnVisible('scoreMode')" :label="assignmentColumnLabel('scoreMode', '评分模式')" :width="assignmentColumnWidth('scoreMode', 110)">
             <template #default="scope">{{ scoreModeLabel(scope.row.scoreMode) }}</template>
           </el-table-column>
-          <el-table-column label="互斥模式" width="120">
+          <el-table-column v-if="assignmentColumnVisible('exclusiveMode')" :label="assignmentColumnLabel('exclusiveMode', '互斥模式')" :width="assignmentColumnWidth('exclusiveMode', 120)">
             <template #default="scope">{{ exclusiveLabel(scope.row.exclusiveMode) }}</template>
           </el-table-column>
-          <el-table-column label="评分可见" width="130">
+          <el-table-column v-if="assignmentColumnVisible('scoreVisibilityPolicy')" :label="assignmentColumnLabel('scoreVisibilityPolicy', '评分可见')" :width="assignmentColumnWidth('scoreVisibilityPolicy', 130)">
             <template #default="scope">
               <el-tag size="small" :type="scoreVisibilityType(scope.row.scoreVisibilityPolicy)">
                 {{ scoreVisibilityLabel(scope.row.scoreVisibilityPolicy) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="任务/历史评分" width="180">
+          <el-table-column v-if="assignmentColumnVisible('taskStats')" :label="assignmentColumnLabel('taskStats', '任务/历史评分')" :width="assignmentColumnWidth('taskStats', 180)">
             <template #default="scope">
               <el-tag class="mr-1" size="small">有效项目 {{ scope.row.projectCount || 0 }}</el-tag>
               <el-tag size="small" type="success">已交 {{ scope.row.submittedCount || 0 }}</el-tag>
@@ -159,7 +159,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="可见性" min-width="190">
+          <el-table-column v-if="assignmentColumnVisible('visibility')" :label="assignmentColumnLabel('visibility', '可见性')" :min-width="assignmentColumnWidth('visibility', 190)">
             <template #default="scope">
               <el-tag v-if="scope.row.hideSchoolInfo" class="mr-1" size="small">隐藏学校</el-tag>
               <el-tag v-if="scope.row.hideMemberInfo" class="mr-1" size="small">隐藏成员</el-tag>
@@ -175,12 +175,12 @@
               >
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="90">
+          <el-table-column v-if="assignmentColumnVisible('status')" :label="assignmentColumnLabel('status', '状态')" :width="assignmentColumnWidth('status', 90)">
             <template #default="scope">
               <el-tag :type="scope.row.status === 'active' ? 'success' : 'info'">{{ scope.row.status === 'active' ? '启用' : '停用' }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="160" fixed="right" align="center">
+          <el-table-column v-if="assignmentColumnVisible('actions')" :label="assignmentColumnLabel('actions', '操作')" :width="assignmentColumnWidth('actions', 160)" fixed="right" align="center">
             <template #default="scope">
               <el-button v-hasPermi="['crehn:reviewAssignment:edit']" link type="primary" icon="Edit" @click="openForm(scope.row)">编辑</el-button>
               <el-button v-hasPermi="['crehn:reviewAssignment:remove']" link type="danger" icon="CircleClose" @click="handleDelete(scope.row)"
@@ -988,11 +988,18 @@ import {
   ReviewProjectOverviewVO
 } from '@/api/crehn/types';
 import { isCategoryGroup } from '@/utils/artCategory';
+import { useArtListTablePage } from '@/composables/useArtListTableConfig';
 import AssignmentScopeSelector from '@/views/crehn/components/AssignmentScopeSelector.vue';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 const router = useRouter();
+const { columns: controlledTableColumns } = useArtListTablePage('reviewAssignment');
+const protectedAssignmentColumns = new Set(['status', 'actions']);
+const assignmentColumnSetting = (key: string) => controlledTableColumns.value.find((column) => column.key === key);
+const assignmentColumnVisible = (key: string) => protectedAssignmentColumns.has(key) || assignmentColumnSetting(key)?.visible !== false;
+const assignmentColumnLabel = (key: string, fallback: string) => assignmentColumnSetting(key)?.label || fallback;
+const assignmentColumnWidth = (key: string, fallback: number) => assignmentColumnSetting(key)?.width || fallback;
 
 const loading = ref(false);
 const total = ref(0);

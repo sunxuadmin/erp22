@@ -114,7 +114,8 @@ public class ArtDetailDisplayConfigService {
         "view", "score", "edit", "return", "withdraw", "submit", "delete"
     );
     private static final List<String> LIST_TABLE_PAGE_KEYS = List.of(
-        "project", "schoolSubmit", "audit", "review", "projectView"
+        "project", "schoolSubmit", "audit", "review", "projectView",
+        "reviewAssignment", "scoreSummary", "signedSheets"
     );
 
     private static final Map<String, String> AUDIT_DEFAULT_LABELS = orderedMap(
@@ -1740,6 +1741,50 @@ public class ArtDetailDisplayConfigService {
                 tableColumn("actions", "操作", 130, 130, true)
             )
         ));
+        pages.put("reviewAssignment", defaultListTablePage(
+            "暂无评审分配记录",
+            List.of(
+                tableColumn("selection", "选择", 58, 52, true),
+                tableColumn("activityName", "活动", 180, 120, true),
+                tableColumn("categoryName", "类别", 150, 90, true),
+                tableColumn("reviewerNames", "评审人员", 220, 120, true),
+                tableColumn("schoolScopeMode", "学校范围", 160, 100, true),
+                tableColumn("scoreMode", "评分模式", 110, 86, true),
+                tableColumn("exclusiveMode", "互斥模式", 120, 90, true),
+                tableColumn("scoreVisibilityPolicy", "评分可见", 120, 90, true),
+                tableColumn("taskStats", "任务/历史评分", 180, 120, true),
+                tableColumn("visibility", "可见性", 190, 120, true),
+                tableColumn("status", "状态", 100, 76, true),
+                tableColumn("actions", "操作", 180, 180, true)
+            )
+        ));
+        pages.put("scoreSummary", defaultListTablePage(
+            "暂无评分汇总记录",
+            List.of(
+                tableColumn("projectName", "节目名称", 240, 140, true),
+                tableColumn("categoryName", "类别", 150, 90, true),
+                tableColumn("programForm", "形式", 120, 80, true),
+                tableColumn("groupOrNature", "甲乙组/个人", 140, 90, true),
+                tableColumn("schoolName", "学校", 180, 100, true),
+                tableColumn("currentAverageScore", "当前平均分", 120, 90, true),
+                tableColumn("warningText", "评分提示", 120, 90, true),
+                tableColumn("actions", "操作", 140, 140, true)
+            )
+        ));
+        pages.put("signedSheets", defaultListTablePage(
+            "当前筛选下还没有签名表",
+            List.of(
+                tableColumn("activityName", "活动", 160, 110, true),
+                tableColumn("categoryName", "类别", 110, 80, true),
+                tableColumn("reviewerName", "签字老师", 120, 90, true),
+                tableColumn("total", "评分数", 88, 70, true),
+                tableColumn("submissionMode", "提交方式", 100, 82, true),
+                tableColumn("signedAt", "提交时间", 158, 110, true),
+                tableColumn("status", "状态", 92, 76, true),
+                tableColumn("withdrawalAudit", "撤回审计", 245, 140, true),
+                tableColumn("actions", "操作", 252, 220, true)
+            )
+        ));
         layout.setPages(pages);
         return layout;
     }
@@ -1983,6 +2028,18 @@ public class ArtDetailDisplayConfigService {
             case "projectView" -> Set.of(
                 "projectNo", "projectName", "categoryName", "groupName", "schoolName",
                 "submittedAt", "status", "actions"
+            );
+            case "reviewAssignment" -> new LinkedHashSet<>(List.of(
+                "selection", "activityName", "categoryName", "reviewerNames", "schoolScopeMode", "scoreMode",
+                "exclusiveMode", "scoreVisibilityPolicy", "taskStats", "visibility", "status", "actions"
+            ));
+            case "scoreSummary" -> Set.of(
+                "projectName", "categoryName", "programForm", "groupOrNature", "schoolName",
+                "currentAverageScore", "warningText", "actions"
+            );
+            case "signedSheets" -> Set.of(
+                "activityName", "categoryName", "reviewerName", "total", "submissionMode",
+                "signedAt", "status", "withdrawalAudit", "actions"
             );
             default -> Set.of();
         };

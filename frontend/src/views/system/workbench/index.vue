@@ -99,12 +99,11 @@
             <nav v-show="sectionOptionsExpanded" class="workbench-config-selector-options" aria-label="工作台配置范围">
               <el-tooltip v-for="section in workbenchSections" :key="section.key" :content="section.label" placement="top" :show-after="350">
                 <button
-                  v-hasPermi="section.permission"
                   type="button"
                   :class="{ 'is-active': activeWorkbenchTab === section.key }"
                   :disabled="currentScopeSaving || currentScopeRestoring"
-                  :title="section.label"
-                  @click="switchWorkbenchSection(section.key)"
+                  :title="hasSectionPermission(section) ? section.label : CONFIG_PERMISSION_HINT"
+                  @click="switchWorkbenchSectionGuarded(section)"
                 >
                   <span>{{ section.shortLabel }}</span>
                   <el-icon v-if="sectionDirtyMap[section.key]" class="workbench-config-nav__dirty"><WarningFilled /></el-icon>
@@ -420,7 +419,7 @@
               <div class="panel-header">
                 <div>
                   <span>颜色与公共样式</span>
-                  <small>五类业务表格共享颜色、状态和操作样式</small>
+                  <small>八类业务表格共享颜色、状态和操作样式</small>
                 </div>
               </div>
               <ArtGlobalTableVisualEditor key="global-table-appearance" ref="globalTableAppearanceEditorRef" mode="appearance" :show-footer="false" />
@@ -1915,6 +1914,7 @@ import {
   type ArtWorkspaceHeaderPageConfig
 } from '@/api/crehn/detailDisplay';
 import { ActivityCategoryVO, ActivityVO } from '@/api/crehn/types';
+import { checkPermi } from '@/utils/permission';
 import { useAppStore } from '@/store/modules/app';
 import { ElMessageBox } from 'element-plus';
 import { onBeforeRouteLeave } from 'vue-router';
@@ -2035,7 +2035,7 @@ const workbenchSections: Array<{
     key: 'business',
     label: '页面与类别布局',
     shortLabel: '页面类别',
-    description: '五类页面默认与末级类别覆盖',
+    description: '八类页面默认与末级类别覆盖',
     icon: 'Document',
     permission: ['crehn:detailDisplayConfig:edit']
   },
@@ -2064,13 +2064,18 @@ const workbenchSections: Array<{
     permission: ['system:workbench:query']
   }
 ];
+const CONFIG_PERMISSION_HINT = '请先在角色权限管理中增加权限';
+const hasSectionPermission = (section: (typeof workbenchSections)[number]) => checkPermi(section.permission);
 type PublicStyleSectionKey = 'workbench' | 'tableAppearance' | 'reviewDisplay';
 const businessPageShortLabels: Record<ArtListTablePageKey, string> = {
   project: '类别上报',
   schoolSubmit: '学校提交',
   audit: '项目审核',
   review: '专家评分',
-  projectView: '上报进度'
+  projectView: '上报进度',
+  reviewAssignment: '评审分配',
+  scoreSummary: '评分汇总',
+  signedSheets: '签名表汇总'
 };
 const businessPageOptions = artListTablePageOptions.map((item) => ({
   label: item.label,
@@ -3585,6 +3590,14 @@ const switchWorkbenchSection = async (nextSection: WorkbenchSectionKey) => {
   }
 };
 
+const switchWorkbenchSectionGuarded = async (section: (typeof workbenchSections)[number]) => {
+  if (!hasSectionPermission(section)) {
+    proxy?.$modal.msgWarning(CONFIG_PERMISSION_HINT);
+    return;
+  }
+  await switchWorkbenchSection(section.key);
+};
+
 const switchBusinessPage = async (nextPage: ArtListTablePageKey) => {
   if (nextPage === businessPageKey.value) return;
   if (!(await confirmDiscardCurrentScope('切换页面', sectionDirtyMap.value.business))) return;
@@ -3914,6 +3927,10 @@ const defaultComponentConfigJson = (componentKey: string) => {
 };
 
 const addComponent = (component: WorkbenchComponentVO) => {
+  if (component.permission?.length && !checkPermi(component.permission)) {
+    proxy?.$modal.msgWarning(CONFIG_PERMISSION_HINT);
+    return;
+  }
   layoutRows.value.push({
     roleId: selectedRoleId.value,
     componentKey: component.componentKey,

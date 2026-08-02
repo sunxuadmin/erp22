@@ -24,7 +24,10 @@ export const artListActionSlots: Record<ArtListTablePageKey, ArtListActionSemant
   schoolSubmit: [['view'], ['submit', 'withdraw'], ['delete']],
   audit: [['view'], ['return'], ['withdraw']],
   review: [['view', 'edit', 'score']],
-  projectView: [['view'], ['delete']]
+  projectView: [['view'], ['delete']],
+  reviewAssignment: [['view', 'edit'], ['delete']],
+  scoreSummary: [['view']],
+  signedSheets: [['view'], ['withdraw']]
 };
 
 const labelLength = (value: unknown) => Math.max(1, Array.from(String(value || '').trim()).length);

@@ -104,8 +104,8 @@
             <template v-else>{{ displayColumnValue(scope.row, column.fieldKey) }}</template>
           </template>
         </el-table-column>
-        <el-table-column v-if="!visibleDataColumns.length" label="暂无可显示字段" min-width="300" />
-        <el-table-column fixed="right" label="操作" width="140" align="center">
+        <el-table-column v-if="!visibleDataColumns.length" :label="summaryEmptyText" min-width="300" />
+        <el-table-column fixed="right" :label="summaryActionLabel" width="140" align="center">
           <template #default="scope">
             <div class="art-list-row-actions">
               <el-button
@@ -275,6 +275,7 @@ import type {
   ReviewScoreSummaryFilterOptionsVO,
   ReviewScoreSummaryVO
 } from '@/api/crehn/types';
+import { useArtListTablePage } from '@/composables/useArtListTableConfig';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
@@ -308,6 +309,8 @@ const cloneColumns = () => DEFAULT_COLUMNS.map((column) => ({ ...column }));
 const cloneWarning = () => ({ ...DEFAULT_WARNING });
 const EXPANDABLE_SUMMARY_COLUMN_KEYS = new Set(['projectName', 'categoryName', 'programForm', 'schoolName']);
 const DEFAULT_COLUMN_WIDTHS = Object.fromEntries(DEFAULT_COLUMNS.map((column) => [column.fieldKey, column.width || 120]));
+
+const { columns: controlledTableColumns, pageConfig: controlledPageConfig } = useArtListTablePage('scoreSummary');
 
 const loading = ref(false);
 const detailLoading = ref(false);
@@ -356,8 +359,22 @@ const visibleColumns = computed(() => {
 const visibleDataColumns = computed(() => {
   const columns = visibleColumns.value.filter((column) => column.fieldKey !== 'actions');
   const warningColumns = columns.filter((column) => column.fieldKey === 'warningText');
-  return [...columns.filter((column) => column.fieldKey !== 'warningText'), ...warningColumns];
+  const ordered = [...columns.filter((column) => column.fieldKey !== 'warningText'), ...warningColumns];
+  const configured = new Map(controlledTableColumns.value.map((column) => [column.key, column]));
+  return ordered
+    .filter((column) => {
+      const setting = configured.get(column.fieldKey || '');
+      return !setting || setting.visible !== false;
+    })
+    .map((column) => {
+      const setting = configured.get(column.fieldKey || '');
+      return setting
+        ? { ...column, label: setting.label || column.label, width: setting.width || column.width }
+        : column;
+    });
 });
+const summaryEmptyText = computed(() => controlledPageConfig.value.emptyText || '暂无可显示字段');
+const summaryActionLabel = computed(() => controlledPageConfig.value.actionLabels.view || '操作');
 const maxScoreSlot = computed(() => Math.max(0, ...rows.value.flatMap((row) => (row.scoreItems || []).map((item) => Number(item.slot || 0)))));
 
 const schoolLabel = (item: any) => [item.schoolName, item.schoolCode].filter(Boolean).join(' / ');

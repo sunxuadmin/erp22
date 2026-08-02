@@ -79,32 +79,32 @@
       </template>
 
       <el-table v-loading="loading" :data="sheets" border size="small" class="signed-sheet-table" max-height="calc(100vh - 370px)">
-        <el-table-column label="活动" min-width="160" show-overflow-tooltip>
+        <el-table-column v-if="sheetColumnVisible('activityName')" :label="sheetColumnLabel('activityName', '活动')" :min-width="sheetColumnWidth('activityName', 160)" show-overflow-tooltip>
           <template #default="scope">{{ activityLabel(scope.row) }}</template>
         </el-table-column>
-        <el-table-column label="类别" min-width="110" show-overflow-tooltip>
+        <el-table-column v-if="sheetColumnVisible('categoryName')" :label="sheetColumnLabel('categoryName', '类别')" :min-width="sheetColumnWidth('categoryName', 110)" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.categoryName || scope.row.categoryId || '-' }}</template>
         </el-table-column>
-        <el-table-column label="签字老师" min-width="115" show-overflow-tooltip>
+        <el-table-column v-if="sheetColumnVisible('reviewerName')" :label="sheetColumnLabel('reviewerName', '签字老师')" :min-width="sheetColumnWidth('reviewerName', 115)" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.reviewerName || '-' }}</template>
         </el-table-column>
-        <el-table-column label="评分数" width="88" align="center">
+        <el-table-column v-if="sheetColumnVisible('total')" :label="sheetColumnLabel('total', '评分数')" :width="sheetColumnWidth('total', 88)" align="center">
           <template #default="scope">{{ scope.row.total ?? scope.row.rows?.length ?? '-' }}</template>
         </el-table-column>
-        <el-table-column label="提交方式" width="94" align="center">
+        <el-table-column v-if="sheetColumnVisible('submissionMode')" :label="sheetColumnLabel('submissionMode', '提交方式')" :width="sheetColumnWidth('submissionMode', 94)" align="center">
           <template #default="scope">
             <el-tag :type="isUnsignedSubmission(scope.row) ? 'info' : 'success'" effect="plain">
               {{ isUnsignedSubmission(scope.row) ? '无签名提交' : '已签名' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="提交时间" prop="signedAt" min-width="158" />
-        <el-table-column label="状态" width="92" align="center">
+        <el-table-column v-if="sheetColumnVisible('signedAt')" :label="sheetColumnLabel('signedAt', '提交时间')" prop="signedAt" :min-width="sheetColumnWidth('signedAt', 158)" />
+        <el-table-column v-if="sheetColumnVisible('status')" :label="sheetColumnLabel('status', '状态')" :width="sheetColumnWidth('status', 92)" align="center">
           <template #default="scope">
             <el-tag :type="statusTagType(scope.row)" effect="plain">{{ statusLabel(scope.row) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="撤回审计" min-width="245" show-overflow-tooltip>
+        <el-table-column v-if="sheetColumnVisible('withdrawalAudit')" :label="sheetColumnLabel('withdrawalAudit', '撤回审计')" :min-width="sheetColumnWidth('withdrawalAudit', 245)" show-overflow-tooltip>
           <template #default="scope">
             <template v-if="isWithdrawn(scope.row)">
               <div class="withdraw-audit-cell">
@@ -116,7 +116,7 @@
             <span v-else class="signed-sheet-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="252" fixed="right" align="center" class-name="signed-sheet-actions">
+        <el-table-column v-if="sheetColumnVisible('actions')" :label="sheetColumnLabel('actions', '操作')" :width="sheetColumnWidth('actions', 252)" fixed="right" align="center" class-name="signed-sheet-actions">
           <template #default="scope">
             <el-button link type="primary" icon="View" @click="openPreview(scope.row)">查看</el-button>
             <el-tooltip v-if="isWithdrawn(scope.row)" content="已撤回评分提交单仅供审计查看，不能打印或下载" placement="top">
@@ -215,6 +215,7 @@ import type {
   ReviewScoreSheetSignedSheetVO
 } from '@/api/crehn/types';
 import { checkPermi } from '@/utils/permission';
+import { useArtListTablePage } from '@/composables/useArtListTableConfig';
 import { blobValidate } from '@/utils/ruoyi';
 import { ElMessageBox } from 'element-plus';
 import FileSaver from 'file-saver';
@@ -249,10 +250,16 @@ const previewVisible = ref(false);
 const currentSheet = ref<ReviewScoreSheetSignedSheetVO>();
 const withdrawLoadingId = ref<string | number>();
 const fallbackTemplate = emptyScoreSheetTemplate();
+const { columns: controlledTableColumns } = useArtListTablePage('signedSheets');
+const protectedSignedSheetColumns = new Set(['submissionMode', 'signedAt', 'status', 'withdrawalAudit', 'actions']);
 
 const isAdmin = computed(() => props.mode === 'admin');
 const canWithdraw = computed(() => !isAdmin.value || checkPermi(['crehn:reviewSheet:withdraw']));
 const title = computed(() => (isAdmin.value ? '签名评分表' : '我的签名表'));
+const sheetColumnSetting = (key: string) => controlledTableColumns.value.find((column) => column.key === key);
+const sheetColumnVisible = (key: string) => protectedSignedSheetColumns.has(key) || sheetColumnSetting(key)?.visible !== false;
+const sheetColumnLabel = (key: string, fallback: string) => sheetColumnSetting(key)?.label || fallback;
+const sheetColumnWidth = (key: string, fallback: number) => sheetColumnSetting(key)?.width || fallback;
 const introText = computed(() =>
   isAdmin.value
     ? '签名评分表保存评分、模板、可选手写签名与提交时间的历史快照。管理员强制撤回必须填写原因，且会留下操作者审计信息。'
