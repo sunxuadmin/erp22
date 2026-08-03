@@ -597,7 +597,6 @@ import { useArtListTableAppearance } from '@/composables/useArtListTableAppearan
 import { useArtListTablePage } from '@/composables/useArtListTableConfig';
 import { useManagedArtActivity } from '@/composables/useManagedArtActivity';
 import { useUserStore } from '@/store/modules/user';
-import { normalizePreviewMessage } from '@/utils/artReviewMessage';
 import { buildSchoolCategoryMenuTree } from '@/utils/artCategory';
 import { checkPermi } from '@/utils/permission';
 import ArtCategoryTreeDropdown from '../components/ArtCategoryTreeDropdown.vue';
@@ -614,6 +613,19 @@ import ProjectBrowseNavigator from '../components/ProjectBrowseNavigator.vue';
 import ProjectGenericTableReadonly from '../project/components/ProjectGenericTableReadonly.vue';
 import ReviewScopeNavigator from './components/ReviewScopeNavigator.vue';
 import ReviewScorePanel from './components/ReviewScorePanel.vue';
+import {
+  canPreview,
+  formatSize,
+  formatValue,
+  parseJsonObject,
+  parseStringArray,
+  pdfViewerUrl,
+  previewMessage,
+  previewTagType,
+  previewTypeOf,
+  shortText,
+  shouldExpandText
+} from './reviewFilePresentation';
 import { scoreModeLabel, scoreRecordText, scoreResultText } from './scorePresentation';
 import ScoreSheetExportDialog from '../review-score-sheet/components/ScoreSheetExportDialog.vue';
 
@@ -1663,19 +1675,6 @@ const confirmDiscardBeforeSwitch = async () => {
   }
 };
 
-const canPreview = (file: ProjectFileVO) => {
-  const ext = (file.fileExt || '').toLowerCase();
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'mpeg', 'mpg', 'pdf'].includes(ext)) return true;
-  return file.previewStatus === 'converted' && !!file.previewPath;
-};
-const previewTypeOf = (file?: ProjectFileVO) => {
-  if (!file) return '';
-  const ext = (file.fileExt || '').toLowerCase();
-  if (file.previewStatus === 'converted' || ext === 'pdf') return 'pdf';
-  if (['mp4', 'mov', 'mpeg', 'mpg'].includes(ext)) return 'video';
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
-  return canPreview(file) ? 'pdf' : '';
-};
 const selectPreviewFile = (file: ProjectFileVO) => {
   selectedFileId.value = fileKey(file);
   markFileViewed(file);
@@ -1706,14 +1705,10 @@ const refreshCurrentTaskFile = async (file: ProjectFileVO) => {
 const openPreview = async (file: ProjectFileVO) => {
   const freshFile = await refreshCurrentTaskFile(file);
   markFileViewed(freshFile);
-  const ext = (freshFile.fileExt || '').toLowerCase();
   const previewUrl = freshFile.previewStatus === 'converted' && freshFile.previewPath ? freshFile.previewPath : freshFile.storagePath || '';
   previewDialog.title = freshFile.originalName || '文件预览';
   previewDialog.url = previewUrl;
-  if (freshFile.previewStatus === 'converted' || ext === 'pdf') previewDialog.type = 'pdf';
-  else if (['mp4', 'mov', 'mpeg', 'mpg'].includes(ext)) previewDialog.type = 'video';
-  else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) previewDialog.type = 'image';
-  else previewDialog.type = 'other';
+  previewDialog.type = previewTypeOf(freshFile) || 'other';
   previewDialog.visible = true;
 };
 const openOriginalFile = async (file: ProjectFileVO) => {
@@ -1722,80 +1717,10 @@ const openOriginalFile = async (file: ProjectFileVO) => {
     windowOpen(freshFile.storagePath);
   }
 };
-const previewTagType = (status?: string) => (status === 'converted' ? 'success' : status === 'failed' ? 'danger' : 'warning');
-const previewMessage = (file: ProjectFileVO) => {
-  return normalizePreviewMessage(file.previewMessage, file.previewStatus);
-};
-const formatSize = (size?: number) => {
-  if (!size) return '-';
-  if (size >= 1024 * 1024 * 1024) return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`;
-  if (size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(2)} MB`;
-  return `${(size / 1024).toFixed(1)} KB`;
-};
-const parseJsonObject = (text?: string) => {
-  if (!text) return {};
-  try {
-    const parsed = JSON.parse(text);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
-};
-const parseStringArray = (text?: string) => {
-  if (!text) return [];
-  try {
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed.map(String) : [];
-  } catch {
-    return [];
-  }
-};
-const formatValue = (value: any) => {
-  if (value === undefined || value === null || value === '') return '-';
-  if (Array.isArray(value))
-    return (
-      value
-        .map((item) => formatValue(item))
-        .filter((item) => item && item !== '-')
-        .join('、') || '-'
-    );
-  if (typeof value === 'object') {
-    const entries = Object.entries(value)
-      .filter(([, item]) => item !== undefined && item !== null && item !== '')
-      .map(([key, item]) => `${objectFieldLabel(key)}：${formatValue(item)}`);
-    return entries.length ? entries.join('，') : JSON.stringify(value);
-  }
-  return String(value);
-};
-const shortText = (text: string) => (shouldExpandText(text) ? `${text.replace(/\s+/g, ' ').slice(0, 64)}...` : text);
-const shouldExpandText = (text: string) => text.length > 64 || text.includes('\n');
-const objectFieldLabel = (key: string) =>
-  (
-    ({
-      name: '姓名',
-      teacherName: '姓名',
-      teacher_name: '姓名',
-      instructorName: '姓名',
-      instructor_name: '姓名',
-      roleName: '角色',
-      role_name: '角色',
-      title: '职称',
-      phone: '电话',
-      mobile: '手机',
-      unit: '单位',
-      school: '学校',
-      department: '院系',
-      major: '专业'
-    }) as Record<string, string>
-  )[key] || key;
 const openFieldDialog = (row: { label: string; value: string }) => {
   fieldDialog.title = row.label || '内容详情';
   fieldDialog.content = row.value || '-';
   fieldDialog.visible = true;
-};
-const pdfViewerUrl = (url?: string) => {
-  if (!url) return '';
-  return `${url.split('#')[0]}#toolbar=1&navpanes=0&scrollbar=1`;
 };
 const windowOpen = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
 const printPdfPreview = () => {
