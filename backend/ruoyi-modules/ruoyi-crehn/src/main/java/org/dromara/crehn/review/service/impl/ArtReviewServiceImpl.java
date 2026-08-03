@@ -2542,6 +2542,12 @@ public class ArtReviewServiceImpl implements IArtReviewService {
             }
             return;
         }
+        if (ArtReviewConstants.REVIEW_SCORE_MODE_COMMENT_ONLY.equals(assignment.getScoreMode())) {
+            if (StringUtils.isBlank(bo.getCommentText())) {
+                throw new ServiceException("请输入评语");
+            }
+            return;
+        }
         if (bo.getScoreValue() == null) {
             throw new ServiceException("请输入分数");
         }

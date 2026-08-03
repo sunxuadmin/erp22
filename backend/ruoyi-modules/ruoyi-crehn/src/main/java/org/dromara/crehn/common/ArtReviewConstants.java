@@ -38,6 +38,7 @@ public interface ArtReviewConstants {
     String REVIEW_SCORE_SUBMITTED = "submitted";
     String REVIEW_SCORE_MODE_NUMERIC = "numeric_100";
     String REVIEW_SCORE_MODE_GRADE = "grade";
+    String REVIEW_SCORE_MODE_COMMENT_ONLY = "comment_only";
     String REVIEW_EXCLUSIVE_SINGLE = "single";
     String REVIEW_EXCLUSIVE_MULTI = "multi";
     String REVIEW_SCORE_VISIBILITY_AFTER_SUBMIT = "after_submit";

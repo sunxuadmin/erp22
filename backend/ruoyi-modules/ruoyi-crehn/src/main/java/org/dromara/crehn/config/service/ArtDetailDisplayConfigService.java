@@ -2122,7 +2122,7 @@ public class ArtDetailDisplayConfigService {
         columns.add(reviewColumn("groupOrNature", "组别", 100, 70, false));
         columns.add(reviewColumn("programForm", "类别细分", 110, 80, false));
         columns.add(reviewColumn("scoreMode", "评分模式", 90, 70, true));
-        columns.add(reviewColumn("scoreResult", "得分/等级", 96, 80, true));
+        columns.add(reviewColumn("scoreResult", "评审结果", 120, 80, true));
         columns.add(reviewColumn("scoreSubmittedAt", "签字时间", 146, 100, true));
         columns.add(reviewColumn("scoreStatus", "状态", 84, 70, true));
         columns.add(reviewColumn("actions", "操作", 110, 110, true));

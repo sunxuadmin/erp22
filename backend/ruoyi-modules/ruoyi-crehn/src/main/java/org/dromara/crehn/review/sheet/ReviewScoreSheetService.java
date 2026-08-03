@@ -552,7 +552,7 @@ public class ReviewScoreSheetService {
             new ReviewScoreSheetColumnVo("categoryName", "类别", true),
             new ReviewScoreSheetColumnVo("scoreMode", "评分模式", true),
             new ReviewScoreSheetColumnVo("status", "状态", false),
-            new ReviewScoreSheetColumnVo("scoreResult", "得分/等级", true),
+            new ReviewScoreSheetColumnVo("scoreResult", "评审结果", true),
             new ReviewScoreSheetColumnVo("scoreTime", "评分时间", true),
             new ReviewScoreSheetColumnVo("reviewerName", "评审老师", true)
         );

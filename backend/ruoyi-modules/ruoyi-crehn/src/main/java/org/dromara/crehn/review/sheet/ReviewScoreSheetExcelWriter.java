@@ -298,7 +298,11 @@ public class ReviewScoreSheetExcelWriter {
             case "projectNo" -> StringUtils.blankToDefault(task.getProjectNo(), "-");
             case "projectName" -> StringUtils.blankToDefault(task.getProjectName(), "-");
             case "categoryName" -> StringUtils.blankToDefault(task.getCategoryName(), "-");
-            case "scoreMode" -> "grade".equals(task.getScoreMode()) ? "等级制" : "百分制";
+            case "scoreMode" -> switch (StringUtils.blankToDefault(task.getScoreMode(), "numeric_100")) {
+                case "grade" -> "等级制";
+                case "comment_only" -> "仅评语";
+                default -> "百分制";
+            };
             case "status" -> "已提交";
             case "scoreResult" -> scoreResult(task);
             case "scoreTime" -> formatDate(task.getScoreSubmittedAt());
@@ -308,6 +312,9 @@ public class ReviewScoreSheetExcelWriter {
     }
 
     private String scoreResult(ReviewTaskVo task) {
+        if ("comment_only".equals(task.getScoreMode())) {
+            return StringUtils.blankToDefault(task.getCommentText(), "-");
+        }
         if ("grade".equals(task.getScoreMode())) {
             return StringUtils.blankToDefault(task.getGradeValue(), "-");
         }
