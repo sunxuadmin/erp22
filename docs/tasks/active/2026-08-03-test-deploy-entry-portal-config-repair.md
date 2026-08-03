@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`、`REQ-013`
-- 当前状态：`IMPLEMENTED / VERIFIED_LOCAL_STATIC / BUILD_BLOCKED_BY_WINDOWS_GIT_DIAGNOSTIC`
+- 当前状态：`IMPLEMENTED / VERIFIED_LOCAL_STATIC / ASSETS_STAGED / BUILD_BLOCKED_BY_CAPACITY`
 - Git提交：未授权
 - 数据库执行：未授权
 - 部署：未授权
@@ -26,7 +26,7 @@
 ## 验收
 
 - [x] PowerShell AST 解析通过，入口参数仅为 TEST `deploy-local` 增加 `sudo -n`。
-- [ ] 门户构建产物包含唯一根目录 `config.js`，内容为非模块 JavaScript（本轮未构建，待获构建授权）。
+- [ ] 门户构建产物包含唯一根目录 `config.js`，内容为非模块 JavaScript（构建被 TEST 容量门禁阻断）。
 - [x] `git diff --check` 通过；静态检查未执行数据库、服务器和部署操作。
 - [ ] 服务器部署和浏览器复验另行授权后执行。
 
@@ -38,3 +38,5 @@
 - 暂存前的秘密文件追踪检查改为读取 `git ls-files` 结果，避免 Windows PowerShell 将“未匹配”诊断误判为终止异常。
 - 新增 `portal/public/config.js`，仅初始化 `window.CREHN_PORTAL_CONFIG`，不含密码、令牌或服务器地址；Vite 会将 `public/` 原样复制到门户根目录。
 - PowerShell AST、Node `--check` 和 `git diff --check` 通过；构建、服务器和浏览器验证标记为 `NOT_RUN`，需分别授权。
+- `0.1.9-test` 资产已暂存到 `/srv/crehn-test`；BuildKit 仅缓存清理后根分区约 19.2 GiB，正式构建要求至少 20 GiB，重试仍被门禁阻断。
+- 清理后项目 A 五个容器 ID、健康状态和重启次数保持不变；未删除镜像、容器、卷、项目 A 数据或 TEST 备份。
