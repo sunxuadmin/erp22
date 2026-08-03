@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`、`REQ-013`
-- 当前状态：`VERIFIED / DEPLOYED_0.1.9 / NEEDS_RESTRICTED_ROLE_BROWSER`
+- 当前状态：`VERIFIED / DEPLOYED_0.1.9 / BROWSER_VERIFIED / RESTRICTED_ROLE_VERIFIED`
 - Git提交：已授权并完成，`ed2c85d`、`4a7eb2a`、`cb55919`
 - 数据库执行：未授权
 - 部署：已授权并完成 TEST `0.1.9-test`
@@ -28,7 +28,7 @@
 - [x] PowerShell AST 解析通过，入口参数仅为 TEST `deploy-local` 增加 `sudo -n`。
 - [x] 门户构建产物包含根目录 `config.js`，TEST 返回 `200 application/javascript`。
 - [x] `git diff --check`、构建、暂存和部署通过；未执行数据库初始化或 SQL。
-- [ ] 受限审核角色浏览器验收待重新登录后执行。
+- [x] 受限审核角色浏览器验收通过：仅显示项目审核；直接访问工作台配置返回 404。
 
 ## 实际变更与证据
 
@@ -43,3 +43,4 @@
 - 后续按授权删除未使用的 CREHN TEST `0.1.0-test` 至 `0.1.7-test` backend/db/web 镜像后，空间约 33.2 GiB；项目 A 五个容器仍为 `running/healthy`。
 - `BuildLocal` 生成 manifest SHA-256 `c99f81a4b59c3f6d57aa2361a6c957695d67fe9b7e43fd5a14cd265d98590fb9`；`DeployLocal` 使用备份 `/srv/crehn-test/backups/20260803T073145Z-0.1.8-test-pre-deploy`，DB/backend/web/redis/minio 健康，minio-init 完成。
 - 管理员浏览器验收通过：工作台配置、8 个页面标签、页面表头与按钮、表格列编辑字段均显示；无启用活动时保存按钮禁用，未写入业务配置。门户页面显示正常，`config.js` 返回 `200 application/javascript`，控制台无错误。
+- `TEST临时审核` 浏览器验收通过：菜单仅有首页和项目审核；项目审核页显示“当前没有可用的启用活动”；直接访问 `/admin/system/workbench` 显示 404；审核页控制台无错误。
