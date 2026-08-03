@@ -391,8 +391,8 @@ function New-SourceArchive {
         throw 'BLOCKED runtime CREHN_SOURCE_REVISION must equal the full committed revision'
     }
     foreach ($secretPath in @('deploy/.env', 'deploy/env/test.env', 'deploy/env/prod.env')) {
-        & git -C $projectRoot ls-files --error-unmatch -- $secretPath 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
+        $trackedSecret = @(& git -C $projectRoot ls-files -- $secretPath 2>$null)
+        if ($trackedSecret.Count -gt 0) {
             throw "BLOCKED secret environment file is tracked by Git: $secretPath"
         }
     }

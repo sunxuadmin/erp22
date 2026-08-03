@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`、`REQ-013`
-- 当前状态：`IMPLEMENTED / VERIFIED_LOCAL_STATIC / BUILD_NOT_RUN / DEPLOY_NOT_AUTHORIZED`
+- 当前状态：`IMPLEMENTED / VERIFIED_LOCAL_STATIC / BUILD_BLOCKED_BY_WINDOWS_GIT_DIAGNOSTIC`
 - Git提交：未授权
 - 数据库执行：未授权
 - 部署：未授权
@@ -35,5 +35,6 @@
 实施证据：
 
 - `deploy/scripts/invoke-deployment.ps1` 将 TEST `build-local` 与 `deploy-local` 统一包装为 `sudo -n`，与既有暂存环境权限边界一致。
+- 暂存前的秘密文件追踪检查改为读取 `git ls-files` 结果，避免 Windows PowerShell 将“未匹配”诊断误判为终止异常。
 - 新增 `portal/public/config.js`，仅初始化 `window.CREHN_PORTAL_CONFIG`，不含密码、令牌或服务器地址；Vite 会将 `public/` 原样复制到门户根目录。
 - PowerShell AST、Node `--check` 和 `git diff --check` 通过；构建、服务器和浏览器验证标记为 `NOT_RUN`，需分别授权。
