@@ -160,10 +160,12 @@
       <el-table v-loading="detailLoading" border :data="currentDetail?.scoreItems || []">
         <el-table-column label="评分序号" prop="slot" width="90" align="center" />
         <el-table-column label="评委老师" prop="reviewerName" min-width="150" />
-        <el-table-column label="评分" width="100" align="center">
+        <el-table-column label="评审结果" width="160" align="center">
           <template #default="scope">
             {{
-              scope.row.scoreValue !== null && scope.row.scoreValue !== undefined ? formatScore(scope.row.scoreValue) : scope.row.gradeValue || '-'
+              scope.row.scoreValue !== null && scope.row.scoreValue !== undefined
+                ? formatScore(scope.row.scoreValue)
+                : scope.row.gradeValue || scope.row.commentText || '-'
             }}
           </template>
         </el-table-column>
@@ -378,10 +380,17 @@ const summaryActionLabel = computed(() => controlledPageConfig.value.actionLabel
 const maxScoreSlot = computed(() => Math.max(0, ...rows.value.flatMap((row) => (row.scoreItems || []).map((item) => Number(item.slot || 0)))));
 
 const schoolLabel = (item: any) => [item.schoolName, item.schoolCode].filter(Boolean).join(' / ');
-const formatScore = (value?: number) => (value === null || value === undefined ? '-' : Number(value).toFixed(2));
+const formatScore = (value?: number | string | null) => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && String(value).trim() !== '' ? numericValue.toFixed(2) : String(value);
+};
 const scoreSlot = (fieldKey?: string) => Number(String(fieldKey || '').replace('score', ''));
 const isScoreColumn = (fieldKey?: string) => /^score\d+$/.test(String(fieldKey || ''));
-const scoreAt = (row: ReviewScoreSummaryVO, slot: number) => row.scoreItems?.find((item) => Number(item.slot) === slot)?.scoreValue;
+const scoreAt = (row: ReviewScoreSummaryVO, slot: number) => {
+  const item = row.scoreItems?.find((candidate) => Number(candidate.slot) === slot);
+  return item?.scoreValue ?? item?.gradeValue ?? item?.commentText;
+};
 const warningTagType = (status?: string) => (status === 'warning' ? 'danger' : status === 'normal' ? 'success' : 'warning');
 const isExpandableSummaryColumn = (column: ReviewScoreSummaryColumnVO) => EXPANDABLE_SUMMARY_COLUMN_KEYS.has(column.fieldKey || '');
 const configuredColumnWidth = (column: ReviewScoreSummaryColumnVO) => Number(column.width || DEFAULT_COLUMN_WIDTHS[column.fieldKey || ''] || 120);

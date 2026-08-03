@@ -17,7 +17,7 @@ export const reviewListBuiltinColumnOptions: Array<{
   { key: 'groupOrNature', label: '组别', width: 100, minWidth: 70, visible: true, fixed: 'none' },
   { key: 'programForm', label: '类别细分', width: 110, minWidth: 80, visible: false, fixed: 'none' },
   { key: 'scoreMode', label: '评分模式', width: 90, minWidth: 70, visible: false, fixed: 'none' },
-  { key: 'scoreResult', label: '得分/等级', width: 96, minWidth: 80, visible: true, fixed: 'none' },
+  { key: 'scoreResult', label: '评审结果', width: 120, minWidth: 80, visible: true, fixed: 'none' },
   { key: 'scoreSubmittedAt', label: '签字时间', width: 146, minWidth: 100, visible: true, fixed: 'none' },
   { key: 'scoreStatus', label: '状态', width: 84, minWidth: 70, visible: false, fixed: 'none' },
   { key: 'actions', label: '操作', width: 110, minWidth: 110, visible: true, fixed: 'right' }

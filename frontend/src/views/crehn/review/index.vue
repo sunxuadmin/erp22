@@ -227,7 +227,7 @@
               <template #default="scope">
                 <template v-if="['groupOrNature', 'groupName'].includes(column.key)">{{ reviewGroupText(scope.row) }}</template>
                 <template v-else-if="column.key === 'scoreMode'">{{ scoreModeLabel(scope.row.scoreMode) }}</template>
-                <template v-else-if="column.key === 'scoreResult'">{{ scoreText(scope.row) }}</template>
+                <template v-else-if="column.key === 'scoreResult'">{{ scoreResultText(scope.row) }}</template>
                 <ArtListStatusTag
                   v-else-if="column.key === 'scoreStatus'"
                   :semantic="scoreStatusSemantic(scope.row)"
@@ -414,7 +414,7 @@
                     <el-table-column v-if="isScoreRecordColumnVisible('reviewer')" label="评委" min-width="180" show-overflow-tooltip>
                       <template #default="scope">{{ scope.row.reviewerNickName || scope.row.reviewerUserName || scope.row.reviewerUserId }}</template>
                     </el-table-column>
-                    <el-table-column v-if="isScoreRecordColumnVisible('result')" label="得分/等级" width="120">
+                    <el-table-column v-if="isScoreRecordColumnVisible('result')" label="评审结果" width="180">
                       <template #default="scope">{{ scoreRecordText(scope.row) }}</template>
                     </el-table-column>
                     <el-table-column
@@ -437,58 +437,21 @@
             </section>
 
             <aside class="art-detail-workbench__side review-side-pane">
-              <section class="art-detail-workbench__side-section review-score-panel">
-                <div class="art-detail-workbench__side-head">
-                  <strong>{{ detailDisplayConfig.score.title }}</strong>
-                  <div class="art-detail-workbench__side-tools">
-                    <el-tag v-if="detailDisplayConfig.score.statusVisible" size="small" :type="scoreStatusType(currentTask)">
-                      {{ scoreStatusLabel(currentTask) }}
-                    </el-tag>
-                  </div>
-                </div>
-                <div class="review-score-control">
-                  <label>{{ currentTask.scoreMode === 'grade' ? detailDisplayConfig.score.gradeLabel : detailDisplayConfig.score.scoreLabel }}</label>
-                  <el-radio-group
-                    v-if="currentTask.scoreMode === 'grade'"
-                    v-model="scoreForm.gradeValue"
-                    class="review-grade-group"
-                    :disabled="scoreLocked"
-                  >
-                    <el-radio-button v-for="item in gradeOptions" :key="item" :label="item">{{ item }}</el-radio-button>
-                  </el-radio-group>
-                  <template v-else>
-                    <el-input-number
-                      v-model="scoreForm.scoreValue"
-                      :min="numericRule.min"
-                      :max="numericRule.max"
-                      :step="numericRule.step"
-                      :precision="numericRule.precision"
-                      :disabled="scoreLocked"
-                    />
-                    <div v-if="quickScoreOptions.length" class="review-quick-scores" :style="quickScoreGridStyle">
-                      <el-button v-for="item in quickScoreOptions" :key="item" size="small" :disabled="scoreLocked" @click="applyQuickScore(item)">
-                        {{ item }}
-                      </el-button>
-                    </div>
-                  </template>
-                </div>
-                <div v-if="detailDisplayConfig.score.commentVisible" class="review-comment-control">
-                  <label>{{ detailDisplayConfig.score.commentLabel }}</label>
-                  <el-input v-model="scoreForm.commentText" type="textarea" :rows="4" maxlength="1000" show-word-limit :disabled="scoreLocked" />
-                </div>
-                <div class="review-score-actions">
-                  <el-button
-                    v-if="!scoreLocked && detailDisplayConfig.score.saveDraftVisible"
-                    type="primary"
-                    icon="DocumentChecked"
-                    @click="saveScore"
-                  >
-                    保存评分
-                  </el-button>
-                  <el-button v-if="!scoreLocked" icon="ArrowRight" @click="saveScoreAndNext">保存并查看下一个</el-button>
-                  <span v-else-if="currentTask.scoreStatus === 'submitted'" class="review-score-locked-hint">该类别已签字，评分已锁定</span>
-                </div>
-              </section>
+              <ReviewScorePanel
+                :current-task="currentTask"
+                :detail-display-config="detailDisplayConfig"
+                :score-form="scoreForm"
+                :score-locked="scoreLocked"
+                :numeric-rule="numericRule"
+                :grade-options="gradeOptions"
+                :quick-score-options="quickScoreOptions"
+                :quick-score-grid-style="quickScoreGridStyle"
+                :score-status-type="scoreStatusType"
+                :score-status-label="scoreStatusLabel"
+                :apply-quick-score="applyQuickScore"
+                :save-score="saveScore"
+                :save-score-and-next="saveScoreAndNext"
+              />
 
               <section v-if="detailDisplayConfig.score.fileListVisible" class="art-detail-workbench__side-section is-grow review-file-panel">
                 <ArtDetailFileList
@@ -650,6 +613,8 @@ import { artReviewGroupDisplayText } from '../components/artListTableDefaults';
 import ProjectBrowseNavigator from '../components/ProjectBrowseNavigator.vue';
 import ProjectGenericTableReadonly from '../project/components/ProjectGenericTableReadonly.vue';
 import ReviewScopeNavigator from './components/ReviewScopeNavigator.vue';
+import ReviewScorePanel from './components/ReviewScorePanel.vue';
+import { scoreModeLabel, scoreRecordText, scoreResultText } from './scorePresentation';
 import ScoreSheetExportDialog from '../review-score-sheet/components/ScoreSheetExportDialog.vue';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -1537,11 +1502,15 @@ const openDetail = async (row: ReviewTaskVO) => {
 
 const ensureScoreComplete = () => {
   if (!currentTask.value) return false;
+  if (currentTask.value.scoreMode === 'comment_only' && !scoreForm.commentText?.trim()) {
+    proxy?.$modal.msgError('请输入评语');
+    return false;
+  }
   if (currentTask.value.scoreMode === 'grade' && !scoreForm.gradeValue) {
     proxy?.$modal.msgError('请选择评分等级');
     return false;
   }
-  if (currentTask.value.scoreMode !== 'grade' && (scoreForm.scoreValue === undefined || scoreForm.scoreValue === null)) {
+  if (currentTask.value.scoreMode !== 'grade' && currentTask.value.scoreMode !== 'comment_only' && (scoreForm.scoreValue === undefined || scoreForm.scoreValue === null)) {
     proxy?.$modal.msgError('请输入分数');
     return false;
   }
@@ -1603,7 +1572,6 @@ const buildScorePayload = () => ({
   commentText: scoreForm.commentText
 });
 
-const scoreModeLabel = (value?: string) => (value === 'grade' ? '等级制' : '百分制');
 const scoreVisibilityLabel = (_value?: string) => '评委间始终互盲';
 const scoreStatusLabel = (row: ReviewTaskVO) => {
   if (row.lockedByOther) return '已被评分';
@@ -1623,8 +1591,6 @@ const scoreStatusSemantic = (row: ReviewTaskVO): ArtListStatusSemantic => {
   if (row.scoreStatus === 'draft') return 'scoreDraft';
   return 'unscored';
 };
-const scoreText = (row: ReviewTaskVO) => (row.scoreMode === 'grade' ? row.gradeValue || '-' : (row.scoreValue ?? '-'));
-const scoreRecordText = (row: ReviewScoreVO) => row.gradeValue || (row.scoreValue ?? '-');
 const applyQuickScore = (value: number) => {
   if (scoreLocked.value) return;
   scoreForm.scoreValue = value;

@@ -7,6 +7,7 @@ import type {
   ReviewScoreSheetTemplateVO,
   ReviewTaskVO
 } from '@/api/crehn/types';
+import { scoreModeLabel, scoreResultText } from '../review/scorePresentation';
 
 export const defaultScoreSheetColumns = (): ReviewScoreSheetColumnVO[] => [
   { key: 'projectNo', label: '项目编号', visible: true },
@@ -14,7 +15,7 @@ export const defaultScoreSheetColumns = (): ReviewScoreSheetColumnVO[] => [
   { key: 'categoryName', label: '类别', visible: true },
   { key: 'scoreMode', label: '评分模式', visible: true },
   { key: 'status', label: '状态', visible: false },
-  { key: 'scoreResult', label: '得分/等级', visible: true },
+  { key: 'scoreResult', label: '评审结果', visible: true },
   { key: 'scoreTime', label: '评分时间', visible: true },
   { key: 'reviewerName', label: '评审老师', visible: true }
 ];
@@ -56,9 +57,9 @@ export const scoreTaskToPreviewRow = (task: ReviewTaskVO, reviewerName = '评审
   projectNo: task.projectNo || '-',
   projectName: task.projectName || '-',
   categoryName: task.categoryName || '-',
-  scoreMode: task.scoreMode === 'grade' ? '等级制' : '百分制',
+  scoreMode: scoreModeLabel(task.scoreMode),
   status: '已提交',
-  scoreResult: task.scoreMode === 'grade' ? task.gradeValue || '-' : task.scoreValue == null ? '-' : Number(task.scoreValue).toFixed(2),
+  scoreResult: scoreResultText(task, true),
   scoreTime: task.scoreSubmittedAt || '-',
   reviewerName: reviewerName || '评审老师'
 });

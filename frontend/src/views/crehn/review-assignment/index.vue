@@ -466,37 +466,7 @@
                       </div>
                     </div>
                   </template>
-                  <el-row :gutter="10">
-                    <el-col :span="12">
-                      <el-form-item label="评分模式">
-                        <el-select v-model="form.scoreMode">
-                          <el-option label="百分制" value="numeric_100" />
-                          <el-option label="等级制" value="grade" />
-                        </el-select>
-                      </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                      <el-form-item label="评分互斥">
-                        <el-select v-model="form.exclusiveMode">
-                          <el-option label="单评委互斥" value="single" />
-                          <el-option label="多评委可评" value="multi" />
-                        </el-select>
-                      </el-form-item>
-                    </el-col>
-                  </el-row>
-                  <el-form-item v-if="form.scoreMode !== 'grade'" label="预设分数">
-                    <el-input v-model="quickScoreText" placeholder="例如：30,60,80,90,100" clearable />
-                  </el-form-item>
-                  <el-form-item label="全部评分可见">
-                    <el-select v-model="form.scoreVisibilityPolicy">
-                      <el-option label="评分后可见" value="after_submit" />
-                      <el-option label="一直不可见" value="hidden" />
-                      <el-option label="一直可见" value="always" />
-                    </el-select>
-                  </el-form-item>
-                  <el-form-item label="高级评分规则">
-                    <el-input v-model="form.scoreRuleJson" type="textarea" :rows="4" />
-                  </el-form-item>
+                  <ReviewScoreConfigurationFields v-model="form" v-model:quick-score-text="quickScoreText" layout="single" />
                 </el-collapse-item>
               </el-collapse>
             </section>
@@ -641,36 +611,7 @@
 
         <el-collapse v-if="mixedScopeForm.operation !== 'remove'" class="mixed-scope-score-config">
           <el-collapse-item name="score-config" title="评分配置（所选类别统一使用）">
-            <el-row :gutter="12">
-              <el-col :span="8">
-                <el-form-item label="评分模式">
-                  <el-select v-model="mixedScopeForm.scoreMode">
-                    <el-option label="百分制" value="numeric_100" />
-                    <el-option label="等级制" value="grade" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="评分互斥">
-                  <el-select v-model="mixedScopeForm.exclusiveMode">
-                    <el-option label="单评委互斥" value="single" />
-                    <el-option label="多评委可评" value="multi" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="评分可见">
-                  <el-select v-model="mixedScopeForm.scoreVisibilityPolicy">
-                    <el-option label="评分后可见" value="after_submit" />
-                    <el-option label="一直不可见" value="hidden" />
-                    <el-option label="一直可见" value="always" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="高级评分规则">
-              <el-input v-model="mixedScopeForm.scoreRuleJson" type="textarea" :rows="3" />
-            </el-form-item>
+            <ReviewScoreConfigurationFields v-model="mixedScopeForm" layout="mixed" />
           </el-collapse-item>
         </el-collapse>
 
@@ -990,6 +931,8 @@ import {
 import { isCategoryGroup } from '@/utils/artCategory';
 import { useArtListTablePage } from '@/composables/useArtListTableConfig';
 import AssignmentScopeSelector from '@/views/crehn/components/AssignmentScopeSelector.vue';
+import { scoreModeLabel } from '../review/scorePresentation';
+import ReviewScoreConfigurationFields from './components/ReviewScoreConfigurationFields.vue';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
@@ -2154,7 +2097,6 @@ const reviewerLabel = (row: ReviewAssignmentVO) => {
   const name = row.reviewerNickName || row.reviewerUserName || row.reviewerUserId || '-';
   return row.reviewerUserName ? `${name}（${row.reviewerUserName}）` : String(name);
 };
-const scoreModeLabel = (value?: string) => (value === 'grade' ? '等级制' : '百分制');
 const exclusiveLabel = (value?: string) => (value === 'multi' ? '多评委可评' : '单评委互斥');
 const scoreVisibilityLabel = (value?: string) =>
   ({ hidden: '一直不可见', always: '一直可见', after_submit: '评分后可见' })[value || 'after_submit'] || '评分后可见';
@@ -2391,7 +2333,7 @@ const syncQuickScoreTextFromRule = () => {
 const syncQuickScoresToRule = () => {
   const rule = scoreRuleObject();
   if (!rule) return false;
-  if (form.scoreMode === 'grade') {
+  if (form.scoreMode === 'grade' || form.scoreMode === 'comment_only') {
     delete rule.quickScores;
     form.scoreRuleJson = JSON.stringify(rule);
     return true;

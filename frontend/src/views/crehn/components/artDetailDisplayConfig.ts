@@ -947,7 +947,7 @@ export const scoreFileColumnOptions: Array<{ key: ArtScoreFileColumnKey; label: 
 
 export const scoreRecordColumnOptions: Array<{ key: ArtScoreRecordColumnKey; label: string }> = [
   { key: 'reviewer', label: '评委' },
-  { key: 'result', label: '得分/等级' },
+  { key: 'result', label: '评审结果' },
   { key: 'comment', label: '意见' }
 ];
 

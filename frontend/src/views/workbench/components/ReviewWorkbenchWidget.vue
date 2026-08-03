@@ -65,7 +65,7 @@
         >
           <el-table-column label="作品名称" prop="projectName" min-width="220" show-overflow-tooltip />
           <el-table-column label="类别" prop="categoryName" min-width="140" show-overflow-tooltip />
-          <el-table-column label="得分/等级" width="110">
+          <el-table-column label="评分结果" width="110">
             <template #default="{ row }">{{ scoreText(row) }}</template>
           </el-table-column>
           <el-table-column label="状态" width="90" align="center">
@@ -91,6 +91,7 @@
 <script setup lang="ts">
 import { getReviewWorkbench } from '@/api/crehn/review';
 import { ReviewScoreVO, ReviewTaskVO, ReviewWorkbenchVO } from '@/api/crehn/types';
+import { scoreRecordText } from '@/views/crehn/review/scorePresentation';
 
 type ReviewWorkbenchCardConfig = {
   key: string;
@@ -275,7 +276,7 @@ const cardStyle = (item: ReviewWorkbenchCardConfig) => ({
   background: item.backgroundColor || defaultCardStyle.backgroundColor,
   cursor: hasCardLink(item) ? 'pointer' : 'default'
 });
-const scoreText = (row: ReviewScoreVO) => row.gradeValue || (row.scoreValue ?? '-');
+const scoreText = (row: ReviewScoreVO) => scoreRecordText(row);
 
 const loadData = async () => {
   loading.value = true;
