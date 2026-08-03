@@ -71,6 +71,7 @@
 - 后端职责审计：`ArtReviewServiceImpl` 同时承载分配、任务查询和评分管理，私有方法共享度较高；本批不做机械拆分或新增转发 Service，待形成可独立测试的真实边界后再拆。
 - 本批显示配置/评分展示审计：`artDetailDisplayConfig.ts` 已有空值、旧配置迁移、默认值和规范化测试；结果汇总页已有数值、等级和评语回退展示。为避免重复防御逻辑和无边界拆分，本批不新增兼容分支或拆文件。
 - 追加明确漏点修复：通用评审工作台 `ReviewWorkbenchWidget.vue` 的最近评分原先只显示等级/数值，无法显示仅评语记录；现改用共享 `scoreRecordText`，列名调整为“评分结果”，沿用已有评语回退规则。
-- 本批静态验证：`frontend` 定向 Vitest 通过 3 个文件、39 个测试（显示配置 18、评分展示 3、表格配置 18）；`vue-tsc --noEmit` 仍仅命中既有未修改文件 `src/views/system/workbench/index.vue:460` 的 `ArtListTablePageKey` 类型错误；测试产生的 `.eslintrc-auto-import.json` 自动导入基线已恢复；`git diff --check` 通过，仅有换行符提示。
+- 本批结构拆分：从 `review/index.vue` 提取独立的 `reviewFilePresentation.ts`，集中文件预览类型、文件大小、字段 JSON 展示和 PDF 查看地址等纯函数；新增对应 3 项单元测试，页面保留任务刷新、预览打开和状态管理。
+- 本批静态验证：`frontend` 定向 Vitest 通过 4 个文件、42 个测试（文件展示 3、显示配置 18、评分展示 3、表格配置 18）；`vue-tsc --noEmit` 仍仅命中既有未修改文件 `src/views/system/workbench/index.vue:460` 的 `ArtListTablePageKey` 类型错误；测试产生的 `.eslintrc-auto-import.json` 自动导入基线已恢复；`git diff --check` 通过，仅有换行符提示。
 - 未修改 SQL、部署配置或 Git 历史；数据库、服务器、部署和推送仍未授权。
 - 具体实现完成后按 `IMPLEMENTED → VERIFIED` 回填文件、测试、浏览器、数据库、部署和授权证据。
