@@ -528,7 +528,7 @@ function Invoke-InstalledAction {
     } elseif ($Action -eq 'DatabasePlan') {
         $arguments += @('--database-operation', 'plan')
     }
-    if (-not $production -and $RemoteAction -eq 'build-local') {
+    if (-not $production -and $RemoteAction -in @('build-local', 'deploy-local')) {
         $arguments = @('sudo', '-n') + $arguments
     }
     Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments $arguments

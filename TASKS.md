@@ -14,6 +14,10 @@
 - [2026-08-01 TEST部署健康检查等待修复](docs/tasks/active/2026-08-01-test-deploy-health-wait-repair.md)
 - [2026-08-02 TEST管理端构建上下文修复](docs/tasks/active/2026-08-02-test-admin-build-context-repair.md)
 - [2026-08-02 TEST项目A保护基线顺序误报修复](docs/tasks/active/2026-08-02-test-protected-baseline-order-repair.md)
+- [2026-08-02 业务页面表头与表格配置覆盖补充](docs/tasks/active/2026-08-02-business-page-header-table-config-coverage.md)
+- [2026-08-02 业务页面表头与表格配置运行时接入](docs/tasks/active/2026-08-02-business-page-table-config-implementation.md)
+- [2026-08-02 表格配置编辑器初始化运行时错误修复](docs/tasks/active/2026-08-02-table-config-runtime-error-repair.md)
+- [2026-08-03 TEST DeployLocal 入口与门户运行时配置修复](docs/tasks/active/2026-08-03-test-deploy-entry-portal-config-repair.md)
 
 任务卡模板：[docs/tasks/active/TEMPLATE.md](docs/tasks/active/TEMPLATE.md)
 
