@@ -3,10 +3,10 @@
 ## 状态
 
 - 需求：`REQ-010`、`REQ-013`
-- 当前状态：`IMPLEMENTED / VERIFIED_LOCAL_STATIC / ASSETS_STAGED / BUILD_BLOCKED_BY_CAPACITY`
-- Git提交：未授权
+- 当前状态：`VERIFIED / DEPLOYED_0.1.9 / NEEDS_RESTRICTED_ROLE_BROWSER`
+- Git提交：已授权并完成，`ed2c85d`、`4a7eb2a`、`cb55919`
 - 数据库执行：未授权
-- 部署：未授权
+- 部署：已授权并完成 TEST `0.1.9-test`
 
 ## 目标
 
@@ -26,9 +26,9 @@
 ## 验收
 
 - [x] PowerShell AST 解析通过，入口参数仅为 TEST `deploy-local` 增加 `sudo -n`。
-- [ ] 门户构建产物包含唯一根目录 `config.js`，内容为非模块 JavaScript（构建被 TEST 容量门禁阻断）。
-- [x] `git diff --check` 通过；静态检查未执行数据库、服务器和部署操作。
-- [ ] 服务器部署和浏览器复验另行授权后执行。
+- [x] 门户构建产物包含根目录 `config.js`，TEST 返回 `200 application/javascript`。
+- [x] `git diff --check`、构建、暂存和部署通过；未执行数据库初始化或 SQL。
+- [ ] 受限审核角色浏览器验收待重新登录后执行。
 
 ## 实际变更与证据
 
@@ -40,3 +40,6 @@
 - PowerShell AST、Node `--check` 和 `git diff --check` 通过；构建、服务器和浏览器验证标记为 `NOT_RUN`，需分别授权。
 - `0.1.9-test` 资产已暂存到 `/srv/crehn-test`；BuildKit 仅缓存清理后根分区约 19.2 GiB，正式构建要求至少 20 GiB，重试仍被门禁阻断。
 - 清理后项目 A 五个容器 ID、健康状态和重启次数保持不变；未删除镜像、容器、卷、项目 A 数据或 TEST 备份。
+- 后续按授权删除未使用的 CREHN TEST `0.1.0-test` 至 `0.1.7-test` backend/db/web 镜像后，空间约 33.2 GiB；项目 A 五个容器仍为 `running/healthy`。
+- `BuildLocal` 生成 manifest SHA-256 `c99f81a4b59c3f6d57aa2361a6c957695d67fe9b7e43fd5a14cd265d98590fb9`；`DeployLocal` 使用备份 `/srv/crehn-test/backups/20260803T073145Z-0.1.8-test-pre-deploy`，DB/backend/web/redis/minio 健康，minio-init 完成。
+- 管理员浏览器验收通过：工作台配置、8 个页面标签、页面表头与按钮、表格列编辑字段均显示；无启用活动时保存按钮禁用，未写入业务配置。门户页面显示正常，`config.js` 返回 `200 application/javascript`，控制台无错误。
