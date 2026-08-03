@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`
-- 当前状态：`VERIFIED / COMMITTED / DEPLOYED_0.1.6`
+- 当前状态：`ARCHIVED / VERIFIED_THROUGH_0.1.9`
 - 部署脚本修改：已获授权
 - Git提交、重新构建、资产暂存和TEST部署：已获授权
 - 数据库初始化：禁止

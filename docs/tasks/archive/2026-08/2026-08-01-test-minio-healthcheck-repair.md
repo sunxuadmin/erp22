@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`COMMIT_APPROVED / BUILD_REDEPLOY_PENDING`
+- 当前状态：`ARCHIVED / VERIFIED_THROUGH_0.1.9`
 - 代码/部署资产修改：已获授权
 - 构建、资产暂存、TEST部署：已获授权
 - Git提交：本轮已授权，仅本地提交

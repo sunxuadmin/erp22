@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-014`
-- 当前状态：`VERIFIED / DEPLOYED_0.1.7 / BROWSER_VERIFIED / RESTRICTED_ROLE_VERIFIED`
+- 当前状态：`ARCHIVED / VERIFIED / SUPERSEDED_BY_0.1.9`
 - Git提交：已授权并完成，`345c3c86ac2f451013c726cd04492dbe410161db`
 - 数据库执行：未执行（本任务无 SQL）
 - 部署：已授权并完成 TEST `0.1.7-test`

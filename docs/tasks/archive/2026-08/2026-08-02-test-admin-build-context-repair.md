@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`
-- 当前状态：`VERIFIED / COMMITTED / DEPLOYED_0.1.6 / NEEDS_RESTRICTED_ROLE_BROWSER`
+- 当前状态：`ARCHIVED / VERIFIED_THROUGH_0.1.9 / RESTRICTED_ROLE_VERIFIED`
 - 代码修改：已获授权
 - 构建、资产暂存、TEST部署和浏览器验收：已获授权
 - Git提交：已完成；本任务不推送

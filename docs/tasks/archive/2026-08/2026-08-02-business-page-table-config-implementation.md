@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-013A`
-- 当前状态：`IMPLEMENTED / VERIFIED_LOCAL / BACKEND_COMPILE_NOT_RUN / DEPLOY_PENDING`
+- 当前状态：`ARCHIVED / VERIFIED_THROUGH_0.1.9 / BROWSER_ADMIN_VERIFIED`
 - 稳定页面键：`reviewAssignment`、`scoreSummary`、`signedSheets`
 - 数据库执行：未执行
 - 构建与部署：未执行（当前不可变修订仍为 `345c3c86…`，暂存会遗漏本轮未提交代码）

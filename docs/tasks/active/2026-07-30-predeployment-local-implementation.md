@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-001` 至 `REQ-012`
-- 当前状态：`IMPLEMENTED / SERVER_VERIFICATION_PENDING`
+- 当前状态：`IMPLEMENTED / TEST_PARTIAL_VERIFIED / DATABASE_AND_FULL_ACCEPTANCE_PENDING`
 - 负责人：Codex
 - Git仓库：2026-07-31提交前只读审计时，`main` 已有5个本地提交（非本任务执行）
 - 新增Git提交：未授权

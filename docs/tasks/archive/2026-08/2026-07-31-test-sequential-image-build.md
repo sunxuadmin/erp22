@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-007`、`REQ-010`
-- 当前状态：`SUPERSEDED / REBUILD_AS_0.1.2_REQUIRED / DEPLOY_NOT_AUTHORIZED`
+- 当前状态：`ARCHIVED / SUPERSEDED_BY_0.1.9 / BUILD_CHAIN_CLOSED`
 - 用户已授权：在TEST通过正式入口顺序构建CREHN镜像；仅此 `build-local` 动作使用已验证的 `sudo -n`
 - 容器启动、SQL、部署、生产操作、Git提交和推送：未授权
 

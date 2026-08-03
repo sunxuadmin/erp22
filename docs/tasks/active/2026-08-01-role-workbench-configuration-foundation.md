@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-013`
-- 当前状态：`IMPLEMENTED / COMMITTED / NEEDS_SERVER / NEEDS_BROWSER`
+- 当前状态：`IMPLEMENTED / TEST_ADMIN_PARTIAL / DATABASE_AND_12_ROLE_BROWSER_PENDING`
 - Git提交：已完成（后端、前端、SQL和文档分类提交）
 - 数据库执行：未授权
 - 部署：未授权

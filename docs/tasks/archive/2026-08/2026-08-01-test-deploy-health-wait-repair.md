@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`
-- 当前状态：`IMPLEMENTING / COMMIT_NOT_AUTHORIZED`
+- 当前状态：`ARCHIVED / VERIFIED_THROUGH_0.1.9`
 - 代码/部署资产修改：已获授权
 - 构建、资产暂存、TEST部署：已获授权
 - Git提交与推送：未授权；本任务不推送

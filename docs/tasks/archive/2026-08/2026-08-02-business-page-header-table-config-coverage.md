@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-013`
-- 当前状态：`IMPLEMENTED / DOC_ONLY / CODE_NOT_STARTED`
+- 当前状态：`ARCHIVED / DOC_COMPLETE / IMPLEMENTED_BY_FOLLOW_UP_TASK`
 - Git提交：未授权
 - 数据库执行：未授权
 - 部署：未授权

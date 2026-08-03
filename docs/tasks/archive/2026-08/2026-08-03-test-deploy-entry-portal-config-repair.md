@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-010`、`REQ-013`
-- 当前状态：`VERIFIED / DEPLOYED_0.1.9 / BROWSER_VERIFIED / RESTRICTED_ROLE_VERIFIED`
+- 当前状态：`ARCHIVED / VERIFIED / DEPLOYED_0.1.9 / BROWSER_VERIFIED / RESTRICTED_ROLE_VERIFIED`
 - Git提交：已授权并完成，`ed2c85d`、`4a7eb2a`、`cb55919`
 - 数据库执行：未授权
 - 部署：已授权并完成 TEST `0.1.9-test`
@@ -37,8 +37,8 @@
 - `deploy/scripts/invoke-deployment.ps1` 将 TEST `build-local` 与 `deploy-local` 统一包装为 `sudo -n`，与既有暂存环境权限边界一致。
 - 暂存前的秘密文件追踪检查改为读取 `git ls-files` 结果，避免 Windows PowerShell 将“未匹配”诊断误判为终止异常。
 - 新增 `portal/public/config.js`，仅初始化 `window.CREHN_PORTAL_CONFIG`，不含密码、令牌或服务器地址；Vite 会将 `public/` 原样复制到门户根目录。
-- PowerShell AST、Node `--check` 和 `git diff --check` 通过；构建、服务器和浏览器验证标记为 `NOT_RUN`，需分别授权。
-- `0.1.9-test` 资产已暂存到 `/srv/crehn-test`；BuildKit 仅缓存清理后根分区约 19.2 GiB，正式构建要求至少 20 GiB，重试仍被门禁阻断。
+- PowerShell AST、Node `--check` 和 `git diff --check` 通过；后续已按独立授权完成 TEST 构建、暂存、部署和浏览器验收。
+- `0.1.9-test` 资产已暂存到 `/srv/crehn-test`；BuildLocal、DeployLocal、健康检查和项目A保护基线验收均已完成。
 - 清理后项目 A 五个容器 ID、健康状态和重启次数保持不变；未删除镜像、容器、卷、项目 A 数据或 TEST 备份。
 - 后续按授权删除未使用的 CREHN TEST `0.1.0-test` 至 `0.1.7-test` backend/db/web 镜像后，空间约 33.2 GiB；项目 A 五个容器仍为 `running/healthy`。
 - `BuildLocal` 生成 manifest SHA-256 `c99f81a4b59c3f6d57aa2361a6c957695d67fe9b7e43fd5a14cd265d98590fb9`；`DeployLocal` 使用备份 `/srv/crehn-test/backups/20260803T073145Z-0.1.8-test-pre-deploy`，DB/backend/web/redis/minio 健康，minio-init 完成。

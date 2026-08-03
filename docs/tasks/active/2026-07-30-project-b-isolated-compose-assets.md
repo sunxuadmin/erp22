@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：`REQ-006`、`REQ-007`、`REQ-010`、`REQ-012`
-- 当前状态：`IMPLEMENTED / SERVER_VERIFICATION_PENDING`
+- 当前状态：`IMPLEMENTED / TEST_PARTIAL_VERIFIED / DATABASE_AND_PROD_PENDING`
 - 文件修改：已授权
 - 本地构建：未授权
 - 本地容器部署：未授权
