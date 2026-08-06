@@ -13,22 +13,27 @@
 
 ## 分支说明
 
-- ts分支(稳定发布主分支 生产可用)
-- dev分支(开发分支 开发过程中使用)
+- CREHN 当前采用 `main + feature/REQ-* + vX.Y.Z 发布标签`，不建立长期 `develop` 分支。
+- 提交、推送、标签和部署分别授权；构建通过不自动代表可发布。
 
 ## 前端运行
 
-```bash
+```powershell
 # 安装依赖
-npm install --registry=https://registry.npmmirror.com
+pnpm install --frozen-lockfile
 
 # 启动服务
-npm run dev
+pnpm dev
+
+# 运行测试与类型检查
+pnpm test
+pnpm typecheck
 
 # 构建生产环境
-npm run build:prod
+pnpm build:prod
 
-# 前端访问地址 http://localhost:80
+# 本地开发按 .env.development 使用根页面上下文；生产构建按 .env.production 发布到 /admin/
+# 生产浏览器 API 前缀为 /prod-api/，CREHN 业务接口路径为 /crehn/<module>/...
 ```
 
 ## 本框架与RuoYi的业务差异

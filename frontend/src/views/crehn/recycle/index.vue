@@ -20,8 +20,15 @@
             <el-form-item label="项目名称">
               <el-input v-model="projectQuery.projectName" clearable placeholder="请输入项目名称" @keyup.enter="loadProjects" />
             </el-form-item>
-            <el-form-item label="活动ID">
-              <el-input v-model="projectQuery.activityId" clearable style="width: 120px" />
+            <el-form-item label="活动">
+              <el-select v-model="projectQuery.activityId" clearable filterable placeholder="全部活动" style="width: 220px">
+                <el-option
+                  v-for="activity in activityOptions"
+                  :key="String(activity.id)"
+                  :label="activity.activityName"
+                  :value="String(activity.id)"
+                />
+              </el-select>
             </el-form-item>
             <el-form-item label="类别ID">
               <el-input v-model="projectQuery.categoryId" clearable style="width: 120px" />
@@ -56,7 +63,13 @@
               </template>
             </el-table-column>
           </el-table>
-          <pagination v-show="projectTotal > 0" v-model:page="projectQuery.pageNum" v-model:limit="projectQuery.pageSize" :total="projectTotal" @pagination="loadProjects" />
+          <pagination
+            v-show="projectTotal > 0"
+            v-model:page="projectQuery.pageNum"
+            v-model:limit="projectQuery.pageSize"
+            :total="projectTotal"
+            @pagination="loadProjects"
+          />
         </el-tab-pane>
 
         <el-tab-pane label="附件回收站" name="file">
@@ -117,7 +130,13 @@
               </template>
             </el-table-column>
           </el-table>
-          <pagination v-show="fileTotal > 0" v-model:page="fileQuery.pageNum" v-model:limit="fileQuery.pageSize" :total="fileTotal" @pagination="loadFiles" />
+          <pagination
+            v-show="fileTotal > 0"
+            v-model:page="fileQuery.pageNum"
+            v-model:limit="fileQuery.pageSize"
+            :total="fileTotal"
+            @pagination="loadFiles"
+          />
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -152,6 +171,8 @@ import {
 } from '@/api/crehn/project';
 import { ProjectFileVO, ProjectVO } from '@/api/crehn/types';
 import { useRoute } from 'vue-router';
+import { listActivityOptions } from '@/api/crehn/activity';
+import type { ActivityVO } from '@/api/crehn/types';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
@@ -160,6 +181,7 @@ const activeTab = ref('project');
 const projectLoading = ref(false);
 const fileLoading = ref(false);
 const projectRows = ref<ProjectVO[]>([]);
+const activityOptions = ref<ActivityVO[]>([]);
 const fileRows = ref<ProjectFileVO[]>([]);
 const projectTotal = ref(0);
 const fileTotal = ref(0);
@@ -342,9 +364,11 @@ const applyRouteFilters = () => {
   fileQuery.projectId = queryText(route.query.projectId);
 };
 
-onMounted(() => {
+onMounted(async () => {
+  const response: any = await listActivityOptions();
+  activityOptions.value = response.data || [];
   applyRouteFilters();
-  handleTabChange();
+  await handleTabChange();
 });
 
 watch(

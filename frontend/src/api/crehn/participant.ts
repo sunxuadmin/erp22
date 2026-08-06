@@ -23,8 +23,16 @@ export interface ParticipantActivationIssue {
   expiresAt?: string;
 }
 
-export const listParticipant = (params: Record<string, unknown>) =>
-  request({ url: '/crehn/participant-account/list', method: 'get', params });
+export interface ParticipantActivationPreview {
+  participantName?: string;
+  schoolName?: string;
+  activityName?: string;
+  identityNoMasked?: string;
+  phonenumberMasked?: string;
+  emailMasked?: string;
+}
+
+export const listParticipant = (params: Record<string, unknown>) => request({ url: '/crehn/participant-account/list', method: 'get', params });
 
 export const importParticipant = (data: FormData) =>
   request<ParticipantActivationIssue[]>({
@@ -42,14 +50,15 @@ export const downloadParticipantTemplate = () =>
     responseType: 'blob'
   });
 
-export const reissueParticipantCode = (data: {
-  participantId: string | number;
-  expiresAt: string;
-  reason: string;
-}) => request<ParticipantActivationIssue>({ url: '/crehn/participant-account/reissue', method: 'post', data });
+export const reissueParticipantCode = (data: { participantId: string | number; expiresAt: string; reason: string }) =>
+  request<ParticipantActivationIssue>({ url: '/crehn/participant-account/reissue', method: 'post', data });
 
-export const activateParticipant = (data: {
-  activationCode: string;
-  password: string;
-  profileConfirmation: 'confirmed';
-}) => request({ url: '/crehn/participant-account/activate', method: 'post', data });
+export const previewParticipantActivation = (activationCode: string) =>
+  request<ParticipantActivationPreview>({
+    url: '/crehn/participant-account/activation-preview',
+    method: 'post',
+    data: { activationCode }
+  });
+
+export const activateParticipant = (data: { activationCode: string; password: string; profileConfirmation: 'confirmed' }) =>
+  request({ url: '/crehn/participant-account/activate', method: 'post', data });

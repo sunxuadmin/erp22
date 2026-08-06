@@ -447,7 +447,7 @@
             </div>
           </template>
           <el-tabs v-model="businessConfigTab" class="business-config-tabs">
-            <el-tab-pane name="header">
+            <el-tab-pane name="header" :disabled="!businessHeaderPageKey">
               <template #label>
                 <span class="business-config-tab-label">
                   页面表头与按钮
@@ -455,9 +455,10 @@
                 </span>
               </template>
               <ArtBusinessDisplayVisualEditor
+                v-if="businessHeaderPageKey"
                 ref="pageHeaderEditorRef"
                 mode="projectList"
-                :page-key="businessPageKey"
+                :page-key="businessHeaderPageKey"
                 compact
                 :show-navigation="false"
                 :show-footer="false"
@@ -1967,6 +1968,7 @@ import {
 } from '@/utils/artCategory';
 import { UNIVERSAL_DASHBOARD_COMPONENT_KEY, defaultUniversalDashboardConfig, resolveDashboardRole } from '@/views/workbench/universalDashboard';
 import { normalizeSchoolProjectCategoryAllLabel } from '@/views/workbench/schoolProjectSubmitConfig';
+import { isWorkspaceHeaderPageKey } from './workbenchPageKeyBoundary';
 import ArtBusinessDisplayVisualEditor from '@/views/crehn/components/ArtBusinessDisplayVisualEditor.vue';
 import ArtGlobalTableVisualEditor from '@/views/crehn/components/ArtGlobalTableVisualEditor.vue';
 import ArtProjectListVisualEditor from '@/views/crehn/components/ArtProjectListVisualEditor.vue';
@@ -2083,6 +2085,7 @@ const businessPageOptions = artListTablePageOptions.map((item) => ({
   value: item.key
 }));
 const businessPageKey = ref<ArtListTablePageKey>('project');
+const businessHeaderPageKey = computed(() => (isWorkspaceHeaderPageKey(businessPageKey.value) ? businessPageKey.value : undefined));
 type BusinessConfigTabKey = 'header' | 'table';
 const businessConfigTab = ref<BusinessConfigTabKey>('header');
 const publicStyleSectionOptions: Array<{ label: string; shortLabel: string; value: PublicStyleSectionKey }> = [
@@ -3604,6 +3607,7 @@ const switchBusinessPage = async (nextPage: ArtListTablePageKey) => {
   globalTableLayoutEditorRef.value?.cancelChanges?.();
   await pageHeaderEditorRef.value?.cancelChanges?.(false);
   businessPageKey.value = nextPage;
+  if (!isWorkspaceHeaderPageKey(nextPage)) businessConfigTab.value = 'table';
 };
 
 const saveCurrentScope = async () => {

@@ -8,6 +8,15 @@
         <el-form-item label="一次性激活码" prop="activationCode">
           <el-input v-model.trim="form.activationCode" maxlength="32" autocomplete="one-time-code" />
         </el-form-item>
+        <el-button class="activation-preview-button" :loading="previewing" @click="previewProfile">核对本人资料</el-button>
+        <el-descriptions v-if="preview" class="activation-preview" :column="1" border>
+          <el-descriptions-item label="姓名">{{ preview.participantName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="学校">{{ preview.schoolName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="活动">{{ preview.activityName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="证件号">{{ preview.identityNoMasked || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="手机号">{{ preview.phonenumberMasked || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="邮箱">{{ preview.emailMasked || '-' }}</el-descriptions-item>
+        </el-descriptions>
         <el-form-item label="设置密码" prop="password">
           <el-input v-model="form.password" type="password" show-password maxlength="30" autocomplete="new-password" />
         </el-form-item>
@@ -23,16 +32,19 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
-import { activateParticipant } from '@/api/crehn/participant';
+import { activateParticipant, previewParticipantActivation, type ParticipantActivationPreview } from '@/api/crehn/participant';
 
 const router = useRouter();
 const formRef = ref<FormInstance>();
 const submitting = ref(false);
+const previewing = ref(false);
 const confirmed = ref(false);
+const preview = ref<ParticipantActivationPreview>();
+const previewedCode = ref('');
 const form = reactive({ activationCode: '', password: '', confirmPassword: '' });
 const rules: FormRules = {
   activationCode: [{ required: true, message: '请输入激活码', trigger: 'blur' }],
@@ -47,15 +59,39 @@ const rules: FormRules = {
   ],
   confirmPassword: [
     {
-      validator: (_rule, value, callback) =>
-        value === form.password ? callback() : callback(new Error('两次输入的密码不一致')),
+      validator: (_rule, value, callback) => (value === form.password ? callback() : callback(new Error('两次输入的密码不一致'))),
       trigger: 'blur'
     }
   ]
 };
 
+watch(
+  () => form.activationCode,
+  () => {
+    preview.value = undefined;
+    previewedCode.value = '';
+    confirmed.value = false;
+  }
+);
+
+const previewProfile = async () => {
+  await formRef.value?.validateField('activationCode');
+  previewing.value = true;
+  try {
+    const { data } = await previewParticipantActivation(form.activationCode);
+    preview.value = data;
+    previewedCode.value = form.activationCode;
+  } finally {
+    previewing.value = false;
+  }
+};
+
 const submit = async () => {
   await formRef.value?.validate();
+  if (!preview.value || previewedCode.value !== form.activationCode) {
+    ElMessage.warning('请先使用当前激活码核对本人资料');
+    return;
+  }
   if (!confirmed.value) {
     ElMessage.warning('请先确认由本人激活并核对资料');
     return;
@@ -106,5 +142,12 @@ const submit = async () => {
 .activation-submit {
   width: 100%;
   margin: 22px 0 16px;
+}
+.activation-preview-button {
+  width: 100%;
+  margin-bottom: 16px;
+}
+.activation-preview {
+  margin-bottom: 20px;
 }
 </style>

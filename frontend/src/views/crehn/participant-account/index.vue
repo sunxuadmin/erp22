@@ -2,7 +2,11 @@
   <div class="p-2">
     <el-card class="mb-2" shadow="never">
       <el-form :model="query" inline>
-        <el-form-item label="活动ID"><el-input v-model="query.activityId" clearable /></el-form-item>
+        <el-form-item label="活动">
+          <el-select v-model="query.activityId" clearable filterable placeholder="全部活动" style="width: 220px">
+            <el-option v-for="activity in activityOptions" :key="String(activity.id)" :label="activity.activityName" :value="String(activity.id)" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="姓名"><el-input v-model="query.participantName" clearable /></el-form-item>
         <el-form-item label="状态">
           <el-select v-model="query.status" clearable style="width: 160px">
@@ -49,13 +53,7 @@
           <el-table-column label="确认时间" prop="confirmedAt" min-width="170" />
           <el-table-column label="操作" width="120">
             <template #default="{ row }">
-              <el-button
-                v-if="row.status !== 'confirmed'"
-                v-hasPermi="['crehn:participant:reissue']"
-                link
-                type="primary"
-                @click="openReissue(row)"
-              >
+              <el-button v-if="row.status !== 'confirmed'" v-hasPermi="['crehn:participant:reissue']" link type="primary" @click="openReissue(row)">
                 重发激活码
               </el-button>
             </template>
@@ -70,13 +68,29 @@
         :total="total"
         @pagination="load"
       />
-      <el-button v-else class="mt-2" @click="issuedCodes = []; load()">返回参赛者列表</el-button>
+      <el-button
+        v-else
+        class="mt-2"
+        @click="
+          issuedCodes = [];
+          load();
+        "
+        >返回参赛者列表</el-button
+      >
     </el-card>
 
     <el-dialog v-model="importVisible" title="导入参赛者名单" width="520px">
       <el-form label-width="100px">
-        <el-form-item label="活动ID" required><el-input v-model="importForm.activityId" /></el-form-item>
-        <el-form-item label="学校ID"><el-input v-model="importForm.schoolId" placeholder="学校账号可留空" /></el-form-item>
+        <el-form-item label="活动" required>
+          <el-select v-model="importForm.activityId" filterable placeholder="请选择活动" style="width: 100%">
+            <el-option v-for="activity in activityOptions" :key="String(activity.id)" :label="activity.activityName" :value="String(activity.id)" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="学校">
+          <el-select v-model="importForm.schoolId" clearable filterable placeholder="当前学校账号可留空" style="width: 100%">
+            <el-option v-for="school in schoolOptions" :key="String(school.id)" :label="school.schoolName" :value="String(school.id)" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="激活截止" required>
           <el-date-picker v-model="importForm.expiresAt" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" />
         </el-form-item>
@@ -109,6 +123,9 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
+import { listActivityOptions } from '@/api/crehn/activity';
+import { listSchoolOptions } from '@/api/crehn/config';
+import type { ActivityVO } from '@/api/crehn/types';
 import {
   downloadParticipantTemplate,
   importParticipant,
@@ -123,6 +140,8 @@ const importing = ref(false);
 const rows = ref<ParticipantProfile[]>([]);
 const total = ref(0);
 const issuedCodes = ref<ParticipantActivationIssue[]>([]);
+const activityOptions = ref<ActivityVO[]>([]);
+const schoolOptions = ref<Array<{ id?: string | number; schoolName?: string }>>([]);
 const importVisible = ref(false);
 const reissueVisible = ref(false);
 const selectedFile = ref<File>();
@@ -193,5 +212,10 @@ const submitReissue = async () => {
   reissueVisible.value = false;
 };
 
-onMounted(load);
+onMounted(async () => {
+  const [activityResponse, schoolResponse]: any[] = await Promise.all([listActivityOptions(), listSchoolOptions({ status: '0' })]);
+  activityOptions.value = activityResponse.data || [];
+  schoolOptions.value = schoolResponse.data || [];
+  await load();
+});
 </script>

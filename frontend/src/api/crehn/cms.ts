@@ -61,6 +61,20 @@ export interface PortalHomeComponent {
   enabled?: boolean;
 }
 
+export interface PortalPageLayout {
+  id?: string | number;
+  siteId?: string | number;
+  pageCode?: string;
+  layoutCode?: string;
+  layoutName?: string;
+  renderVersion?: string;
+  themeJson?: string;
+  componentJson?: string;
+  sortOrder?: number;
+  enabled?: boolean;
+  active?: boolean;
+}
+
 export interface PortalMediaAsset {
   id?: string | number;
   siteId?: string | number;
@@ -103,5 +117,13 @@ export const listPortalHomeComponents = (siteId: string | number) =>
   request<PortalHomeComponent[]>({ url: '/crehn/cms/home/list', method: 'get', params: { siteId } });
 export const savePortalHomeComponent = (data: PortalHomeComponent) =>
   request<PortalHomeComponent>({ url: '/crehn/cms/home', method: 'put', data });
+export const listPortalPageLayouts = (siteId: string | number, pageCode = 'home') =>
+  request<PortalPageLayout[]>({ url: '/crehn/cms/layout/list', method: 'get', params: { siteId, pageCode } });
+export const savePortalPageLayout = (data: PortalPageLayout) =>
+  request<PortalPageLayout>({ url: '/crehn/cms/layout', method: 'put', data });
+export const activatePortalPageLayout = (siteId: string | number, layoutCode: string, pageCode = 'home') =>
+  request({ url: `/crehn/cms/layout/${siteId}/activate`, method: 'post', params: { pageCode, layoutCode } });
 export const publishPortalHome = (siteId: string | number, reason: string) =>
   request({ url: `/crehn/cms/home/${siteId}/publish`, method: 'post', params: { reason } });
+export const publishPortalHomeLayout = (siteId: string | number, layoutCode: string, reason: string) =>
+  request({ url: `/crehn/cms/home/${siteId}/publish`, method: 'post', params: { reason, layoutCode } });

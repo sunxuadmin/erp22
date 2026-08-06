@@ -2,25 +2,19 @@
   <div class="p-2">
     <el-card class="mb-2" shadow="never">
       <el-form inline>
-        <el-form-item label="活动ID"><el-input v-model="activityId" clearable /></el-form-item>
+        <el-form-item label="活动">
+          <el-select v-model="activityId" clearable filterable placeholder="全部可用活动" style="width: 260px">
+            <el-option v-for="activity in activityOptions" :key="String(activity.id)" :label="activity.activityName" :value="String(activity.id)" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="Search" @click="load">查询</el-button>
-          <el-button
-            v-hasPermi="['crehn:schoolSubmission:submit']"
-            type="success"
-            icon="Promotion"
-            :disabled="!selected.length"
-            @click="finalSubmit"
-          >
+          <el-button v-hasPermi="['crehn:schoolSubmission:submit']" type="success" icon="Promotion" :disabled="!selected.length" @click="finalSubmit">
             最终提交所选推荐作品
           </el-button>
         </el-form-item>
       </el-form>
-      <el-alert
-        type="info"
-        :closable="false"
-        title="流程：参赛者本人提交 → 学校审核推荐/退回 → 学校按活动最终提交。最终提交会生成不可变快照。"
-      />
+      <el-alert type="info" :closable="false" title="流程：参赛者本人提交 → 学校审核推荐/退回 → 学校按活动最终提交。最终提交会生成不可变快照。" />
     </el-card>
     <el-card shadow="never">
       <el-table v-loading="loading" :data="rows" border @selection-change="selected = $event">
@@ -38,22 +32,8 @@
         <el-table-column label="操作" width="190" fixed="right">
           <template #default="{ row }">
             <template v-if="row.status === 'participant_submitted'">
-              <el-button
-                v-hasPermi="['crehn:schoolSubmission:review']"
-                link
-                type="success"
-                @click="review(row, 'pass')"
-              >
-                推荐
-              </el-button>
-              <el-button
-                v-hasPermi="['crehn:schoolSubmission:review']"
-                link
-                type="danger"
-                @click="openReturn(row)"
-              >
-                退回
-              </el-button>
+              <el-button v-hasPermi="['crehn:schoolSubmission:review']" link type="success" @click="review(row, 'pass')"> 推荐 </el-button>
+              <el-button v-hasPermi="['crehn:schoolSubmission:review']" link type="danger" @click="openReturn(row)"> 退回 </el-button>
             </template>
           </template>
         </el-table-column>
@@ -74,13 +54,12 @@
 import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { ProjectVO } from '@/api/crehn/types';
-import {
-  finalSubmitSchoolProjects,
-  listSchoolSubmission,
-  reviewSchoolProject
-} from '@/api/crehn/schoolSubmission';
+import type { ActivityVO } from '@/api/crehn/types';
+import { listAvailableActivity } from '@/api/crehn/activity';
+import { finalSubmitSchoolProjects, listSchoolSubmission, reviewSchoolProject } from '@/api/crehn/schoolSubmission';
 
 const activityId = ref('');
+const activityOptions = ref<ActivityVO[]>([]);
 const loading = ref(false);
 const rows = ref<ProjectVO[]>([]);
 const selected = ref<ProjectVO[]>([]);
@@ -93,10 +72,11 @@ const statusLabel = (status?: string) =>
     participant_submitted: '待学校审核',
     school_approved: '学校已推荐',
     participant_returned: '已退回参赛者'
-  })[status || ''] || status || '-';
+  })[status || ''] ||
+  status ||
+  '-';
 
-const statusType = (status?: string) =>
-  status === 'school_approved' ? 'success' : status === 'participant_returned' ? 'danger' : 'warning';
+const statusType = (status?: string) => (status === 'school_approved' ? 'success' : status === 'participant_returned' ? 'danger' : 'warning');
 
 const load = async () => {
   loading.value = true;
@@ -136,11 +116,7 @@ const finalSubmit = async () => {
     ElMessage.warning('一次最终提交只能选择同一活动作品');
     return;
   }
-  await ElMessageBox.confirm(
-    `确认最终提交所选 ${selected.value.length} 项作品？提交后将形成不可变快照。`,
-    '学校最终提交',
-    { type: 'warning' }
-  );
+  await ElMessageBox.confirm(`确认最终提交所选 ${selected.value.length} 项作品？提交后将形成不可变快照。`, '学校最终提交', { type: 'warning' });
   await finalSubmitSchoolProjects({
     activityId: selected.value[0].activityId!,
     projectIds: selected.value.map((item) => item.id!)
@@ -149,5 +125,9 @@ const finalSubmit = async () => {
   await load();
 };
 
-onMounted(load);
+onMounted(async () => {
+  const response: any = await listAvailableActivity();
+  activityOptions.value = response.data || [];
+  await load();
+});
 </script>

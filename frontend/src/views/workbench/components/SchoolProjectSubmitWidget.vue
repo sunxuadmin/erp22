@@ -197,42 +197,6 @@
               @click="restoreBackendColumnWidths"
             />
           </template>
-          <template #selectAll>
-            <el-tooltip :content="selectAllTooltip" placement="top">
-              <el-button
-                class="school-project-select-btn"
-                :class="{ 'is-selected': currentPageAllSelected }"
-                :style="selectAllAppearanceStyle"
-                :type="currentPageAllSelected ? 'primary' : undefined"
-                :plain="activeHeaderConfig.selectAllButton.variant === 'plain'"
-                :text="activeHeaderConfig.selectAllButton.variant === 'text'"
-                :icon="activeHeaderConfig.selectAllButton.iconVisible === false ? undefined : 'CircleCheck'"
-                :disabled="!selectableRows.length"
-                :aria-label="selectAllTooltip"
-                @click="toggleCurrentPageSelection(!currentPageAllSelected)"
-              >
-                <span v-if="selectAllButtonText">{{ selectAllButtonText }}</span>
-              </el-button>
-            </el-tooltip>
-          </template>
-          <template #unifiedSubmit>
-            <el-tooltip :content="activeHeaderConfig.unifiedSubmitButton.tooltip" placement="top">
-              <el-button
-                class="school-project-submit-all"
-                :style="unifiedSubmitAppearanceStyle"
-                type="primary"
-                :plain="activeHeaderConfig.unifiedSubmitButton.variant === 'plain'"
-                :text="activeHeaderConfig.unifiedSubmitButton.variant === 'text'"
-                :icon="activeHeaderConfig.unifiedSubmitButton.iconVisible === false ? undefined : 'Upload'"
-                :loading="submitting"
-                :disabled="!selectedRows.length"
-                :aria-label="activeHeaderConfig.unifiedSubmitButton.tooltip"
-                @click="handleSubmitAction"
-              >
-                <span v-if="unifiedSubmitButtonText">{{ unifiedSubmitButtonText }}</span>
-              </el-button>
-            </el-tooltip>
-          </template>
           <template #navigationButton>
             <ArtWorkspaceConfigButton
               :icon="activeHeaderConfig.navigationButton.iconVisible === false ? '' : 'Link'"
@@ -270,19 +234,7 @@
             row-key="id"
             :empty-text="schoolTablePage.emptyText"
             @header-dragend="handleColumnResize"
-            @selection-change="handleSelectionChange"
           >
-            <el-table-column
-              v-if="selectionColumn"
-              type="selection"
-              column-key="selection"
-              :label="selectionColumn.label"
-              :width="fittedColumnWidth('selection')"
-              :fixed="selectionColumn.fixed"
-              :resizable="selectionColumn.resizable"
-              label-class-name="school-project-resizable-header"
-              :selectable="isSelectable"
-            />
             <el-table-column
               v-if="serialColumn"
               type="index"
@@ -347,41 +299,6 @@
                   >
                     {{ schoolActionText('view', '查看') }}
                   </el-button>
-                  <el-button
-                    v-hasPermi="['crehn:project:submit']"
-                    class="school-project-action"
-                    :class="[
-                      isWithdrawAction(row) ? 'school-project-action--withdraw' : 'school-project-action--submit',
-                      { 'is-action-disabled': submitOrWithdrawDisabled(row) }
-                    ]"
-                    :type="submitOrWithdrawType(row)"
-                    link
-                    size="small"
-                    :icon="actionIcon(isWithdrawAction(row) ? 'RefreshLeft' : 'Upload')"
-                    :aria-disabled="submitOrWithdrawDisabled(row)"
-                    :title="submitOrWithdrawDisabled(row) ? submitOrWithdrawBlockedMessage(row) : undefined"
-                    @click="handleSubmitOrWithdraw(row)"
-                  >
-                    {{ submitOrWithdrawLabel(row) }}
-                  </el-button>
-                  <el-tooltip :content="deleteBlockedMessage(row)" :disabled="canDeleteProject(row)" placement="top">
-                    <span class="school-project-action-tooltip">
-                      <el-button
-                        v-hasPermi="['crehn:project:remove']"
-                        class="school-project-action school-project-action--delete"
-                        :class="{ 'is-action-disabled': !canDeleteProject(row) }"
-                        type="danger"
-                        link
-                        size="small"
-                        :icon="actionIcon('Delete')"
-                        :aria-disabled="!canDeleteProject(row)"
-                        :title="!canDeleteProject(row) ? deleteBlockedMessage(row) : undefined"
-                        @click="handleRecycleAction(row)"
-                      >
-                        {{ schoolActionText('delete', '删除') }}
-                      </el-button>
-                    </span>
-                  </el-tooltip>
                 </div>
               </template>
             </el-table-column>
@@ -440,9 +357,9 @@ import type {
   ArtWorkspaceHeaderPageConfig
 } from '@/api/crehn/detailDisplay';
 import { listActivityReportRuleSchoolOptions } from '@/api/crehn/config';
-import { listMyProject, listMyProjectCategoryStats, recycleProject, submitProject, withdrawSubmitProject } from '@/api/crehn/project';
+import { listMyProject, listMyProjectCategoryStats } from '@/api/crehn/project';
 import { ActivityCategoryVO, ActivityRuleGroupOptionVO, ActivityVO, ProjectCategoryStatsVO, ProjectVO } from '@/api/crehn/types';
-import { buildSchoolCategoryMenuTree, isCategoryBusinessAvailable, isCategoryGroup } from '@/utils/artCategory';
+import { buildSchoolCategoryMenuTree, isCategoryGroup } from '@/utils/artCategory';
 import { useUserStore } from '@/store/modules/user';
 import { useArtListTableAppearance } from '@/composables/useArtListTableAppearance';
 import { artTableColumnValue, artTableDisplayText, useArtListTablePage } from '@/composables/useArtListTableConfig';
@@ -576,9 +493,7 @@ const route = useRoute();
 const userStore = useUserStore();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const loading = ref(false);
-const submitting = ref(false);
 const projectList = ref<ProjectVO[]>([]);
-const selectedRows = ref<ProjectVO[]>([]);
 const total = ref(0);
 const allTotal = ref(0);
 const allProjectRows = ref<ProjectVO[]>([]);
@@ -661,19 +576,6 @@ const activeHeaderConfig = computed(() => {
 });
 const schoolHeaderText = (itemKey: 'categoryFilter' | 'groupFilter' | 'status' | 'search', textKey: string, fallback: string) =>
   workspaceHeaderItemText(activeHeaderConfig.value, itemKey, textKey, fallback);
-const selectAllButtonText = computed(() => {
-  const text = currentPageAllSelected.value ? activeHeaderConfig.value.selectAllButton.alternateText : activeHeaderConfig.value.selectAllButton.text;
-  if (!activeHeaderConfig.value.selectAllButton.showCount) return text;
-  return text ? `${text}（${selectedRows.value.length}）` : String(selectedRows.value.length);
-});
-const selectAllTooltip = computed(() =>
-  currentPageAllSelected.value ? activeHeaderConfig.value.selectAllButton.alternateTooltip : activeHeaderConfig.value.selectAllButton.tooltip
-);
-const unifiedSubmitButtonText = computed(() => {
-  const text = activeHeaderConfig.value.unifiedSubmitButton.text;
-  if (!activeHeaderConfig.value.unifiedSubmitButton.showCount) return text;
-  return text ? `${text}（${selectedRows.value.length}）` : String(selectedRows.value.length);
-});
 const handleHome = () => {
   if (props.maximized) {
     emit('toggle-maximize', false);
@@ -731,9 +633,7 @@ const buttonAppearanceStyle = (appearance?: ArtWorkspaceHeaderButtonAppearanceCo
           : 'transparent'
       }
     : undefined;
-const unifiedSubmitAppearanceStyle = computed(() => buttonAppearanceStyle(activeHeaderConfig.value.unifiedSubmitButton.appearance));
 const navigationButtonAppearanceStyle = computed(() => buttonAppearanceStyle(activeHeaderConfig.value.navigationButton.appearance));
-const selectAllAppearanceStyle = computed(() => buttonAppearanceStyle(activeHeaderConfig.value.selectAllButton.appearance));
 const homeButtonAppearanceStyle = computed(() => buttonAppearanceStyle(activeHeaderConfig.value.homeButton.appearance));
 const componentSurfaceStyle = computed(() => ({
   '--navigator-sidebar-width': `${detailDisplayConfig.value.navigator.sidebarWidth}px`,
@@ -747,7 +647,6 @@ const componentSurfaceStyle = computed(() => ({
 }));
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / query.pageSize)));
 const pageInfo = computed(() => `${query.pageNum}/${pageCount.value}`);
-const selectableRows = computed(() => projectList.value.filter(isSelectable));
 const categoryNameMap = computed<Record<string, string>>(() =>
   Object.fromEntries(
     categoryList.value
@@ -755,10 +654,6 @@ const categoryNameMap = computed<Record<string, string>>(() =>
       .map((item) => [String(item.id), String(item.categoryName || '')])
   )
 );
-const currentPageAllSelected = computed({
-  get: () => selectableRows.value.length > 0 && selectableRows.value.every((row) => selectedRows.value.some((item) => item.id === row.id)),
-  set: () => undefined
-});
 const groupFilteredRows = computed(() => {
   if (!activeGroupCode.value) return allProjectRows.value;
   return allProjectRows.value.filter((row) => String(row.groupCode || '') === activeGroupCode.value);
@@ -795,7 +690,6 @@ const {
   const categoryIds = expandedMode.value ? activeCategoryIds.value : activeCategoryTab.value?.categoryIds || [];
   return categoryIds.length === 1 ? categoryIds[0] : undefined;
 });
-const selectionColumn = computed(() => schoolTableColumns.value.find((column) => column.key === 'selection'));
 const visibleStats = computed(() =>
   [...activeHeaderConfig.value.statusItems]
     .filter((item) => item.visible !== false)
@@ -1136,23 +1030,6 @@ const statusSemantics: Record<string, ArtListStatusSemantic> = {
   audit_passed: 'approved'
 };
 const statusSemantic = (status?: string): ArtListStatusSemantic => statusSemantics[status || ''] || 'draft';
-const canEdit = (status?: string) => !status || ['draft', 'returned'].includes(status);
-const categoryBusinessAvailable = (categoryId?: string | number) => {
-  if (categoryId === undefined || categoryId === null) return false;
-  const category = categoryList.value.find((item) => String(item.id) === String(categoryId));
-  return !!category && isCategoryBusinessAvailable(category, categoryList.value);
-};
-const canEditProject = (row: ProjectVO) => canEdit(row.status) && categoryBusinessAvailable(row.categoryId);
-const isSelectable = (row: ProjectVO) => canEditProject(row);
-const isSubmittedRow = (row: ProjectVO) => row.status === 'submitted';
-const isWithdrawAction = (row: ProjectVO) => isSubmittedRow(row) || row.status === 'audit_passed';
-const canDeleteProject = (row: ProjectVO) => canEditProject(row);
-const submitOrWithdrawDisabled = (row: ProjectVO) => (isSubmittedRow(row) ? false : !canEditProject(row));
-const submitOrWithdrawLabel = (row: ProjectVO) => (isWithdrawAction(row) ? schoolActionText('withdraw', '撤回') : schoolActionText('submit', '提交'));
-const submitOrWithdrawType = (row: ProjectVO) => (isWithdrawAction(row) ? 'warning' : 'success');
-const submitOrWithdrawBlockedMessage = (row: ProjectVO) => (row.status === 'audit_passed' ? '项目已通过审核，不能撤回' : '当前项目暂不可提交');
-const deleteBlockedMessage = (row: ProjectVO) =>
-  ['submitted', 'audit_passed'].includes(String(row.status || '')) ? '请先撤回后删除' : '当前项目暂不可删除';
 const categoryDisplayName = (row: ProjectVO) => {
   if (row.categoryName) return row.categoryName;
   if (row.categoryId !== undefined && row.categoryId !== null) {
@@ -1228,15 +1105,6 @@ const resolvedColumnWidth = (key: string) => normalizeColumnWidth(key, localColu
 const columnWidth = (column: ArtReviewListColumnConfig) => (column.key === 'actions' ? column.width : resolvedColumnWidth(column.key));
 const tableFitColumns = computed<ArtResizableColumn[]>(() => {
   const columns: ArtResizableColumn[] = [];
-  if (selectionColumn.value) {
-    columns.push({
-      key: 'selection',
-      width: resolvedColumnWidth('selection'),
-      minWidth: Math.max(44, Number(selectionColumn.value.minWidth) || 0),
-      fixed: selectionColumn.value.fixed,
-      resizable: selectionColumn.value.resizable
-    });
-  }
   if (serialColumn.value) {
     columns.push({
       key: 'serial',
@@ -1476,7 +1344,6 @@ const loadList = async () => {
     if (!allCategoriesSelected.value && !queryCategoryIds.length) {
       projectList.value = [];
       total.value = 0;
-      selectedRows.value = [];
       return;
     }
     if (queryCategoryIds.length) {
@@ -1497,7 +1364,6 @@ const loadList = async () => {
     if (pageSizeSelection.value === 'all') {
       query.pageSize = Math.max(total.value, 1);
     }
-    selectedRows.value = [];
   } finally {
     loading.value = false;
   }
@@ -1534,7 +1400,6 @@ const handleBrowseCategorySelection = async (selection: { key: string; categoryI
 const handleGroupSelection = async (groupCode: string) => {
   activeGroupCode.value = groupCode;
   query.pageNum = 1;
-  clearSelectedRows();
   await loadList();
 };
 
@@ -1578,11 +1443,6 @@ const pageSizeForSelection = (selection: PageSizeSelection) => {
   return Number(selection);
 };
 
-const clearSelectedRows = () => {
-  selectedRows.value = [];
-  tableRef.value?.clearSelection();
-};
-
 const applyPageSizeSelection = async (selection = pageSizeSelection.value) => {
   pageSizeSelection.value = selection;
   if (selection === 'custom') {
@@ -1590,7 +1450,6 @@ const applyPageSizeSelection = async (selection = pageSizeSelection.value) => {
   }
   query.pageSize = pageSizeForSelection(selection);
   query.pageNum = 1;
-  clearSelectedRows();
   await loadList();
 };
 
@@ -1630,93 +1489,10 @@ const handleMaximizePageSize = async (value: boolean) => {
   tableRef.value?.doLayout();
 };
 
-const handleSelectionChange = (rows: ProjectVO[]) => {
-  selectedRows.value = rows;
-};
-
-const toggleCurrentPageSelection = (checked: boolean | string | number) => {
-  tableRef.value?.clearSelection();
-  if (Boolean(checked)) {
-    selectableRows.value.forEach((row) => tableRef.value?.toggleRowSelection(row, true));
-  }
-};
-
 const openProject = async (row: ProjectVO) => {
   if (row.id) {
     await router.push({ path: `/crehn/project/edit/${row.id}`, query: buildEditQuery(row) });
   }
-};
-
-const projectDisplayName = (row: ProjectVO) => String(row.projectName || row.projectNo || row.categoryName || '未命名项目').trim();
-
-const submitRows = async (rows: ProjectVO[]) => {
-  for (const row of rows) {
-    if (row.id) {
-      await submitProject(row.id);
-    }
-  }
-};
-
-const handleSubmitAction = async () => {
-  await submitSelected();
-};
-
-const submitSelected = async () => {
-  await proxy?.$modal.confirm(`确认统一提交选中的 ${selectedRows.value.length} 个项目？提交后将进入审核流程。`);
-  submitting.value = true;
-  try {
-    await submitRows(selectedRows.value);
-    proxy?.$modal.msgSuccess('提交成功');
-    selectedRows.value = [];
-    await refresh();
-  } finally {
-    submitting.value = false;
-  }
-};
-
-const submitRow = async (row: ProjectVO) => {
-  if (!String(row.projectName || '').trim()) {
-    proxy?.$modal.msgWarning('该项目名称为空，请先进入编辑页补全后再提交');
-    return;
-  }
-  await proxy?.$modal.confirm(`确认提交项目「${projectDisplayName(row)}」？提交后不可修改。`);
-  await submitProject(row.id!);
-  proxy?.$modal.msgSuccess('提交成功');
-  await refresh();
-};
-
-const withdrawRow = async (row: ProjectVO) => {
-  await proxy?.$modal.confirm(`确认撤回项目「${projectDisplayName(row)}」的提交？撤回后可继续修改。`);
-  await withdrawSubmitProject(row.id!);
-  proxy?.$modal.msgSuccess('已撤回提交');
-  await refresh();
-};
-
-const handleSubmitOrWithdraw = async (row: ProjectVO) => {
-  if (submitOrWithdrawDisabled(row)) {
-    proxy?.$modal.msgWarning(submitOrWithdrawBlockedMessage(row));
-    return;
-  }
-  if (isSubmittedRow(row)) {
-    await withdrawRow(row);
-    return;
-  }
-  await submitRow(row);
-};
-
-const recycleRow = async (row: ProjectVO) => {
-  await proxy?.$modal.confirm(`确认删除项目「${projectDisplayName(row)}」？`);
-  await recycleProject(row.id!);
-  proxy?.$modal.msgSuccess('已移入回收站');
-  await refresh();
-};
-
-const handleRecycleAction = async (row: ProjectVO) => {
-  if (!canDeleteProject(row)) {
-    proxy?.$modal.msgWarning(deleteBlockedMessage(row));
-    return;
-  }
-  await recycleRow(row);
 };
 
 watch(

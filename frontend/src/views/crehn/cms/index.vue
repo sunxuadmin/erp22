@@ -81,23 +81,62 @@
             <el-button v-hasPermi="['crehn:cms:home:edit']" type="primary" @click="editComponent()">新增组件</el-button>
             <el-button v-hasPermi="['crehn:cms:home:publish']" type="success" @click="publishHome">发布当前首页版本</el-button>
           </div>
-          <div class="component-grid">
-            <button
+          <div ref="homeGridRef" class="component-grid grid-stack">
+            <div
               v-for="component in components"
               :key="String(component.id)"
-              class="component-tile"
-              :style="{ gridColumn: `span ${Math.min(component.gridW || 12, 12)}` }"
-              draggable="true"
-              @dragstart="dragging = component"
-              @dragover.prevent
-              @drop="dropBefore(component)"
-              @click="editComponent(component)"
+              class="grid-stack-item"
+              :gs-id="String(component.id)"
+              :gs-x="component.gridX || 0"
+              :gs-y="component.gridY || 0"
+              :gs-w="Math.min(component.gridW || 12, 12)"
+              :gs-h="component.gridH || 1"
             >
-              <small>{{ component.componentType }} / {{ component.dataSourceCode }}</small>
-              <strong>{{ componentTitle(component) }}</strong>
-              <span>{{ component.gridW || 12 }}/12 栅格</span>
-            </button>
+              <div class="grid-stack-item-content component-tile" @click="editComponent(component)">
+                <small>{{ component.componentType }} / {{ component.dataSourceCode }}</small>
+                <strong>{{ componentTitle(component) }}</strong>
+                <span>{{ component.gridW || 12 }}/12 栅格</span>
+              </div>
+            </div>
           </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="主题与布局" name="layout">
+          <el-alert
+            v-if="!canEditHome"
+            class="mb-2"
+            type="warning"
+            show-icon
+            :closable="false"
+            title="当前账号没有首页布局编辑权限，需要增加权限，请先在角色权限管理中增加权限"
+          />
+          <div class="cms-toolbar mb-2">
+            <el-button v-hasPermi="['crehn:cms:home:edit']" type="primary" @click="editLayout()">新增布局</el-button>
+            <el-button v-hasPermi="['crehn:cms:home:edit']" :disabled="!selectedLayout" @click="editLayout(selectedLayout)">编辑当前布局</el-button>
+            <el-button v-hasPermi="['crehn:cms:home:edit']" :disabled="!selectedLayout" @click="activateSelectedLayout">切换为当前布局</el-button>
+            <el-button v-hasPermi="['crehn:cms:home:publish']" type="success" :disabled="!selectedLayout" @click="publishHome">发布当前布局</el-button>
+          </div>
+          <el-table :data="layouts" border highlight-current-row @current-change="selectLayout">
+            <el-table-column label="布局名称" prop="layoutName" min-width="180" />
+            <el-table-column label="布局编码" prop="layoutCode" width="160" />
+            <el-table-column label="视觉版本" prop="renderVersion" width="110" />
+            <el-table-column label="主题" width="130">
+              <template #default="{ row }">{{ themeSummary(row) }}</template>
+            </el-table-column>
+            <el-table-column label="状态" width="120">
+              <template #default="{ row }">
+                <el-tag v-if="row.active" type="success">当前草稿</el-tag>
+                <el-tag v-else type="info">已保存</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="220">
+              <template #default="{ row }">
+                <el-button v-hasPermi="['crehn:cms:home:edit']" link type="primary" @click="editLayout(row)">编辑</el-button>
+                <el-button v-hasPermi="['crehn:cms:home:edit']" link type="success" :disabled="row.active" @click="activateLayout(row)">切换</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-if="!layouts.length" description="尚未保存布局，可从当前首页组件创建布局" />
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -161,6 +200,52 @@
       <template #footer><el-button @click="componentVisible = false">取消</el-button><el-button type="primary" @click="submitComponent">保存</el-button></template>
     </el-dialog>
 
+    <el-dialog v-model="layoutVisible" title="门户主题与布局" width="720px">
+      <el-form label-width="100px">
+        <el-form-item label="布局编码"><el-input v-model="layoutForm.layoutCode" maxlength="64" /></el-form-item>
+        <el-form-item label="布局名称"><el-input v-model="layoutForm.layoutName" maxlength="128" /></el-form-item>
+        <el-form-item label="视觉版本">
+          <el-select v-model="layoutForm.renderVersion">
+            <el-option label="参考稿版" value="v1" />
+            <el-option label="竖卡展厅版" value="v2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="主题预设">
+          <el-select v-model="selectedThemePreset" @change="applyThemePreset">
+            <el-option v-for="preset in themePresets" :key="preset.id" :label="preset.label" :value="preset.id" />
+          </el-select>
+        </el-form-item>
+        <el-row :gutter="12">
+          <el-col :span="8"><el-form-item label="页面起色"><el-color-picker v-model="themeDraft.pageBgStart" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="页面中色"><el-color-picker v-model="themeDraft.pageBgMiddle" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="页面终色"><el-color-picker v-model="themeDraft.pageBgEnd" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="主标题色"><el-color-picker v-model="themeDraft.heroTitle" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="强调色"><el-color-picker v-model="themeDraft.heroAccent" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="卡片标题"><el-color-picker v-model="themeDraft.cardTitle" /></el-form-item></el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="8"><el-form-item label="玻璃透明度"><el-slider v-model="themeDraft.glassCardOpacity" :min="0.08" :max="0.96" :step="0.01" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="玻璃模糊"><el-slider v-model="themeDraft.glassBlur" :min="6" :max="32" :step="1" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="页脚字号"><el-slider v-model="themeDraft.footerFontSize" :min="8" :max="18" :step="1" /></el-form-item></el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="8"><el-form-item label="玻璃高光"><el-slider v-model="themeDraft.glassHighlightOpacity" :min="0.2" :max="1" :step="0.01" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="玻璃阴影"><el-slider v-model="themeDraft.glassShadowOpacity" :min="0" :max="0.4" :step="0.01" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="粒子透明度"><el-slider v-model="themeDraft.particleOpacity" :min="0" :max="0.6" :step="0.01" /></el-form-item></el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="8"><el-form-item label="粒子大小"><el-slider v-model="themeDraft.particleSize" :min="1" :max="6" :step="0.5" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="粒子光晕"><el-slider v-model="themeDraft.particleGlow" :min="0" :max="24" :step="1" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="渲染策略"><el-tag type="success">CSS 合成动画</el-tag></el-form-item></el-col>
+        </el-row>
+        <el-alert type="info" :closable="false" title="本布局会保存当前首页组件的受控快照；发布后公共门户才会切换，未发布草稿不会被匿名访问。" />
+      </el-form>
+      <template #footer>
+        <el-button @click="layoutVisible = false">取消</el-button>
+        <el-button v-hasPermi="['crehn:cms:home:edit']" type="primary" @click="submitLayout">保存布局</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="publishVisible" title="发布文章" width="520px">
       <el-form label-width="90px">
         <el-form-item label="定时发布"><el-date-picker v-model="publishForm.scheduledAt" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" clearable /></el-form-item>
@@ -172,21 +257,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { GridStack } from 'gridstack';
+import 'gridstack/dist/gridstack.min.css';
 import {
+  activatePortalPageLayout,
   approvePortalMedia,
   listPortalArticles,
   listPortalChannels,
   listPortalHomeComponents,
+  listPortalPageLayouts,
   listPortalMedia,
   listPortalSites,
   offlinePortalArticle,
   publishPortalArticle,
   publishPortalHome,
+  publishPortalHomeLayout,
   savePortalArticle,
   savePortalChannel,
   savePortalHomeComponent,
+  savePortalPageLayout,
   savePortalMedia,
   savePortalSite,
   submitPortalArticleReview,
@@ -194,8 +285,11 @@ import {
   type PortalChannel,
   type PortalHomeComponent,
   type PortalMediaAsset,
+  type PortalPageLayout,
   type PortalSite
 } from '@/api/crehn/cms';
+import { checkPermi } from '@/utils/permission';
+import { clonePortalLayoutComponents, createPortalLayoutComponentDraft, parsePortalLayoutComponents } from './portalLayoutDraft';
 
 const activeTab = ref('channel');
 const sites = ref<PortalSite[]>([]);
@@ -204,7 +298,10 @@ const channels = ref<PortalChannel[]>([]);
 const articles = ref<PortalArticle[]>([]);
 const mediaRows = ref<PortalMediaAsset[]>([]);
 const components = ref<PortalHomeComponent[]>([]);
-const dragging = ref<PortalHomeComponent>();
+const homeGridRef = ref<HTMLElement>();
+let homeGrid: GridStack | undefined;
+const layouts = ref<PortalPageLayout[]>([]);
+const selectedLayout = ref<PortalPageLayout>();
 const articleQuery = reactive({ status: '' });
 const articleStatuses = ['DRAFT', 'IN_REVIEW', 'SCHEDULED', 'PUBLISHED', 'OFFLINE'];
 const componentTypes = ['hero', 'news', 'notice', 'activity', 'schedule', 'media', 'stat', 'showcase', 'links'];
@@ -214,6 +311,7 @@ const channelVisible = ref(false);
 const articleVisible = ref(false);
 const mediaVisible = ref(false);
 const componentVisible = ref(false);
+const layoutVisible = ref(false);
 const publishVisible = ref(false);
 const mediaOssId = ref('');
 const siteForm = reactive<PortalSite>({});
@@ -221,8 +319,45 @@ const channelForm = reactive<PortalChannel>({});
 const articleForm = reactive<PortalArticle>({});
 const mediaForm = reactive<PortalMediaAsset>({});
 const componentForm = reactive<PortalHomeComponent>({});
+const layoutForm = reactive<PortalPageLayout>({});
+const layoutComponentDraft = ref<PortalHomeComponent[]>([]);
 const publishForm = reactive({ articleId: '' as string | number, scheduledAt: '', reason: '' });
+const selectedThemePreset = ref('fresh-blue');
+const themeDraft = reactive({
+  pageBgStart: '#edf9fb',
+  pageBgMiddle: '#edf4ff',
+  pageBgEnd: '#eef2ff',
+  heroTitle: '#079fe2',
+  heroAccent: '#5748d8',
+  cardTitle: '#0b326b',
+  glassCardOpacity: 0.72,
+  glassBlur: 6,
+  footerFontSize: 10,
+  glassHighlightOpacity: 0.92,
+  glassShadowOpacity: 0.12,
+  particleOpacity: 0.24,
+  particleSize: 3,
+  particleGlow: 10
+});
+const themePresets = [
+  {
+    id: 'fresh-blue',
+    label: '清爽蓝绿',
+    values: { pageBgStart: '#edf9fb', pageBgMiddle: '#edf4ff', pageBgEnd: '#eef2ff', heroTitle: '#079fe2', heroAccent: '#5748d8', cardTitle: '#0b326b', glassCardOpacity: 0.72, glassBlur: 6, footerFontSize: 10, glassHighlightOpacity: 0.92, glassShadowOpacity: 0.12, particleOpacity: 0.24, particleSize: 3, particleGlow: 10 }
+  },
+  {
+    id: 'ink-showcase',
+    label: '深色展厅',
+    values: { pageBgStart: '#101827', pageBgMiddle: '#172942', pageBgEnd: '#2d1f42', heroTitle: '#73d7ff', heroAccent: '#c19cff', cardTitle: '#eaf5ff', glassCardOpacity: 0.38, glassBlur: 14, footerFontSize: 10, glassHighlightOpacity: 0.72, glassShadowOpacity: 0.26, particleOpacity: 0.34, particleSize: 3.5, particleGlow: 16 }
+  },
+  {
+    id: 'paper-warm',
+    label: '暖白纸张',
+    values: { pageBgStart: '#fffaf0', pageBgMiddle: '#fff5e8', pageBgEnd: '#f4ecff', heroTitle: '#c85d3b', heroAccent: '#8a4fbb', cardTitle: '#4b3041', glassCardOpacity: 0.86, glassBlur: 6, footerFontSize: 11, glassHighlightOpacity: 0.98, glassShadowOpacity: 0.08, particleOpacity: 0.18, particleSize: 2.5, particleGlow: 8 }
+  }
+];
 const currentSite = computed(() => sites.value.find((item) => String(item.id) === String(siteId.value)));
+const canEditHome = computed(() => checkPermi(['crehn:cms:home:edit']));
 
 const replaceForm = <T extends object>(target: T, source: Partial<T>) => {
   Object.keys(target).forEach((key) => delete (target as any)[key]);
@@ -238,15 +373,51 @@ const loadSites = async () => {
 
 const changeSite = async () => {
   if (!siteId.value) return;
-  const [channelResponse, mediaResponse, componentResponse]: any[] = await Promise.all([
+  const [channelResponse, mediaResponse, componentResponse, layoutResponse]: any[] = await Promise.all([
     listPortalChannels(siteId.value),
     listPortalMedia(siteId.value),
-    listPortalHomeComponents(siteId.value)
+    listPortalHomeComponents(siteId.value),
+    listPortalPageLayouts(siteId.value)
   ]);
   channels.value = channelResponse.data || [];
   mediaRows.value = mediaResponse.data || [];
   components.value = componentResponse.data || [];
+  layouts.value = layoutResponse.data || [];
+  const activeLayout = layouts.value.find((item) => item.active);
+  selectedLayout.value = activeLayout || layouts.value[0];
+  if (!activeLayout || !(await applyLayoutComponents(activeLayout))) {
+    await nextTick();
+    refreshHomeGrid();
+  }
   await loadArticles();
+};
+
+const refreshHomeGrid = () => {
+  if (!homeGridRef.value) return;
+  homeGrid?.destroy(false);
+  homeGrid = GridStack.init(
+    {
+      column: 12,
+      float: true,
+      margin: 8,
+      cellHeight: 72,
+      draggable: { handle: '.component-tile' },
+      resizable: { handles: 'e,se,s,sw,w' }
+    },
+    homeGridRef.value
+  );
+  homeGrid.on('change', (_event, nodes) => {
+    nodes.forEach((node) => {
+      const target = components.value.find((item) => String(item.id) === String(node.id));
+      if (!target) return;
+      Object.assign(target, {
+        gridX: node.x ?? target.gridX ?? 0,
+        gridY: node.y ?? target.gridY ?? 0,
+        gridW: node.w ?? target.gridW ?? 12,
+        gridH: node.h ?? target.gridH ?? 1
+      });
+    });
+  });
 };
 
 const loadArticles = async () => {
@@ -332,25 +503,107 @@ const submitComponent = async () => {
   componentVisible.value = false;
   await changeSite();
 };
+const applyThemePreset = (presetId = selectedThemePreset.value) => {
+  const preset = themePresets.find((item) => item.id === presetId);
+  if (preset) Object.assign(themeDraft, preset.values);
+};
+const parseTheme = (themeJson?: string) => {
+  if (!themeJson) return;
+  try {
+    const parsed = JSON.parse(themeJson) as Record<string, unknown>;
+    Object.keys(themeDraft).forEach((key) => {
+      if (key in parsed) (themeDraft as any)[key] = parsed[key];
+    });
+  } catch {
+    applyThemePreset();
+  }
+};
+const themeSummary = (layout: PortalPageLayout) => {
+  try {
+    const theme = JSON.parse(layout.themeJson || '{}') as Record<string, unknown>;
+    return String(theme.heroTitle || '默认主题');
+  } catch {
+    return '默认主题';
+  }
+};
+const applyLayoutComponents = async (layout?: PortalPageLayout) => {
+  const parsed = parsePortalLayoutComponents(layout?.componentJson);
+  if (!parsed) {
+    ElMessage.warning('布局组件快照无效，已保留当前组件');
+    return false;
+  }
+  components.value = clonePortalLayoutComponents(parsed);
+  await nextTick();
+  refreshHomeGrid();
+  return true;
+};
+const selectLayout = (layout?: PortalPageLayout) => {
+  if (layout) selectedLayout.value = layout;
+};
+const editLayout = (layout?: PortalPageLayout) => {
+  const componentDraft = createPortalLayoutComponentDraft(layout, components.value);
+  if (!componentDraft) {
+    ElMessage.error('当前布局组件快照无效，已阻止覆盖保存');
+    return;
+  }
+  layoutComponentDraft.value = componentDraft;
+  const source = layout
+    ? { ...layout }
+    : {
+        siteId: siteId.value,
+        pageCode: 'home',
+        layoutCode: `layout-${layouts.value.length + 1}`,
+        layoutName: `创意河南布局 ${layouts.value.length + 1}`,
+        renderVersion: 'v1',
+        sortOrder: layouts.value.length + 1,
+        enabled: true,
+        active: false
+      };
+  replaceForm(layoutForm, source);
+  applyThemePreset('fresh-blue');
+  parseTheme(layout?.themeJson);
+  layoutVisible.value = true;
+};
+const submitLayout = async () => {
+  if (!layoutForm.layoutCode?.trim() || !layoutForm.layoutName?.trim()) {
+    return ElMessage.warning('布局编码和布局名称不能为空');
+  }
+  await savePortalPageLayout({
+    ...layoutForm,
+    siteId: siteId.value,
+    pageCode: 'home',
+    themeJson: JSON.stringify(themeDraft),
+    componentJson: JSON.stringify(layoutComponentDraft.value)
+  });
+  layoutVisible.value = false;
+  await changeSite();
+  ElMessage.success('布局已保存，发布后公共门户才会切换');
+};
+const activateLayout = async (layout: PortalPageLayout) => {
+  if (!layout.layoutCode) return;
+  await activatePortalPageLayout(siteId.value!, layout.layoutCode);
+  await changeSite();
+  ElMessage.success(`已切换草稿布局：${layout.layoutName || layout.layoutCode}`);
+};
+const activateSelectedLayout = () => {
+  if (selectedLayout.value) void activateLayout(selectedLayout.value);
+};
 const componentTitle = (component: PortalHomeComponent) => {
   return JSON.parse(component.configJson || '{}').title || component.componentKey;
 };
-const dropBefore = async (target: PortalHomeComponent) => {
-  if (!dragging.value || dragging.value.id === target.id) return;
-  const ordered = components.value.filter((item) => item.id !== dragging.value!.id);
-  ordered.splice(ordered.findIndex((item) => item.id === target.id), 0, dragging.value);
-  await Promise.all(ordered.map((item, index) => savePortalHomeComponent({ ...item, sortOrder: index + 1 })));
-  dragging.value = undefined;
-  await changeSite();
-};
 const publishHome = async () => {
   const { value } = await ElMessageBox.prompt('请输入本次首页发布原因', '发布首页版本', { inputType: 'textarea', inputValidator: (value) => !!value?.trim() || '原因不能为空' });
-  await publishPortalHome(siteId.value!, value.trim());
+  if (selectedLayout.value?.layoutCode) {
+    await publishPortalHomeLayout(siteId.value!, selectedLayout.value.layoutCode, value.trim());
+  } else {
+    await publishPortalHome(siteId.value!, value.trim());
+  }
   ElMessage.success('首页版本发布成功');
 };
 const channelName = (id?: string | number) => channels.value.find((item) => String(item.id) === String(id))?.channelName || id || '-';
 
 onMounted(loadSites);
+onBeforeUnmount(() => homeGrid?.destroy(false));
 </script>
 
 <style scoped>
@@ -361,16 +614,14 @@ onMounted(loadSites);
   flex-wrap: wrap;
 }
 .component-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 12px;
+  min-height: 260px;
   padding: 16px;
   border: 1px dashed var(--el-border-color);
   border-radius: 10px;
   background: var(--el-fill-color-lighter);
 }
 .component-tile {
-  min-height: 104px;
+  height: 100%;
   display: grid;
   gap: 8px;
   align-content: center;
