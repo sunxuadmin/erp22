@@ -8,22 +8,22 @@
 
 ## 已登记需求
 
-| ID | 需求 | 状态 | 权威规范/验收 |
-| --- | --- | --- | --- |
-| REQ-001 | 使用与 DYZ 同源的 RuoYi-Vue-Plus 技术栈建立完全独立的 CREHN 项目 | IMPLEMENTED | 工程规范、后端/前端架构；待服务器编译验证 |
-| REQ-002 | 建设独立公共门户及组件化 CMS | IMPLEMENTED | 门户CMS规范；管理端/门户本地构建通过 |
-| REQ-003 | 参赛者正式账号；学校批量名单/一次性激活码；本人激活填报 | IMPLEMENTED | 产品规范、角色权限；待数据库流程验证 |
-| REQ-004 | 学校提交、审核、多专家单评委评分、汇总和结果发布完整流程 | IMPLEMENTED | 状态机、验收矩阵；待角色化集成验证 |
-| REQ-005 | 兼容 DYZ 活动和历史数据，但不共库、不双写、不复用运行标识 | IMPLEMENTED | DYZ兼容规范、活动配置包版本门禁；待固定样例包验证 |
-| REQ-006 | 学校、并发、上传、保留、浏览器、备份目标和消息渠道分层配置 | IMPLEMENTED | 安全运维、动态引擎；容量/恢复等待服务器验证 |
-| REQ-007 | LOCAL、TEST、STAGE、PROD 环境严格隔离 | IMPLEMENTED | 工程规范、安全运维、Compose 分层文件 |
-| REQ-008 | Git 使用 `main + feature/REQ-* + 发布标签`，不设长期 `develop` | IMPLEMENTED | `main`已配置Synology `origin`上游；GitHub远端已改为仓库局部HTTPS并完成只读核验；当前无发布标签，尚未同步的提交必须分别获得推送授权 |
-| REQ-009 | Synology 裸仓库目标为 `C:\Users\A\Documents\SynologyDrive\GIT\CREHN\CREHN.git` | VERIFIED | 裸仓库已创建，`origin/main` 已建立并完成首次推送；后续推送仍需逐次授权 |
-| REQ-010 | 192.168.2.229 构建测试，专用 ECS 2 只接收同一不可变产物 | IMPLEMENTING | TEST `0.1.9-test` 已部署运行，管理员和临时审核浏览器验收通过；当前部分数据库备份/恢复、初始化白名单、数据库回读、完整角色验收和 ECS 2 仍未执行 |
-| REQ-011 | 初期只启用站内消息；短信和邮件在真实供应商配置前关闭 | IMPLEMENTED | 安全运维、学校审核/项目审核/结果发布站内消息 |
-| REQ-012 | 1Panel 不作为运行依赖；若使用只装宿主机，不装入 CREHN 容器 | CONFIRMED | ADR-0001 |
-| REQ-013 | 所有用户可见功能页面纳入受控配置覆盖，管理员可在白名单和兼容契约内维护主题、系统骨架、角色首页、页面/类别布局、组件、表格和显示文案 | IMPLEMENTING | 角色工作台、稳定 `role_key` 和业务表格配置运行时已实施；TEST `0.1.9-test` 管理员/临时审核页面验收通过，但数据库回读、全页面登记、运行时版本、12角色和逐页浏览器验收仍需分阶段实施 |
-| REQ-014 | 项目评审支持百分制、等级制和仅评语模式；无数值分场景必须贯穿评分、签名评分表、汇总、结果、导出和学校端展示 | IMPLEMENTING | 第一批已实施仅评语模式基础链路；评审发布、排名/奖项规则、权限和角色化浏览器验收仍待确认 |
+| ID | 需求 | 状态 | 静态测试 | 构建 | 浏览器 | 数据库 | 服务器 | 生产 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| REQ-001 | 独立 CREHN 工程 | IMPLEMENTED | 规范/前端检查 PASS | 前端 PASS；后端 NOT_RUN | TEST局部通过 | NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-002 | 独立公共门户及组件化 CMS | IMPLEMENTED | 定向测试 PASS | 门户/管理端 PASS；后端 NOT_RUN | NEEDS_BROWSER | V006 NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-003 | 参赛者正式账号、一次性激活码与本人填报 | IMPLEMENTED | FLOW/ACTIVATE/UX 静态 PASS | 前端 PASS；后端 NOT_RUN | NEEDS_BROWSER | NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-004 | 学校审核、专家评审、汇总与结果发布流程 | IMPLEMENTED | 前端测试 PASS；后端仅静态 | 前端 PASS；后端 NOT_RUN | NEEDS_BROWSER（12角色未完成） | NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-005 | DYZ 选择性兼容，不共库/双写/复用运行标识 | IMPLEMENTED | 版本化契约存在 | 前端 PASS；固定样例包 NOT_RUN | NEEDS_BROWSER | NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-006 | 容量、上传、保留、备份和消息分层配置 | IMPLEMENTED | 配置/脚本静态存在 | 前端 PASS；部署产物 NOT_RUN | NEEDS_BROWSER | 恢复演练 NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-007 | LOCAL/TEST/STAGE/PROD 隔离 | IMPLEMENTED | Compose静态历史通过 | TEST历史构建通过 | TEST局部通过 | TEST DB隔离回读未完成 | TEST局部通过 | NOT_RUN |
+| REQ-008 | `main + feature/REQ-* + 发布标签` | IMPLEMENTED | 本地 Git 结构已核验 | 不适用 | 不适用 | 不适用 | 远端运行验证未完成 | 发布标签 NOT_RUN |
+| REQ-009 | Synology 裸仓库 | VERIFIED | `origin/main`与首次推送有历史证据 | 不适用 | 不适用 | 不适用 | 已验证 | 不适用 |
+| REQ-010 | 229 TEST 验证，ECS 2 不可变发布 | IMPLEMENTING | 预检/资产历史 PASS | TEST历史 PASS | 管理员/临时审核局部通过 | 备份/恢复/初始化 NOT_RUN | TEST局部通过；ECS 2 NEEDS_SERVER | NOT_RUN |
+| REQ-011 | 初期只启用站内消息 | IMPLEMENTED | 三类代码静态存在 | 后端 NOT_RUN | NEEDS_BROWSER | NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-012 | 1Panel 不作为运行依赖 | CONFIRMED | ADR-0001 | 不适用 | 不适用 | 不适用 | NEEDS_SERVER | NOT_RUN |
+| REQ-013 | 全页面受控配置与角色工作台 | IMPLEMENTING | QA-001 typecheck/94测试 PASS | 管理端4GB构建 PASS；后端 NOT_RUN | TEST两角色局部通过；12角色 NEEDS_BROWSER | V005/V006 NOT_RUN | NEEDS_SERVER | NOT_RUN |
+| REQ-014 | 百分制、等级制和仅评语全链路 | IMPLEMENTING | 第一批基础链路存在 | 前端 PASS；后端 NOT_RUN | NEEDS_BROWSER | NOT_RUN | NEEDS_SERVER | NOT_RUN |
 
 ## 新需求登记规则
 

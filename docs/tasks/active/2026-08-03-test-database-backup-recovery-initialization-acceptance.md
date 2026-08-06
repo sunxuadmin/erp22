@@ -17,14 +17,14 @@
 - TEST `0.1.9-test` 已部署并运行正常，运行时源码修订为 `4a7eb2a9c18396a6933e441967a6f065b6236fcb`。
 - 管理员和 TEST 临时审核浏览器验收已完成；这些证据只证明应用、权限入口和页面行为，不证明数据库初始化或恢复可用。
 - 数据库初始化、业务 SQL、ECS 2连接、OSS配置和Git推送均未执行。
-- 本地静态核对：`deploy/db/Dockerfile` 包含45个初始化入口，路径全部存在且唯一；两个 Shell 引导脚本均为 LF-only。
+- 当前本地静态重算：`migration-manifest.json` 为44项 `businessStructure`，`deploy/db/Dockerfile` 为47个 `/opt/crehn/init` 入口（1个框架基线 + 2个 bootstrap + 44项业务结构）；48条全部 `COPY` 另含 manifest 本身。44个 manifest 路径全部存在。
 - 全量 SQL manifest 不能直接等同于初始化清单；初始化入口中包含 `V005` 和运行时配置内容，需在远端写操作前固定其分类、顺序和 SHA-256。
 
 ## 阶段A已执行证据
 
 - 229 `PreflightLocal` 已通过，且脚本报告未改变主机：内存 `6755 MiB`、Swap `4095 MiB`、根分区剩余 `24847 MiB`、Docker `29.6.2`、Compose `5.3.1`。
 - TEST 候选端口 `28181/29000/29001` 均为可用或已由 `crehn-test` 占用；项目A `dyz-current-shadow` 5 个容器均 `running/healthy`，重启次数为0且未 OOM，保护 Web 和存储入口健康。
-- 本地 45 项入口分类对照结果：`ProgramInitializationSql=4`、`RequiredSchemaSql=10`、`ProgramMigrationSql=22`、`ProgramRuntimeConfigSql=2`、`BusinessRuntimeSql=1`、未登记入口=6。
+- 历史 45 项入口（加入 V006/V007 前）分类对照结果：`ProgramInitializationSql=4`、`RequiredSchemaSql=10`、`ProgramMigrationSql=22`、`ProgramRuntimeConfigSql=2`、`BusinessRuntimeSql=1`、未登记入口=6。
 - 未登记入口为两个 TEST 引导 Shell 和 `V001` 至 `V004`；需要在初始化专用 manifest 中登记来源、顺序、脚本类型和 SHA-256。
 - 需要人工确认的高风险分类包括 `V005`、`art_review_config_rules.sql`、`art_review_m68_recycle_audit_scope.sql`、`art_review_m82_activity_menu_name.sql` 及多个手动 ProgramMigration；在分类决策完成前不执行初始化。
 - 首次 `DatabasePlan` 未进入远端计划逻辑，因 TEST 远端入口以当前用户执行时返回退出码 `126 Permission denied`；未执行 SQL、未启动容器、未修改数据库。
@@ -36,11 +36,11 @@
 
 ## 初始化入口本地审查结果
 
-- 45 项入口按当前 SQL manifest 对照为：`ProgramInitializationSql=4`、`RequiredSchemaSql=10`、`ProgramMigrationSql=22`、`ProgramRuntimeConfigSql=2`、`BusinessRuntimeSql=1`、未登记入口=6。
+- 历史 45 项入口对照为：`ProgramInitializationSql=4`、`RequiredSchemaSql=10`、`ProgramMigrationSql=22`、`ProgramRuntimeConfigSql=2`、`BusinessRuntimeSql=1`、未登记入口=6。
 - 未登记入口：`bootstrap-admin.sh`、`bootstrap-test-oss.sh`、`V001`、`V002`、`V003`、`V004`；必须先补充来源、顺序、脚本类型和 SHA-256，不能依赖 Dockerfile 顺序作为唯一审计来源。
 - `BusinessRuntimeSql` 的 `art_review_m68_recycle_audit_scope.sql` 含运行时审核分配数据风险，不得默认纳入空库初始化。
 - `ProgramRuntimeConfigSql` 的 `art_review_config_rules.sql` 与 `art_review_m82_activity_menu_name.sql` 必须作为显式运行时配置动作单独决策，不能随普通结构初始化自动执行。
-- `V005__crehn_workbench_role_key.sql` 虽位于初始化镜像，但 manifest 要求备份、孤儿布局回读和明确 SQL 授权；在当前任务中暂不执行。
+- `V005__crehn_workbench_role_key.sql`、`V006__crehn_portal_page_layout.sql` 和 `V007__crehn_role_permission_boundaries.sql` 虽位于初始化镜像，仍需备份、隔离恢复、执行前快照/回读和明确 SQL 授权；本轮均未执行。
 - 其余 ProgramMigration 需要逐项确认“空库初始化允许”还是“后续手动迁移”，不能因为 `DatabasePlan` 通过就自动执行。
 
 ## 现有脚本能力限制
@@ -80,12 +80,12 @@
 
 1. 只停止/重建 `crehn-test` 数据库及必要的 CREHN 应用连接，不操作项目A。
 2. 确认目标库表数量为0、无完成标记、数据库镜像与 `0.1.9-test` 清单一致。
-3. 按固定的45项初始化白名单逐项执行，记录文件名、顺序、退出码和实际执行数量。
+3. 按执行前最终签字的47项初始化白名单逐项执行，记录文件名、顺序、SHA-256、退出码和实际执行数量。
 4. 任一入口失败时不得写入完成标记；保留日志、容器和隔离证据，停止后续应用启动。
 
 ## 阶段E：初始化只读回读验收
 
-- 45/45 入口执行成功，顺序和清单哈希一致；
+- 47/47 入口执行成功，顺序和清单哈希一致；
 - 完成标记包含项目、版本、源码修订、入口数量和完成时间；
 - `sys_user`、管理员角色、菜单权限和必要框架表可回读；
 - `sys_workbench_layout.role_key`、V005 索引、结果管理员和监督审计员配置符合预期；
@@ -100,14 +100,14 @@
 ## 验收状态
 
 - [x] 本地初始化入口数量、路径唯一性和 Shell LF 静态核对。
-- [x] 45 项入口与 SQL manifest 分类和危险操作本地审查。
+- [x] 历史45项入口与 SQL manifest 分类和危险操作本地审查；当前44项业务结构/47个初始化入口已重算，但新增 V006/V007 尚未纳入完整分类和哈希签字。
 - [x] 229 主机、TEST端口和项目A保护基线只读预检。
 - [ ] 229 TEST 数据库容器、卷/挂载、表数量、错误标记和已有备份只读回读。
 - [ ] 当前部分数据库逻辑与物理备份。
 - [ ] 隔离逻辑恢复与物理恢复演练。
 - [ ] 初始化白名单分类、顺序和 SHA-256 固定；当前因 manifest 分类冲突阻断。
 - [ ] 人工确认空库初始化白名单与后续 ProgramMigration 分组。
-- [ ] 空库45项初始化和完成标记。
+- [ ] 空库47项初始化和完成标记。
 - [ ] 初始化后的数据库结构、角色、配置和项目A隔离回读。
 - [ ] 后续应用重新启动和浏览器复验。
 
