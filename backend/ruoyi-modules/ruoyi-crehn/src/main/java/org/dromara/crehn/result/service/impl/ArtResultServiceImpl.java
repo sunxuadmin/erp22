@@ -37,6 +37,7 @@ import org.dromara.crehn.domain.vo.ProjectUploadSummaryVo;
 import org.dromara.crehn.domain.vo.ProjectFileVo;
 import org.dromara.crehn.domain.vo.ProjectVo;
 import org.dromara.crehn.domain.vo.ReviewAwardRuleVo;
+import org.dromara.crehn.domain.vo.PublicReviewResultVo;
 import org.dromara.crehn.domain.vo.ReviewProjectOverviewVo;
 import org.dromara.crehn.domain.vo.ReviewResultLogVo;
 import org.dromara.crehn.domain.vo.ReviewResultReadinessVo;
@@ -193,6 +194,35 @@ public class ArtResultServiceImpl implements IArtResultService {
         fillNames(page.getRecords());
         maskSchoolResultVisibility(page.getRecords());
         return TableDataInfo.build(page);
+    }
+
+    @Override
+    public TableDataInfo<PublicReviewResultVo> queryPublicPublishedResultPage(PageQuery pageQuery) {
+        long pageNumber = Math.max(1, pageQuery.getPageNum() == null ? 1 : pageQuery.getPageNum());
+        long pageSize = Math.min(100, Math.max(1, pageQuery.getPageSize() == null ? 20 : pageQuery.getPageSize()));
+        Page<ReviewResultVo> page = resultMapper.selectVoPage(new Page<>(pageNumber, pageSize), Wrappers.lambdaQuery(ReviewResult.class)
+            .eq(ReviewResult::getResultStatus, ArtReviewConstants.RESULT_PUBLISHED)
+            .orderByDesc(ReviewResult::getPublishedAt)
+            .orderByAsc(ReviewResult::getRankNo));
+        fillNames(page.getRecords());
+        maskSchoolResultVisibility(page.getRecords());
+        List<PublicReviewResultVo> rows = page.getRecords().stream().map(this::toPublicResult).toList();
+        return new TableDataInfo<>(rows, page.getTotal());
+    }
+
+    private PublicReviewResultVo toPublicResult(ReviewResultVo source) {
+        PublicReviewResultVo target = new PublicReviewResultVo();
+        target.setActivityName(source.getActivityName());
+        target.setCategoryName(source.getCategoryName());
+        target.setProjectNo(source.getProjectNo());
+        target.setProjectName(source.getProjectName());
+        target.setSchoolName(source.getSchoolName());
+        target.setAverageScore(Boolean.TRUE.equals(source.getShowScore()) ? source.getAverageScore() : null);
+        target.setFinalGrade(Boolean.TRUE.equals(source.getShowScore()) ? source.getFinalGrade() : null);
+        target.setAwardLevel(source.getAwardLevel());
+        target.setRankNo(Boolean.TRUE.equals(source.getShowRank()) ? source.getRankNo() : null);
+        target.setPublishedAt(source.getPublishedAt());
+        return target;
     }
 
     @Override

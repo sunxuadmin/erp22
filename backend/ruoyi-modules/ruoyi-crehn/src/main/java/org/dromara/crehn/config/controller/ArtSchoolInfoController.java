@@ -36,7 +36,7 @@ public class ArtSchoolInfoController extends BaseController {
         return schoolInfoService.queryPage(query, pageQuery);
     }
 
-    @SaCheckPermission("crehn:schoolInfo:list")
+    @SaCheckPermission(value = {"crehn:schoolInfo:list", "crehn:participant:import"}, mode = SaMode.OR)
     @GetMapping("/options")
     public R<List<SchoolInfoVo>> options(SchoolInfo query) {
         return R.ok(schoolInfoService.queryList(query));

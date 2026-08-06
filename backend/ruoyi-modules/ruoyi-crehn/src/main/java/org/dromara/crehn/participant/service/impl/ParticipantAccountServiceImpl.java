@@ -12,15 +12,19 @@ import org.dromara.common.mybatis.core.page.PageQuery;
 import org.dromara.common.mybatis.core.page.TableDataInfo;
 import org.dromara.common.satoken.utils.LoginHelper;
 import org.dromara.crehn.domain.AccountAudit;
+import org.dromara.crehn.domain.Activity;
 import org.dromara.crehn.domain.ActivationBatch;
 import org.dromara.crehn.domain.ParticipantActivationCode;
 import org.dromara.crehn.domain.ParticipantProfile;
 import org.dromara.crehn.domain.bo.ParticipantActivateBo;
+import org.dromara.crehn.domain.bo.ParticipantActivationPreviewBo;
 import org.dromara.crehn.domain.bo.ParticipantBatchImportBo;
 import org.dromara.crehn.domain.bo.ParticipantCodeReissueBo;
 import org.dromara.crehn.domain.bo.ParticipantImportRow;
 import org.dromara.crehn.domain.vo.ParticipantActivationIssueVo;
+import org.dromara.crehn.domain.vo.ParticipantActivationPreviewVo;
 import org.dromara.crehn.mapper.AccountAuditMapper;
+import org.dromara.crehn.mapper.ActivityMapper;
 import org.dromara.crehn.mapper.ActivationBatchMapper;
 import org.dromara.crehn.mapper.ParticipantActivationCodeMapper;
 import org.dromara.crehn.mapper.ParticipantProfileMapper;
@@ -61,6 +65,7 @@ public class ParticipantAccountServiceImpl implements IParticipantAccountService
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final ParticipantProfileMapper profileMapper;
+    private final ActivityMapper activityMapper;
     private final ActivationBatchMapper batchMapper;
     private final ParticipantActivationCodeMapper codeMapper;
     private final AccountAuditMapper auditMapper;
@@ -154,30 +159,34 @@ public class ParticipantAccountServiceImpl implements IParticipantAccountService
     }
 
     @Override
+    public ParticipantActivationPreviewVo previewActivation(ParticipantActivationPreviewBo bo) {
+        ParticipantActivationCode code = requireIssuedActivationCode(bo.getActivationCode(), false);
+        ParticipantProfile profile = requirePendingParticipant(code);
+        ParticipantActivationPreviewVo result = new ParticipantActivationPreviewVo();
+        result.setParticipantName(maskName(profile.getParticipantName()));
+        result.setIdentityNoMasked(profile.getIdentityNoMasked());
+        result.setPhonenumberMasked(maskPhone(profile.getPhonenumber()));
+        result.setEmailMasked(maskEmail(profile.getEmail()));
+        if (profile.getSchoolId() != null) {
+            var school = schoolInfoMapper.selectById(profile.getSchoolId());
+            result.setSchoolName(school == null ? null : school.getSchoolName());
+        }
+        if (profile.getActivityId() != null) {
+            Activity activity = activityMapper.selectById(profile.getActivityId());
+            result.setActivityName(activity == null ? null : activity.getActivityName());
+        }
+        return result;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void activate(ParticipantActivateBo bo, HttpServletRequest request) {
         validatePassword(bo.getPassword());
         if (!"confirmed".equalsIgnoreCase(bo.getProfileConfirmation())) {
             throw new ServiceException("必须由参赛者本人确认资料");
         }
-        ParticipantActivationCode code = codeMapper.selectOne(Wrappers.lambdaQuery(ParticipantActivationCode.class)
-            .eq(ParticipantActivationCode::getCodeHash, hash(normalizeCode(bo.getActivationCode())))
-            .last("for update"));
-        if (code == null) {
-            throw new ServiceException("激活码无效");
-        }
-        if (!"issued".equals(code.getStatus())) {
-            throw new ServiceException("激活码已使用或已失效");
-        }
-        if (code.getExpiresAt() == null || !code.getExpiresAt().after(new Date())) {
-            code.setStatus("expired");
-            codeMapper.updateById(code);
-            throw new ServiceException("激活码已过期");
-        }
-        ParticipantProfile profile = profileMapper.selectById(code.getParticipantId());
-        if (profile == null || !PROFILE_PENDING.equals(profile.getStatus())) {
-            throw new ServiceException("参赛者资料状态不允许激活");
-        }
+        ParticipantActivationCode code = requireIssuedActivationCode(bo.getActivationCode(), true);
+        ParticipantProfile profile = requirePendingParticipant(code);
         SysUser user = sysUserMapper.selectById(profile.getUserId());
         if (user == null || !USER_TYPE_PARTICIPANT.equals(user.getUserType())) {
             throw new ServiceException("参赛者账号不存在");
@@ -300,6 +309,33 @@ public class ParticipantAccountServiceImpl implements IParticipantAccountService
         codeMapper.insert(code);
     }
 
+    private ParticipantActivationCode requireIssuedActivationCode(String plainCode, boolean lockForUpdate) {
+        LambdaQueryWrapper<ParticipantActivationCode> query = Wrappers.lambdaQuery(ParticipantActivationCode.class)
+            .eq(ParticipantActivationCode::getCodeHash, hash(normalizeCode(plainCode)));
+        if (lockForUpdate) {
+            query.last("for update");
+        }
+        ParticipantActivationCode code = codeMapper.selectOne(query);
+        if (code == null) {
+            throw new ServiceException("激活码无效");
+        }
+        if (!"issued".equals(code.getStatus())) {
+            throw new ServiceException("激活码已使用或已失效");
+        }
+        if (code.getExpiresAt() == null || !code.getExpiresAt().after(new Date())) {
+            throw new ServiceException("激活码已过期");
+        }
+        return code;
+    }
+
+    private ParticipantProfile requirePendingParticipant(ParticipantActivationCode code) {
+        ParticipantProfile profile = profileMapper.selectById(code.getParticipantId());
+        if (profile == null || !PROFILE_PENDING.equals(profile.getStatus())) {
+            throw new ServiceException("参赛者资料状态不允许激活");
+        }
+        return profile;
+    }
+
     private void validatePassword(String password) {
         if (StringUtils.isBlank(password) || password.length() < 8 || password.length() > 30
             || !PASSWORD_LETTER.matcher(password).matches() || !PASSWORD_NUMBER.matcher(password).matches()) {
@@ -328,6 +364,37 @@ public class ParticipantAccountServiceImpl implements IParticipantAccountService
             return "****";
         }
         return value.substring(0, 3) + "****" + value.substring(value.length() - 4);
+    }
+
+    private String maskName(String name) {
+        String value = trimToNull(name);
+        if (value == null) {
+            return null;
+        }
+        return value.length() == 1 ? "*" : value.substring(0, 1) + "*".repeat(value.length() - 1);
+    }
+
+    private String maskPhone(String phone) {
+        String value = trimToNull(phone);
+        if (value == null) {
+            return null;
+        }
+        if (value.length() <= 7) {
+            return "****";
+        }
+        return value.substring(0, 3) + "****" + value.substring(value.length() - 4);
+    }
+
+    private String maskEmail(String email) {
+        String value = trimToNull(email);
+        if (value == null) {
+            return null;
+        }
+        int separator = value.indexOf('@');
+        if (separator <= 0) {
+            return "****";
+        }
+        return value.substring(0, 1) + "***" + value.substring(separator);
     }
 
     private String hash(String value) {

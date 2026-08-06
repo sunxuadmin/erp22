@@ -17,6 +17,7 @@ import org.dromara.crehn.domain.PortalArticleVersion;
 import org.dromara.crehn.domain.PortalChannel;
 import org.dromara.crehn.domain.PortalHomeComponent;
 import org.dromara.crehn.domain.PortalMediaAsset;
+import org.dromara.crehn.domain.PortalPageLayout;
 import org.dromara.crehn.domain.PortalRelease;
 import org.dromara.crehn.domain.PortalSite;
 import org.dromara.crehn.domain.bo.PortalArticleActionBo;
@@ -25,6 +26,7 @@ import org.dromara.crehn.mapper.PortalArticleVersionMapper;
 import org.dromara.crehn.mapper.PortalChannelMapper;
 import org.dromara.crehn.mapper.PortalHomeComponentMapper;
 import org.dromara.crehn.mapper.PortalMediaAssetMapper;
+import org.dromara.crehn.mapper.PortalPageLayoutMapper;
 import org.dromara.crehn.mapper.PortalReleaseMapper;
 import org.dromara.crehn.mapper.PortalSiteMapper;
 import org.dromara.system.domain.vo.SysOssVo;
@@ -42,7 +44,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -51,12 +55,6 @@ import java.util.Set;
 public class PortalCmsServiceImpl implements IPortalCmsService {
     private static final Set<String> ARTICLE_VISIBILITY = Set.of("public", "login", "school");
     private static final Set<String> SITE_STATUS = Set.of("enabled", "disabled");
-    private static final Set<String> COMPONENT_TYPES = Set.of(
-        "hero", "news", "notice", "activity", "schedule", "media", "stat", "showcase", "links"
-    );
-    private static final Set<String> DATA_SOURCES = Set.of(
-        "manual", "public_articles", "public_notices", "public_activity", "public_results", "public_stats"
-    );
 
     private final PortalArticleMapper articleMapper;
     private final PortalArticleVersionMapper versionMapper;
@@ -64,6 +62,7 @@ public class PortalCmsServiceImpl implements IPortalCmsService {
     private final PortalChannelMapper channelMapper;
     private final PortalMediaAssetMapper mediaMapper;
     private final PortalHomeComponentMapper componentMapper;
+    private final PortalPageLayoutMapper pageLayoutMapper;
     private final PortalReleaseMapper releaseMapper;
     private final ISysOssService ossService;
 
@@ -211,21 +210,7 @@ public class PortalCmsServiceImpl implements IPortalCmsService {
             throw new ServiceException("站点和组件标识不能为空");
         }
         requireSite(component.getSiteId());
-        component.setPageCode(StringUtils.blankToDefault(component.getPageCode(), "home"));
-        component.setSortOrder(component.getSortOrder() == null ? 0 : component.getSortOrder());
-        component.setGridX(component.getGridX() == null ? 0 : component.getGridX());
-        component.setGridY(component.getGridY() == null ? 0 : component.getGridY());
-        component.setGridW(component.getGridW() == null ? 12 : component.getGridW());
-        component.setGridH(component.getGridH() == null ? 1 : component.getGridH());
-        component.setEnabled(component.getEnabled() == null || component.getEnabled());
-        if (component.getGridX() < 0 || component.getGridY() < 0 || component.getGridW() < 1
-            || component.getGridW() > 12 || component.getGridH() < 1) {
-            throw new ServiceException("首页组件栅格位置不正确");
-        }
-        if (StringUtils.isNotBlank(component.getConfigJson()) && !JsonUtils.isJsonObject(component.getConfigJson())) {
-            throw new ServiceException("首页组件配置必须是JSON对象");
-        }
-        validateComponent(component);
+        PortalHomeConfigurationValidator.normalizeComponent(component, component.getSiteId());
         if (component.getId() == null) {
             componentMapper.insert(component);
         } else {
@@ -236,6 +221,96 @@ public class PortalCmsServiceImpl implements IPortalCmsService {
             componentMapper.updateById(component);
         }
         return component;
+    }
+
+    @Override
+    public List<PortalPageLayout> listPageLayouts(Long siteId, String pageCode) {
+        requireSite(siteId);
+        String normalizedPageCode = StringUtils.blankToDefault(pageCode, "home");
+        return pageLayoutMapper.selectList(Wrappers.lambdaQuery(PortalPageLayout.class)
+            .eq(PortalPageLayout::getSiteId, siteId)
+            .eq(PortalPageLayout::getPageCode, normalizedPageCode)
+            .orderByAsc(PortalPageLayout::getSortOrder)
+            .orderByAsc(PortalPageLayout::getId));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public PortalPageLayout savePageLayout(PortalPageLayout layout) {
+        if (layout == null || layout.getSiteId() == null || StringUtils.isBlank(layout.getLayoutCode())
+            || StringUtils.isBlank(layout.getLayoutName())) {
+            throw new ServiceException("站点、布局编码和布局名称不能为空");
+        }
+        requireSite(layout.getSiteId());
+        layout.setPageCode(StringUtils.blankToDefault(layout.getPageCode(), "home"));
+        layout.setLayoutCode(layout.getLayoutCode().trim());
+        layout.setLayoutName(layout.getLayoutName().trim());
+        layout.setRenderVersion(PortalHomeConfigurationValidator.normalizeRenderVersion(layout.getRenderVersion()));
+        layout.setSortOrder(layout.getSortOrder() == null ? 0 : layout.getSortOrder());
+        layout.setEnabled(layout.getEnabled() == null || layout.getEnabled());
+        boolean activateRequested = Boolean.TRUE.equals(layout.getActive());
+        layout.setActive(false);
+        if (!layout.getLayoutCode().matches("[A-Za-z0-9_-]{1,64}")) {
+            throw new ServiceException("布局编码只能包含字母、数字、下划线和短横线");
+        }
+        PortalHomeConfigurationValidator.validateThemeJson(layout.getThemeJson());
+        if (StringUtils.isBlank(layout.getComponentJson())) {
+            layout.setComponentJson("[]");
+        }
+        layout.setComponentJson(PortalHomeConfigurationValidator.normalizeComponentSnapshotJson(
+            layout.getComponentJson(), layout.getSiteId()
+        ));
+        if (layout.getId() == null) {
+            long duplicate = pageLayoutMapper.selectCount(Wrappers.lambdaQuery(PortalPageLayout.class)
+                .eq(PortalPageLayout::getSiteId, layout.getSiteId())
+                .eq(PortalPageLayout::getPageCode, layout.getPageCode())
+                .eq(PortalPageLayout::getLayoutCode, layout.getLayoutCode()));
+            if (duplicate > 0) {
+                throw new ServiceException("布局编码已存在");
+            }
+            pageLayoutMapper.insert(layout);
+        } else {
+            PortalPageLayout existing = pageLayoutMapper.selectById(layout.getId());
+            if (existing == null || !existing.getSiteId().equals(layout.getSiteId())) {
+                throw new ServiceException("布局不存在或不属于当前站点");
+            }
+            long duplicate = pageLayoutMapper.selectCount(Wrappers.lambdaQuery(PortalPageLayout.class)
+                .eq(PortalPageLayout::getSiteId, layout.getSiteId())
+                .eq(PortalPageLayout::getPageCode, layout.getPageCode())
+                .eq(PortalPageLayout::getLayoutCode, layout.getLayoutCode())
+                .ne(PortalPageLayout::getId, layout.getId()));
+            if (duplicate > 0) {
+                throw new ServiceException("布局编码已存在");
+            }
+            layout.setActive(existing.getActive());
+            pageLayoutMapper.updateById(layout);
+        }
+        if (activateRequested) {
+            activatePageLayout(layout.getSiteId(), layout.getPageCode(), layout.getLayoutCode());
+            layout.setActive(true);
+        }
+        return layout;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void activatePageLayout(Long siteId, String pageCode, String layoutCode) {
+        requireSite(siteId);
+        String normalizedPageCode = StringUtils.blankToDefault(pageCode, "home");
+        PortalPageLayout target = pageLayoutMapper.selectOne(Wrappers.lambdaQuery(PortalPageLayout.class)
+            .eq(PortalPageLayout::getSiteId, siteId)
+            .eq(PortalPageLayout::getPageCode, normalizedPageCode)
+            .eq(PortalPageLayout::getLayoutCode, layoutCode)
+            .last("limit 1"));
+        if (target == null || !Boolean.TRUE.equals(target.getEnabled())) {
+            throw new ServiceException("布局不存在或未启用");
+        }
+        pageLayoutMapper.update(null, Wrappers.lambdaUpdate(PortalPageLayout.class)
+            .eq(PortalPageLayout::getSiteId, siteId)
+            .eq(PortalPageLayout::getPageCode, normalizedPageCode)
+            .set(PortalPageLayout::getActive, false));
+        target.setActive(true);
+        pageLayoutMapper.updateById(target);
     }
 
     @Override
@@ -388,16 +463,61 @@ public class PortalCmsServiceImpl implements IPortalCmsService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PortalRelease publishHome(Long siteId, String reason) {
+        return publishHome(siteId, null, reason);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public PortalRelease publishHome(Long siteId, String layoutCode, String reason) {
         requireSite(siteId);
         if (StringUtils.isBlank(reason)) {
             throw new ServiceException("首页发布原因不能为空");
         }
-        List<PortalHomeComponent> components = componentMapper.selectList(Wrappers.lambdaQuery(PortalHomeComponent.class)
-            .eq(PortalHomeComponent::getSiteId, siteId)
-            .eq(PortalHomeComponent::getEnabled, true)
-            .orderByAsc(PortalHomeComponent::getSortOrder));
-        components.forEach(this::validateComponent);
-        String snapshot = JsonUtils.toJsonString(components);
+        PortalPageLayout selectedLayout = StringUtils.isBlank(layoutCode)
+            ? pageLayoutMapper.selectOne(Wrappers.lambdaQuery(PortalPageLayout.class)
+                .eq(PortalPageLayout::getSiteId, siteId)
+                .eq(PortalPageLayout::getPageCode, "home")
+                .eq(PortalPageLayout::getActive, true)
+                .eq(PortalPageLayout::getEnabled, true)
+                .orderByAsc(PortalPageLayout::getSortOrder)
+                .orderByAsc(PortalPageLayout::getId)
+                .last("limit 1"))
+            : pageLayoutMapper.selectOne(Wrappers.lambdaQuery(PortalPageLayout.class)
+                .eq(PortalPageLayout::getSiteId, siteId)
+                .eq(PortalPageLayout::getPageCode, "home")
+                .eq(PortalPageLayout::getLayoutCode, layoutCode)
+                .eq(PortalPageLayout::getEnabled, true)
+                .last("limit 1"));
+        if (StringUtils.isNotBlank(layoutCode) && selectedLayout == null) {
+            throw new ServiceException("指定的首页布局不存在或未启用");
+        }
+        List<PortalHomeComponent> components;
+        String themeJson = null;
+        String renderVersion = "v1";
+        String selectedLayoutCode = null;
+        if (selectedLayout == null) {
+            components = componentMapper.selectList(Wrappers.lambdaQuery(PortalHomeComponent.class)
+                .eq(PortalHomeComponent::getSiteId, siteId)
+                .eq(PortalHomeComponent::getEnabled, true)
+                .orderByAsc(PortalHomeComponent::getSortOrder));
+            components.forEach(component -> PortalHomeConfigurationValidator.normalizeComponent(component, siteId));
+        } else {
+            components = PortalHomeConfigurationValidator.parseAndNormalizeComponentSnapshot(
+                selectedLayout.getComponentJson(), siteId
+            ).stream().filter(component -> Boolean.TRUE.equals(component.getEnabled())).toList();
+            themeJson = selectedLayout.getThemeJson();
+            PortalHomeConfigurationValidator.validateThemeJson(themeJson);
+            renderVersion = PortalHomeConfigurationValidator.normalizeRenderVersion(selectedLayout.getRenderVersion());
+            selectedLayoutCode = selectedLayout.getLayoutCode();
+        }
+        Map<String, Object> releaseSnapshot = new LinkedHashMap<>();
+        releaseSnapshot.put("layoutCode", selectedLayoutCode);
+        releaseSnapshot.put("renderVersion", renderVersion);
+        releaseSnapshot.put("theme", StringUtils.isBlank(themeJson)
+            ? Map.of()
+            : JsonUtils.parseObject(themeJson, Map.class));
+        releaseSnapshot.put("components", components);
+        String snapshot = JsonUtils.toJsonString(releaseSnapshot);
         PortalRelease previousRelease = currentRelease(siteId);
         Integer latest = releaseMapper.selectList(Wrappers.lambdaQuery(PortalRelease.class)
             .eq(PortalRelease::getSiteId, siteId)
@@ -436,7 +556,36 @@ public class PortalCmsServiceImpl implements IPortalCmsService {
         if (release == null) {
             return List.of();
         }
-        return JsonUtils.parseArray(release.getSnapshotJson(), PortalHomeComponent.class);
+        if (JsonUtils.isJsonArray(release.getSnapshotJson())) {
+            return JsonUtils.parseArray(release.getSnapshotJson(), PortalHomeComponent.class);
+        }
+        Map<String, Object> snapshot = JsonUtils.parseObject(release.getSnapshotJson(), Map.class);
+        Object components = snapshot.get("components");
+        return components == null
+            ? List.of()
+            : JsonUtils.parseArray(JsonUtils.toJsonString(components), PortalHomeComponent.class);
+    }
+
+    @Override
+    public Map<String, Object> publicHomeSnapshot(Long siteId) {
+        PortalRelease release = currentRelease(siteId);
+        if (release == null || StringUtils.isBlank(release.getSnapshotJson())) {
+            Map<String, Object> empty = new LinkedHashMap<>();
+            empty.put("layoutCode", null);
+            empty.put("renderVersion", "v1");
+            empty.put("theme", Map.of());
+            empty.put("components", List.of());
+            return empty;
+        }
+        if (JsonUtils.isJsonArray(release.getSnapshotJson())) {
+            Map<String, Object> legacy = new LinkedHashMap<>();
+            legacy.put("layoutCode", null);
+            legacy.put("renderVersion", "v1");
+            legacy.put("theme", Map.of());
+            legacy.put("components", JsonUtils.parseArray(release.getSnapshotJson(), PortalHomeComponent.class));
+            return legacy;
+        }
+        return JsonUtils.parseObject(release.getSnapshotJson(), Map.class);
     }
 
     @Scheduled(fixedDelayString = "${crehn.cms.publish-poll-ms:60000}")
@@ -521,15 +670,6 @@ public class PortalCmsServiceImpl implements IPortalCmsService {
         version.setSourceVersionId(sourceVersionId);
         versionMapper.insert(version);
         return version;
-    }
-
-    private void validateComponent(PortalHomeComponent component) {
-        if (!COMPONENT_TYPES.contains(component.getComponentType())) {
-            throw new ServiceException("首页组件类型不在白名单：" + component.getComponentType());
-        }
-        if (!DATA_SOURCES.contains(component.getDataSourceCode())) {
-            throw new ServiceException("首页组件数据源不在白名单：" + component.getDataSourceCode());
-        }
     }
 
     private String hash(String value) {

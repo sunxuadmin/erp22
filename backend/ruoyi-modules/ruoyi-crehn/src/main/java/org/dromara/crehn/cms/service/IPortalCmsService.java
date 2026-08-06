@@ -4,6 +4,7 @@ import org.dromara.crehn.domain.PortalArticle;
 import org.dromara.crehn.domain.PortalChannel;
 import org.dromara.crehn.domain.PortalHomeComponent;
 import org.dromara.crehn.domain.PortalMediaAsset;
+import org.dromara.crehn.domain.PortalPageLayout;
 import org.dromara.crehn.domain.PortalRelease;
 import org.dromara.crehn.domain.PortalSite;
 import org.dromara.crehn.domain.bo.PortalArticleActionBo;
@@ -11,6 +12,7 @@ import org.dromara.common.mybatis.core.page.PageQuery;
 import org.dromara.common.mybatis.core.page.TableDataInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IPortalCmsService {
     List<PortalSite> listSites();
@@ -22,6 +24,9 @@ public interface IPortalCmsService {
     void approveMedia(Long mediaId, String reason);
     List<PortalHomeComponent> listHomeComponents(Long siteId);
     PortalHomeComponent saveHomeComponent(PortalHomeComponent component);
+    List<PortalPageLayout> listPageLayouts(Long siteId, String pageCode);
+    PortalPageLayout savePageLayout(PortalPageLayout layout);
+    void activatePageLayout(Long siteId, String pageCode, String layoutCode);
     TableDataInfo<PortalArticle> queryArticles(PortalArticle query, PageQuery pageQuery);
     PortalArticle saveDraft(PortalArticle article);
     void submitReview(Long articleId);
@@ -32,6 +37,8 @@ public interface IPortalCmsService {
     PortalArticle publicArticle(String articleCode);
     PortalSite publicSite(String siteCode);
     PortalRelease publishHome(Long siteId, String reason);
+    PortalRelease publishHome(Long siteId, String layoutCode, String reason);
     PortalRelease currentRelease(Long siteId);
     List<PortalHomeComponent> publicHomeComponents(Long siteId);
+    Map<String, Object> publicHomeSnapshot(Long siteId);
 }

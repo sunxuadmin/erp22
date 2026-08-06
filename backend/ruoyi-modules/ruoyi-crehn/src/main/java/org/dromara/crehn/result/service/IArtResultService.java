@@ -8,6 +8,7 @@ import org.dromara.crehn.domain.vo.ProjectQuotaRatioSummaryVo;
 import org.dromara.crehn.domain.vo.ProjectUploadSummaryVo;
 import org.dromara.crehn.domain.bo.ReviewAwardRuleBo;
 import org.dromara.crehn.domain.vo.ReviewAwardRuleVo;
+import org.dromara.crehn.domain.vo.PublicReviewResultVo;
 import org.dromara.crehn.domain.vo.ReviewProjectOverviewVo;
 import org.dromara.crehn.domain.vo.ReviewResultLogVo;
 import org.dromara.crehn.domain.vo.ReviewResultReadinessVo;
@@ -27,6 +28,7 @@ public interface IArtResultService {
     TableDataInfo<ReviewResultVo> queryResultPage(ReviewResultVo query, PageQuery pageQuery);
 
     TableDataInfo<ReviewResultVo> queryMyPublishedResultPage(ReviewResultVo query, PageQuery pageQuery);
+    TableDataInfo<PublicReviewResultVo> queryPublicPublishedResultPage(PageQuery pageQuery);
 
     ReviewResultReadinessVo checkReadiness(ReviewResultBo bo);
 

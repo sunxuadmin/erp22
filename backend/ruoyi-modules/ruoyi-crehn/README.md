@@ -16,7 +16,9 @@
 
 ## 开发约定
 
-- API 路径使用 `/crehn/<module>/...`。
+- CREHN 业务 Controller 路径使用 `/crehn/<module>/...`；`/system/home-config` 等框架/系统能力例外必须由实际 Controller 和权限契约显式维护。
+- 浏览器访问 Web 时使用 `/prod-api/` 作为反向代理前缀，例如浏览器请求 `/prod-api/crehn/cms/...`，代理转发到后端的路径仍为 `/crehn/cms/...`；`/prod-api/` 不是 Controller 路径。
+- 管理端页面上下文 `/admin/` 与公共门户页面上下文 `/crehn/` 都是前端访问路径，不得与后端 `/crehn/...` 业务 API 前缀混为一谈。
 - 权限标识使用 `crehn:<module>:<action>`。
 - 服务端必须做数据权限校验，学校只看本校，专家只看分配任务。
 - 状态流转、审核、评分、结果锁定、导出等关键动作必须写操作日志。

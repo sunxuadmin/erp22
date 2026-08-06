@@ -17,10 +17,12 @@ import org.dromara.common.ratelimiter.annotation.RateLimiter;
 import org.dromara.common.ratelimiter.enums.LimitType;
 import org.dromara.crehn.domain.ParticipantProfile;
 import org.dromara.crehn.domain.bo.ParticipantActivateBo;
+import org.dromara.crehn.domain.bo.ParticipantActivationPreviewBo;
 import org.dromara.crehn.domain.bo.ParticipantBatchImportBo;
 import org.dromara.crehn.domain.bo.ParticipantCodeReissueBo;
 import org.dromara.crehn.domain.bo.ParticipantImportRow;
 import org.dromara.crehn.domain.vo.ParticipantActivationIssueVo;
+import org.dromara.crehn.domain.vo.ParticipantActivationPreviewVo;
 import org.dromara.crehn.participant.service.IParticipantAccountService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -81,6 +83,14 @@ public class ParticipantAccountController {
     @PostMapping("/template")
     public void template(HttpServletResponse response) {
         ExcelUtil.exportExcel(new ArrayList<>(), "参赛者名单导入模板", ParticipantImportRow.class, response);
+    }
+
+    @SaIgnore
+    @RateLimiter(time = 60, count = 10, limitType = LimitType.IP)
+    @RepeatSubmit(interval = 1000)
+    @PostMapping("/activation-preview")
+    public R<ParticipantActivationPreviewVo> previewActivation(@Valid @RequestBody ParticipantActivationPreviewBo bo) {
+        return R.ok(participantAccountService.previewActivation(bo));
     }
 
     @SaIgnore

@@ -73,6 +73,26 @@ public class ArtReviewSecurity {
         return USER_TYPE_PARTICIPANT.equals(currentUser().getUserType());
     }
 
+    public void requireCurrentParticipant() {
+        SysUser user = currentUser();
+        if (!USER_TYPE_PARTICIPANT.equals(user.getUserType())) {
+            throw new ServiceException("作品草稿、材料和本人提交只能由参赛者账号操作");
+        }
+    }
+
+    public void checkParticipantProjectOwner(Project project) {
+        if (project == null) {
+            throw new ServiceException("项目不存在");
+        }
+        SysUser user = currentUser();
+        if (!USER_TYPE_PARTICIPANT.equals(user.getUserType())) {
+            throw new ServiceException("作品草稿、材料和本人提交只能由参赛者账号操作");
+        }
+        if (!user.getUserId().equals(project.getParticipantUserId())) {
+            throw new ServiceException("无权修改他人作品");
+        }
+    }
+
     public void checkProjectAccess(Project project) {
         if (project == null) {
             throw new ServiceException("项目不存在");

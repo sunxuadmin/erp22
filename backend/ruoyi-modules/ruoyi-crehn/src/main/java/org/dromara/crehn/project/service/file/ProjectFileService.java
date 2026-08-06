@@ -188,7 +188,7 @@ public class ProjectFileService {
 
     public void deleteFile(Long projectId, Long fileId) {
         Project project = requireProjectForUpdate(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         requireCategoryAvailable(project.getActivityId(), project.getCategoryId());
         ProjectFile projectFile = projectFileMapper.selectById(fileId);
@@ -254,7 +254,7 @@ public class ProjectFileService {
 
     private UploadPrepareContext prepareUpload(Long projectId, Long requirementId, String originalName, Long fileSize, boolean forUpdate) {
         Project project = forUpdate ? requireProjectForUpdate(projectId) : requireProject(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         requireCategoryAvailable(project.getActivityId(), project.getCategoryId());
         CategoryFileRequirement requirement = requireFileRequirement(requirementId);

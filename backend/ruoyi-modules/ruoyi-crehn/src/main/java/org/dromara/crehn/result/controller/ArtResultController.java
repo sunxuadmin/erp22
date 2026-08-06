@@ -2,6 +2,7 @@ package org.dromara.crehn.result.controller;
 
 import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaIgnore;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.dromara.crehn.domain.bo.ReviewAwardRuleBo;
@@ -9,6 +10,7 @@ import org.dromara.crehn.domain.bo.ReviewResultBo;
 import org.dromara.crehn.domain.bo.ShowcaseOrderBo;
 import org.dromara.crehn.domain.bo.ReviewScoreWarningConfigBo;
 import org.dromara.crehn.domain.vo.ProjectUploadExportVo;
+import org.dromara.crehn.domain.vo.PublicReviewResultVo;
 import org.dromara.crehn.domain.vo.ProjectUploadOverviewVo;
 import org.dromara.crehn.domain.vo.ProjectQuotaRatioSummaryVo;
 import org.dromara.crehn.domain.vo.ProjectUploadSummaryVo;
@@ -31,6 +33,8 @@ import org.dromara.common.log.annotation.Log;
 import org.dromara.common.log.enums.BusinessType;
 import org.dromara.common.mybatis.core.page.PageQuery;
 import org.dromara.common.mybatis.core.page.TableDataInfo;
+import org.dromara.common.ratelimiter.annotation.RateLimiter;
+import org.dromara.common.ratelimiter.enums.LimitType;
 import org.dromara.common.web.core.BaseController;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,6 +63,13 @@ public class ArtResultController extends BaseController {
     @GetMapping("/my-list")
     public TableDataInfo<ReviewResultVo> myList(ReviewResultVo query, PageQuery pageQuery) {
         return resultService.queryMyPublishedResultPage(query, pageQuery);
+    }
+
+    @SaIgnore
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.IP)
+    @GetMapping("/public/published")
+    public TableDataInfo<PublicReviewResultVo> publicPublished(PageQuery pageQuery) {
+        return resultService.queryPublicPublishedResultPage(pageQuery);
     }
 
     @SaCheckPermission("crehn:result:generate")

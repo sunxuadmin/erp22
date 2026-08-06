@@ -74,6 +74,7 @@ public class ProjectDraftSubmitService {
     private final ProjectQuotaGuard projectQuotaGuard;
 
     public ProjectVo saveDraft(ProjectSaveBo bo) {
+        artReviewSecurity.requireCurrentParticipant();
         Long schoolId = artReviewSecurity.requireEnabledSchoolId();
         if (StringUtils.isBlank(bo.getFormDataJson()) || !JsonUtils.isJsonObject(bo.getFormDataJson())) {
             throw new ServiceException("申报表单数据必须是 JSON 对象");
@@ -96,7 +97,7 @@ public class ProjectDraftSubmitService {
             project.setStatus(ArtReviewConstants.PROJECT_DRAFT);
         } else {
             project = requireProjectForUpdate(bo.getId());
-            artReviewSecurity.checkProjectAccess(project);
+            artReviewSecurity.checkParticipantProjectOwner(project);
             requireEditable(project);
             if (!Objects.equals(project.getActivityId(), bo.getActivityId()) || !Objects.equals(project.getCategoryId(), bo.getCategoryId())) {
                 throw new ServiceException("项目保存后不可修改活动或类别");
@@ -118,7 +119,7 @@ public class ProjectDraftSubmitService {
 
     public void submit(Long id) {
         Project project = requireProjectForUpdate(id);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         projectQuotaGuard.lockSchoolSubmissionScope(project.getSchoolId());
         requireEditable(project);
         requireCategoryAvailable(project.getActivityId(), project.getCategoryId());
@@ -131,31 +132,21 @@ public class ProjectDraftSubmitService {
         SubmitValidationResult validation = projectSubmitValidator.validate(project);
         quotaWarnings.forEach(validation::warn);
         project.setValidationResultJson(JsonUtils.toJsonString(validation));
-        boolean participant = artReviewSecurity.isCurrentParticipant();
-        project.setStatus(participant
-            ? ArtReviewConstants.PROJECT_PARTICIPANT_SUBMITTED
-            : ArtReviewConstants.PROJECT_SUBMITTED);
+        project.setStatus(ArtReviewConstants.PROJECT_PARTICIPANT_SUBMITTED);
         project.setSubmittedAt(new Date());
         project.setSubmittedBy(LoginHelper.getUserId());
-        project.setParticipantSubmittedAt(participant ? project.getSubmittedAt() : null);
-        if (participant) {
-            project.setSchoolReviewStatus("pending");
-            project.setSchoolReviewedAt(null);
-        }
+        project.setParticipantSubmittedAt(project.getSubmittedAt());
+        project.setSchoolReviewStatus("pending");
+        project.setSchoolReviewedAt(null);
         project.setCurrentAuditOpinion(null);
         projectMapper.updateById(project);
     }
 
     public void withdrawSubmit(Long id) {
         Project project = requireProjectForUpdate(id);
-        artReviewSecurity.checkProjectAccess(project);
-        boolean participant = artReviewSecurity.isCurrentParticipant();
-        if (participant && !ArtReviewConstants.PROJECT_PARTICIPANT_SUBMITTED.equals(project.getStatus())) {
+        artReviewSecurity.checkParticipantProjectOwner(project);
+        if (!ArtReviewConstants.PROJECT_PARTICIPANT_SUBMITTED.equals(project.getStatus())) {
             throw new ServiceException("只有本人已提交且学校尚未审核的作品可以撤回");
-        }
-        if (!participant && (!ArtReviewConstants.PROJECT_SUBMITTED.equals(project.getStatus())
-            || project.getSchoolFinalBatchId() != null)) {
-            throw new ServiceException("学校最终提交批次不可通过单个作品撤回");
         }
         project.setStatus(ArtReviewConstants.PROJECT_DRAFT);
         project.setSubmittedAt(null);

@@ -1079,7 +1079,7 @@ public class ArtProjectServiceImpl implements IArtProjectService {
     // ART-REF: BE.PROJECT.MEMBER_IMPORT -> project/service/member/ProjectMemberImportService.java
     public ProjectVo importMembers(Long projectId, MultipartFile file, Boolean replace) {
         Project project = requireProjectForUpdate(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         List<MemberImportRow> rows;
         try {
@@ -1133,7 +1133,7 @@ public class ArtProjectServiceImpl implements IArtProjectService {
     // ART-REF: BE.PROJECT.GENERIC_TABLE_IMPORT -> project/service/table/ProjectGenericTableService.java
     public GenericTableImportResultVo importGenericTable(Long projectId, String tableKey, MultipartFile file) {
         Project project = requireProjectForUpdate(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         validateGenericTableImportFile(file);
         ActivityCategory category = categoryMapper.selectById(project.getCategoryId());
@@ -1550,7 +1550,7 @@ public class ArtProjectServiceImpl implements IArtProjectService {
     @Transactional(rollbackFor = Exception.class)
     public ProjectVo uploadMemberAttachment(Long projectId, Long memberId, String fieldKey, MultipartFile file) {
         Project project = requireProjectForUpdate(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         ProjectMember member = projectMemberMapper.selectById(memberId);
         if (member == null || !Objects.equals(member.getProjectId(), projectId)) {
@@ -1568,7 +1568,7 @@ public class ArtProjectServiceImpl implements IArtProjectService {
     @Transactional(rollbackFor = Exception.class)
     public MemberAttachmentBatchResultVo batchUploadMemberAttachment(Long projectId, String fieldKey, List<MultipartFile> files) {
         Project project = requireProjectForUpdate(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         if (files == null || files.isEmpty()) {
             throw new ServiceException("请选择需要批量上传的文件");
@@ -2093,7 +2093,7 @@ public class ArtProjectServiceImpl implements IArtProjectService {
 
     private ProjectMember requireEditableMember(Long projectId, Long memberId) {
         Project project = requireProjectForUpdate(projectId);
-        artReviewSecurity.checkProjectAccess(project);
+        artReviewSecurity.checkParticipantProjectOwner(project);
         requireEditable(project);
         ProjectMember member = projectMemberMapper.selectById(memberId);
         if (member == null || !Objects.equals(member.getProjectId(), projectId)) {

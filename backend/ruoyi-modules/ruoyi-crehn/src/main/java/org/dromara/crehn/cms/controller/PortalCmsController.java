@@ -15,6 +15,7 @@ import org.dromara.crehn.domain.PortalArticle;
 import org.dromara.crehn.domain.PortalChannel;
 import org.dromara.crehn.domain.PortalHomeComponent;
 import org.dromara.crehn.domain.PortalMediaAsset;
+import org.dromara.crehn.domain.PortalPageLayout;
 import org.dromara.crehn.domain.PortalRelease;
 import org.dromara.crehn.domain.PortalSite;
 import org.dromara.crehn.domain.bo.PortalArticleActionBo;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -100,6 +102,36 @@ public class PortalCmsController {
         return R.ok(cmsService.saveHomeComponent(component));
     }
 
+    @SaCheckPermission("crehn:cms:home:list")
+    @GetMapping("/layout/list")
+    public R<List<PortalPageLayout>> pageLayouts(
+        @RequestParam Long siteId,
+        @RequestParam(required = false) String pageCode
+    ) {
+        return R.ok(cmsService.listPageLayouts(siteId, pageCode));
+    }
+
+    @SaCheckPermission("crehn:cms:home:edit")
+    @Log(title = "门户页面布局保存", businessType = BusinessType.UPDATE)
+    @RepeatSubmit
+    @PutMapping("/layout")
+    public R<PortalPageLayout> savePageLayout(@RequestBody PortalPageLayout layout) {
+        return R.ok(cmsService.savePageLayout(layout));
+    }
+
+    @SaCheckPermission("crehn:cms:home:edit")
+    @Log(title = "门户页面布局切换", businessType = BusinessType.UPDATE)
+    @RepeatSubmit
+    @PostMapping("/layout/{siteId}/activate")
+    public R<Void> activatePageLayout(
+        @PathVariable Long siteId,
+        @RequestParam(required = false) String pageCode,
+        @RequestParam String layoutCode
+    ) {
+        cmsService.activatePageLayout(siteId, pageCode, layoutCode);
+        return R.ok();
+    }
+
     @SaCheckPermission("crehn:cms:article:list")
     @GetMapping("/article/list")
     public TableDataInfo<PortalArticle> list(PortalArticle query, PageQuery pageQuery) {
@@ -152,8 +184,12 @@ public class PortalCmsController {
     @Log(title = "门户首页发布", businessType = BusinessType.UPDATE)
     @RepeatSubmit
     @PostMapping("/home/{siteId}/publish")
-    public R<PortalRelease> publishHome(@PathVariable Long siteId, @RequestParam String reason) {
-        return R.ok(cmsService.publishHome(siteId, reason));
+    public R<PortalRelease> publishHome(
+        @PathVariable Long siteId,
+        @RequestParam String reason,
+        @RequestParam(required = false) String layoutCode
+    ) {
+        return R.ok(cmsService.publishHome(siteId, layoutCode, reason));
     }
 
     @SaIgnore
@@ -181,5 +217,11 @@ public class PortalCmsController {
     @GetMapping("/public/site/{siteId}/home")
     public R<List<PortalHomeComponent>> publicHome(@PathVariable Long siteId) {
         return R.ok(cmsService.publicHomeComponents(siteId));
+    }
+
+    @SaIgnore
+    @GetMapping("/public/site/{siteId}/home/config")
+    public R<Map<String, Object>> publicHomeConfig(@PathVariable Long siteId) {
+        return R.ok(cmsService.publicHomeSnapshot(siteId));
     }
 }

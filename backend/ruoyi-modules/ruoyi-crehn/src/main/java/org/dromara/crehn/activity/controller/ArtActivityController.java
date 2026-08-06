@@ -69,7 +69,8 @@ public class ArtActivityController extends BaseController {
     @SaCheckPermission(value = {
         "crehn:activity:list", "crehn:auditScope:list", "crehn:activityScope:list",
         "crehn:uploadTemplate:list", "crehn:registration:list", "crehn:reviewAssignment:list",
-        "crehn:reportRule:list", "crehn:result:list", "system:workbench:edit"
+        "crehn:reportRule:list", "crehn:result:list", "crehn:participant:list",
+        "crehn:participant:import", "crehn:recycle:list", "system:workbench:edit"
     }, mode = SaMode.OR)
     @GetMapping("/options")
     public R<List<ActivityVo>> activityOptions() {
