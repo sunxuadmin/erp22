@@ -159,7 +159,8 @@ const renderedMotion = computed<MotionSettings>(() => {
 
   return {
     ...backgroundConfig.motion,
-    dustEnabled: false,
+    dustEnabled: backgroundConfig.motion.dustEnabled,
+    dustCount: Math.min(backgroundConfig.motion.dustCount, 4),
     glassBubblesEnabled: false,
     lightCurtainEnabled: false
   };
@@ -197,6 +198,9 @@ const motionStyles = computed<Record<string, string | number>>(() => {
   const glassSaturation = isLiteMode.value
     ? Math.min(glassSettings.value.saturation, performanceConfig.liteGlassSaturation)
     : glassSettings.value.saturation;
+  const particleOpacity = isLiteMode.value ? Math.min(themeConfig.particleOpacity, 0.12) : themeConfig.particleOpacity;
+  const particleSize = isLiteMode.value ? Math.min(themeConfig.particleSize, 3) : themeConfig.particleSize;
+  const particleGlow = isLiteMode.value ? Math.min(themeConfig.particleGlow, 6) : themeConfig.particleGlow;
 
   return {
     "--motion-play-state": effectiveMotionEnabled.value ? "running" : "paused",
@@ -268,6 +272,11 @@ const motionStyles = computed<Record<string, string | number>>(() => {
     "--glass-contrast": glassSettings.value.contrast,
     "--glass-saturation": glassSaturation,
     "--glass-text-opacity": glassSettings.value.textOpacity,
+    "--glass-highlight-opacity": themeConfig.glassHighlightOpacity,
+    "--glass-shadow-opacity": isLiteMode.value ? Math.min(themeConfig.glassShadowOpacity, 0.08) : themeConfig.glassShadowOpacity,
+    "--particle-opacity": particleOpacity,
+    "--particle-size": `${particleSize}px`,
+    "--particle-glow": `${particleGlow}px`,
     "--topbar-opacity": glassSettings.value.topbarOpacity,
     "--topbar-border-opacity": glassSettings.value.topbarBorderOpacity,
     "--topbar-shadow-opacity": glassSettings.value.topbarShadowOpacity,

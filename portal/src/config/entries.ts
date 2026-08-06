@@ -210,6 +210,11 @@ export interface ThemeSettings {
   glassContrast: number;
   glassSaturation: number;
   glassTextOpacity: number;
+  glassHighlightOpacity: number;
+  glassShadowOpacity: number;
+  particleOpacity: number;
+  particleSize: number;
+  particleGlow: number;
   topbarOpacity: number;
   topbarBorderOpacity: number;
   topbarShadowOpacity: number;
@@ -415,6 +420,11 @@ const defaultTheme: ThemeSettings = {
   glassContrast: 0.85,
   glassSaturation: 1.6,
   glassTextOpacity: 0.96,
+  glassHighlightOpacity: 0.92,
+  glassShadowOpacity: 0.12,
+  particleOpacity: 0.24,
+  particleSize: 3,
+  particleGlow: 10,
   topbarOpacity: 0.08,
   topbarBorderOpacity: 0.62,
   topbarShadowOpacity: 0.1,
@@ -443,6 +453,21 @@ export const themeConfig: ThemeSettings = {
   glassContrast: clampNumber(runtimeTheme.glassContrast, defaultTheme.glassContrast, 0.85, 1.3),
   glassSaturation: clampNumber(runtimeTheme.glassSaturation, defaultTheme.glassSaturation, 0.75, 1.6),
   glassTextOpacity: clampNumber(runtimeTheme.glassTextOpacity, defaultTheme.glassTextOpacity, 0.5, 0.96),
+  glassHighlightOpacity: clampNumber(
+    runtimeTheme.glassHighlightOpacity,
+    defaultTheme.glassHighlightOpacity,
+    0.2,
+    1
+  ),
+  glassShadowOpacity: clampNumber(
+    runtimeTheme.glassShadowOpacity,
+    defaultTheme.glassShadowOpacity,
+    0,
+    0.4
+  ),
+  particleOpacity: clampNumber(runtimeTheme.particleOpacity, defaultTheme.particleOpacity, 0, 0.6),
+  particleSize: clampNumber(runtimeTheme.particleSize, defaultTheme.particleSize, 1, 6),
+  particleGlow: clampNumber(runtimeTheme.particleGlow, defaultTheme.particleGlow, 0, 24),
   topbarOpacity: clampNumber(runtimeTheme.topbarOpacity, defaultTheme.topbarOpacity, 0, 0.96),
   topbarBorderOpacity: clampNumber(
     runtimeTheme.topbarBorderOpacity,

@@ -34,12 +34,14 @@ version: {
 }
 ```
 
-- `/crehn/`：打开配置中的默认版本。
+- `/crehn/`：公共门户的目标页面上下文，打开配置中的默认版本；它不是后端 API 前缀。
 - `/crehn/?version=v1`：临时预览参考稿版。
 - `/crehn/?version=v2`：临时预览图三风格竖卡展厅版。
 - 将 `userToggle` 改为 `true`：在顶部显示版本切换按钮，适合现场对比。
 
-`hero`、`entries`、入口链接和提示文案由两个版本共用；`variants.v1` 和 `variants.v2` 只写颜色和动效差异。修改服务器 `/crehn/config.js` 后刷新页面即可生效，不需要重新构建。
+`hero`、`entries`、入口链接和提示文案由两个版本共用；`variants.v1` 和 `variants.v2` 只写颜色和动效差异。部署在目标上下文时，修改服务器 `/crehn/config.js` 后刷新页面即可生效，不需要重新构建。
+
+门户浏览器调用公开 CMS 时使用 `/prod-api/crehn/cms/...`：其中 `/prod-api/` 是 Web 反向代理前缀，转发后的 `/crehn/cms/...` 才是后端 Controller 路径。门户页面 `/crehn/` 与后端业务 API `/crehn/...` 名称相同但职责不同。
 
 ## 配置内容
 
@@ -66,6 +68,8 @@ pnpm dev
 ```powershell
 pnpm run build
 ```
+
+`build` 使用相对静态资源路径；若发布到 `/crehn/`，Web 镜像或静态服务器必须将 `dist/index.html`、`dist/config.js` 与 `dist/assets/` 一并映射到该上下文。仅让 SPA 回退到根目录 `index.html` 不能证明 `/crehn/assets/` 和 `/crehn/config.js` 可用。
 
 产物：
 
