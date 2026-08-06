@@ -29,8 +29,20 @@ server {
         try_files $uri $uri/ /admin/index.html;
     }
 
+    location = /crehn {
+        return 301 /crehn/;
+    }
+
+    location /crehn/ {
+        try_files $uri $uri/ /crehn/index.html;
+    }
+
+    location = / {
+        return 302 /crehn/;
+    }
+
     location / {
-        try_files $uri $uri/ /index.html;
+        return 404;
     }
 
     add_header X-Content-Type-Options nosniff always;

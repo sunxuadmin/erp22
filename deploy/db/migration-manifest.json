@@ -49,7 +49,9 @@
     "backend/script/sql/art_review_m118_review_workbench_menu_name.sql",
     "deploy/db/migrations/V003__crehn_legacy_home_schema.sql",
     "deploy/db/migrations/V004__crehn_menu_role_grants.sql",
-    "deploy/db/migrations/V005__crehn_workbench_role_key.sql"
+    "deploy/db/migrations/V005__crehn_workbench_role_key.sql",
+    "deploy/db/migrations/V006__crehn_portal_page_layout.sql",
+    "deploy/db/migrations/V007__crehn_role_permission_boundaries.sql"
   ],
   "excluded": [
     "backend/script/sql/art_review_seed_test.sql",

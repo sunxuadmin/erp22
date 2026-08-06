@@ -23,5 +23,5 @@ LABEL org.opencontainers.image.title="CREHN Web" \
       org.opencontainers.image.revision="${CREHN_SOURCE_REVISION}"
 COPY deploy/web/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=web-build /src/frontend/dist /usr/share/nginx/html/admin
-COPY --from=web-build /src/portal/dist /usr/share/nginx/html
+COPY --from=web-build /src/portal/dist /usr/share/nginx/html/crehn
 EXPOSE 8080
