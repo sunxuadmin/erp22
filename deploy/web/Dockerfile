@@ -7,6 +7,8 @@ COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml 
 RUN pnpm install --frozen-lockfile --network-concurrency=8 --fetch-retries=5 \
     --fetch-retry-maxtimeout=120000 --fetch-timeout=300000
 COPY frontend/ .
+# The registry contract test compares frontend fields against this server whitelist.
+COPY backend/ruoyi-modules/ruoyi-crehn/src/main/java/org/dromara/crehn/cms/service/impl/PortalHomeConfigurationValidator.java /src/backend/ruoyi-modules/ruoyi-crehn/src/main/java/org/dromara/crehn/cms/service/impl/PortalHomeConfigurationValidator.java
 RUN NODE_OPTIONS="${CREHN_ADMIN_NODE_OPTIONS}" pnpm test \
     && NODE_OPTIONS="${CREHN_ADMIN_NODE_OPTIONS}" pnpm build:prod
 
