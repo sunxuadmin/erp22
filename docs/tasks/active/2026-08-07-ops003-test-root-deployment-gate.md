@@ -3,7 +3,7 @@
 ## 状态
 
 - 需求：2026-08-07 已确认，仅为 TEST 部署建立 root 受限执行门禁。
-- 当前状态：`IMPLEMENTED / STATIC_VERIFIED / SERVER_NOT_RUN`
+- 当前状态：`IMPLEMENTED / STATIC_VERIFIED / TEST_GATE_PASS / TEST_DEPLOY_PASS / TEST_SERVER_VERIFIED / ROLE_BROWSER_NEEDS_BROWSER`
 - Git提交：已授权（本地；推送仍未授权）
 - 数据库执行：未授权
 - 服务器连接、TEST 门禁 bootstrap/验证与 `crehn-test` 部署：已授权；认证方式尚未确认，不假定 SSH 密码等于 sudo 密码。
@@ -54,7 +54,7 @@
 - `powershell -ExecutionPolicy Bypass -File deploy/tests/ops003-test-root-deployment-gate-static.ps1`：`PASS`。
 - `git diff --check`：`PASS`。
 - Shell 语法：`NOT_RUN`，本机没有可用 `bash`；服务器安装前应以目标主机 Bash 再执行 `bash -n` 与 `visudo -cf`。
-- 服务器、sudoers 安装、真实 gate 运行、Docker/Compose、`dyz-current-shadow` 前后基线和浏览器：`NOT_RUN`。
+- 历史部署前记录：服务器、sudoers 安装、真实 gate 运行、Docker/Compose、`dyz-current-shadow` 前后基线和浏览器曾为 `NOT_RUN`；该条已由后续 TEST gate、BuildLocal、DeployLocal、VerifyLocal 与 protected-entry 服务器证据取代。角色登录态浏览器仍为 `NEEDS_BROWSER`。
 
 ### 2026-08-07 服务器门禁验证与 Stage 重试状态
 
@@ -88,3 +88,11 @@
 - 可信 helper/Compose 的更新需要独立管理员 bootstrap，普通候选 stage 故意不会更新它们；因此门禁资产升级与应用候选发布是分开的审查步骤。
 - bootstrap 会要求 `/usr/local`、`/usr/local/sbin`、`/usr/local/libexec`、`/srv`、`/srv/crehn-test`、`runtime` 和 `state` 均为非链接、`root:root` 且不可组/全局写；若 TEST 现有目录由部署用户拥有或权限宽松，bootstrap 将安全拒绝，需管理员先盘点并单独确认收紧影响。
 - 本机无 Bash，Shell 语法和真实 sudoers 解析尚未在 Linux 验证；静态检查不能替代服务器、Docker、protected-project 或浏览器证据。
+
+### 2026-08-07 TEST 0.1.10-test 构建、部署与 Verify 证据
+
+- 不可变版本：`0.1.10-test`，source revision `94cbb8b94b1e9736276dd2d890ba9b23aa8c4be9`。
+- `BuildLocal`：`PASS`。manifest 为 `/srv/crehn-test/releases/0.1.10-test/crehn-images-0.1.10-test.json`；应用镜像标签与版本一致；构建未执行 SQL。
+- `DeployLocal`：`PASS`。manifest SHA-256 为 `5fea1038024cdd501b9b701f05bfbe4bbf162a03b4d4898df41f794c5a3ed8e1`；部署前回滚点为 `/srv/crehn-test/backups/20260807T093844Z-0.1.9-test-pre-deploy`；backend/db/web 均 healthy，`web_admin_api_health` healthy；`dyz-current-shadow` 的 `protected_web_entry` 与 `protected_storage_entry` healthy。TEST MinIO 数据不复制 live 的既有警告如实保留。
+- `VerifyLocal`：`PASS`，所有 CREHN 服务健康；`Browser role smoke tests` 仍为 `NEEDS_BROWSER`，角色登录态尚未验证。
+- 边界：未执行生产、其他 SQL 或 Git push；未影响 `dyz-current-shadow`。
