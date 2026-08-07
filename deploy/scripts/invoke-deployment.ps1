@@ -419,11 +419,35 @@ function Stage-Assets {
         [hashtable]$Runtime
     )
     Require-ApplyConfirmation "STAGE:$($Runtime.Project):$($Runtime.Revision)"
+    if (-not $Production) {
+        $candidateInbox = "/home/$($Target.User)/crehn-test-inbox"
+        $candidateMetadata = Join-Path ([System.IO.Path]::GetTempPath()) ("crehn-test-candidate-" + [Guid]::NewGuid().ToString('N') + '.env')
+    }
     $archive = New-SourceArchive -Production $Production -Revision $Runtime.Revision
     $remoteTemp = "/tmp/crehn-stage-$([Guid]::NewGuid().ToString('N'))"
     $manifestPath = $null
     $releaseArchivePath = $null
     try {
+        if (-not $Production) {
+            $archiveHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+            [System.IO.File]::WriteAllText(
+                $candidateMetadata,
+                "version=$($Runtime.Version)`nsource_revision=$($Runtime.Revision)`narchive_sha256=$archiveHash`n",
+                [System.Text.UTF8Encoding]::new($false))
+            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @('mkdir', '-m', '700', '--', $candidateInbox)
+            Copy-SshFile -Target $Target -Session $Session -LocalPath $archive -RemotePath "$candidateInbox/crehn-test-assets.tar.gz"
+            Copy-SshFile -Target $Target -Session $Session -LocalPath $Runtime.Path -RemotePath "$candidateInbox/crehn-test-runtime.env"
+            Copy-SshFile -Target $Target -Session $Session -LocalPath $candidateMetadata -RemotePath "$candidateInbox/crehn-test-candidate.env"
+            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @(
+                'chmod', '600', '--',
+                "$candidateInbox/crehn-test-assets.tar.gz",
+                "$candidateInbox/crehn-test-runtime.env",
+                "$candidateInbox/crehn-test-candidate.env"
+            )
+            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @('sudo', '-n', '/usr/local/sbin/crehn-test-deploy-gate', 'stage')
+            Write-Status PASS "assets staged through the installed TEST root gate for $($Runtime.Project)"
+            return
+        }
         Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @(
             'mkdir', '-m', '700', '--', $remoteTemp
         )
@@ -479,12 +503,17 @@ function Stage-Assets {
         Write-Status PASS "assets staged for $($Runtime.Project); no build, container, or SQL action was implied"
     } finally {
         Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue
-        try {
-            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @(
-                'rm', '-rf', '--', $remoteTemp
-            )
-        } catch {
-            Write-Status WARN "remote temporary directory may require manual cleanup: $remoteTemp"
+        if ($candidateMetadata) {
+            Remove-Item -LiteralPath $candidateMetadata -Force -ErrorAction SilentlyContinue
+        }
+        if ($Production) {
+            try {
+                Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @(
+                    'rm', '-rf', '--', $remoteTemp
+                )
+            } catch {
+                Write-Status WARN "remote temporary directory may require manual cleanup: $remoteTemp"
+            }
         }
     }
 }
@@ -496,6 +525,20 @@ function Invoke-InstalledAction {
         [hashtable]$Runtime,
         [string]$RemoteAction
     )
+    if (-not $production -and $RemoteAction -in @('build-local', 'deploy-local', 'verify-local')) {
+        $gateAction = @{
+            'build-local' = 'build'
+            'deploy-local' = 'deploy'
+            'verify-local' = 'verify'
+        }[$RemoteAction]
+        if ($gateAction -in @('build', 'deploy')) {
+            Require-ApplyConfirmation "$(if ($gateAction -eq 'build') { 'BUILD' } else { 'DEPLOY' }):$($Runtime.Project):$($Runtime.Version)"
+        }
+        Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @(
+            'sudo', '-n', '/usr/local/sbin/crehn-test-deploy-gate', $gateAction
+        )
+        return
+    }
     $usesStagedEnvironment = $RemoteAction -in @('build-local', 'deploy-local', 'deploy-prod') -or
         ($RemoteAction -eq 'database' -and $Action -in @('DatabasePlan', 'DatabaseInitialize'))
     $remoteEnvironmentFile = if ($usesStagedEnvironment) {

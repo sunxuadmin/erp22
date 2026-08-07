@@ -4,7 +4,15 @@ umask 077
 
 readonly EXIT_BLOCKED=3
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-${PWD}/crehn-deploy.sh}")" && pwd)"
-readonly DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# The TEST root gate installs this script next to root-owned Compose files.
+# A source checkout retains the historical deploy/linux/ layout.
+if [[ -f "${SCRIPT_DIR}/compose.yml" ]]; then
+  readonly DEPLOY_DIR="${SCRIPT_DIR}"
+  readonly SOURCE_PROJECT_DIR="/srv/crehn-test/source"
+else
+  readonly DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+  readonly SOURCE_PROJECT_DIR="${DEPLOY_DIR}/.."
+fi
 readonly BASE_COMPOSE="${DEPLOY_DIR}/compose.yml"
 readonly TEST_COMPOSE="${DEPLOY_DIR}/compose.test.yml"
 readonly PROD_COMPOSE="${DEPLOY_DIR}/compose.prod.yml"
@@ -166,7 +174,7 @@ load_runtime_context() {
     OVERLAY_COMPOSE="${PROD_COMPOSE}"
   fi
   ACTIVE_ENV_FILE="${DEPLOY_ROOT}/runtime/${RUNTIME_ENV}.env"
-  COMPOSE=(docker compose --env-file "${ENV_FILE}" -p "${COMPOSE_PROJECT}" -f "${BASE_COMPOSE}" -f "${OVERLAY_COMPOSE}")
+  COMPOSE=(docker compose --project-directory "${SOURCE_PROJECT_DIR}" --env-file "${ENV_FILE}" -p "${COMPOSE_PROJECT}" -f "${BASE_COMPOSE}" -f "${OVERLAY_COMPOSE}")
 }
 
 require_runtime_secrets() {

@@ -10,6 +10,7 @@ VERSION=""
 RELEASE_MANIFEST=""
 RELEASE_ARCHIVE=""
 SOURCE_REVISION=""
+TRUSTED_ROOT="/usr/local/libexec/crehn-test"
 
 status() {
   printf '[%s] %s\n' "$1" "$2"
@@ -46,6 +47,15 @@ done
 [[ -f "${ARCHIVE}" && -f "${RUNTIME_ENV}" ]] ||
   fail "Source/deployment archive or runtime environment is missing"
 
+if [[ "${MODE}" == "test-source" ]]; then
+  [[ "${DEPLOY_ROOT}" == "/srv/crehn-test" ]] || fail "TEST staging is fixed to /srv/crehn-test"
+  [[ -d "${TRUSTED_ROOT}" ]] || fail "TEST root gate is not bootstrapped"
+  for input in "${ARCHIVE}" "${RUNTIME_ENV}"; do
+    [[ -f "${input}" && ! -L "${input}" && "$(stat -c '%U:%G:%a' "${input}")" == 'root:root:600' ]] ||
+      fail "TEST staged input must be root-owned non-symlink mode 600: ${input}"
+  done
+fi
+
 SOURCE_ROOT="${DEPLOY_ROOT}/source"
 RUNTIME_ROOT="${DEPLOY_ROOT}/runtime"
 STAGING="${DEPLOY_ROOT}/.source-${SOURCE_REVISION}.incomplete"
@@ -75,6 +85,13 @@ mv "${STAGING}" "${SOURCE_ROOT}"
 RUNTIME_NAME="$([[ "${MODE}" == "test-source" ]] && printf test || printf prod)"
 RUNTIME_TARGET="${RUNTIME_ROOT}/${RUNTIME_NAME}-${VERSION}.env"
 install -o root -g root -m 0600 "${RUNTIME_ENV}" "${RUNTIME_TARGET}"
+
+if [[ "${MODE}" == "test-source" ]]; then
+  printf 'version=%s\nsource_revision=%s\n' "${VERSION}" "${SOURCE_REVISION}" \
+    >"${DEPLOY_ROOT}/runtime/test-candidate.env"
+  chown root:root "${DEPLOY_ROOT}/runtime/test-candidate.env"
+  chmod 0600 "${DEPLOY_ROOT}/runtime/test-candidate.env"
+fi
 
 if [[ "${MODE}" == "prod-release" ]]; then
   [[ -f "${RELEASE_MANIFEST}" && -f "${RELEASE_ARCHIVE}" ]] ||
