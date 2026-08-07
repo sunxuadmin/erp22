@@ -434,7 +434,8 @@ function Stage-Assets {
                 $candidateMetadata,
                 "version=$($Runtime.Version)`nsource_revision=$($Runtime.Revision)`narchive_sha256=$archiveHash`n",
                 [System.Text.UTF8Encoding]::new($false))
-            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @('mkdir', '-m', '700', '--', $candidateInbox)
+            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @('mkdir', '-p', '--', $candidateInbox)
+            Invoke-SshCommand -Target $Target -Session $Session -RemoteArguments @('chmod', '700', '--', $candidateInbox)
             Copy-SshFile -Target $Target -Session $Session -LocalPath $archive -RemotePath "$candidateInbox/crehn-test-assets.tar.gz"
             Copy-SshFile -Target $Target -Session $Session -LocalPath $Runtime.Path -RemotePath "$candidateInbox/crehn-test-runtime.env"
             Copy-SshFile -Target $Target -Session $Session -LocalPath $candidateMetadata -RemotePath "$candidateInbox/crehn-test-candidate.env"

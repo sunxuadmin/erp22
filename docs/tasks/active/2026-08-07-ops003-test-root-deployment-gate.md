@@ -56,6 +56,12 @@
 - Shell 语法：`NOT_RUN`，本机没有可用 `bash`；服务器安装前应以目标主机 Bash 再执行 `bash -n` 与 `visudo -cf`。
 - 服务器、sudoers 安装、真实 gate 运行、Docker/Compose、`dyz-current-shadow` 前后基线和浏览器：`NOT_RUN`。
 
+### 2026-08-07 服务器门禁验证与 Stage 重试状态
+
+- gate 安装、`sudoers` 解析、gate `verify` 与 TEST preflight：`PASS`（服务器证据由主线程保留）。
+- 首次 `StageTestAssets`：`BLOCKED`，控制器对已存在的固定 `/home/dyz/crehn-test-inbox` 使用非幂等 `mkdir -m 700`，在进入 gate 前以 `File exists` 退出；未执行 stage、build、deploy 或 SQL。
+- 本次修复：改为固定路径 `mkdir -p -- <inbox>` 后紧接 `chmod 700 -- <inbox>`，不含通配、删除或路径参数；静态验证通过，待主线程授权后重试 stage。
+
 ### 管理员 bootstrap（后续已授权服务器步骤）
 
 1. 使用独立管理员认证进入 TEST；SSH 认证不推定为 sudo 认证。

@@ -37,6 +37,9 @@ if ($parseErrors.Count -ne 0) { throw "FAILED invoke-deployment.ps1 parse errors
 $controller = Get-Content -LiteralPath $controllerPath -Raw
 Require-Match $controller "'sudo', '-n', '/usr/local/sbin/crehn-test-deploy-gate', 'stage'" 'controller must stage through the installed gate'
 Require-Match $controller ('sudo'', ''-n'', ''/usr/local/sbin/crehn-test-deploy-gate'', \$gateAction') 'controller must invoke exact dynamic gate action'
+Require-Match $controller ('@\(''mkdir'', ''-p'', ''--'', \$candidateInbox\)') 'controller must create the fixed candidate inbox idempotently'
+Require-Match $controller ('@\(''chmod'', ''700'', ''--'', \$candidateInbox\)') 'controller must reset the fixed candidate inbox mode'
+Require-NoMatch $controller ('@\(''mkdir'', ''-m'', ''700'', ''--'', \$candidateInbox\)') 'controller must not fail when the fixed candidate inbox already exists'
 Require-NoMatch $controller 'crehn-test-deploy-gate.*(database|rollback|cleanup|prod)' 'controller must map only four TEST gate actions'
 Require-NoMatch (Get-Content -LiteralPath (Join-Path $root 'deploy\linux\install-assets.sh') -Raw) 'TRUSTED_ROOT.+crehn-deploy|TRUSTED_ROOT.+compose' 'ordinary stage must not rewrite trusted root assets'
 Require-Match $stage 'install -o root -g root -m 0600 "\$\{ARCHIVE\}" "\$\{WORK_ARCHIVE\}"' 'stage must copy archive root-owned before validation'
