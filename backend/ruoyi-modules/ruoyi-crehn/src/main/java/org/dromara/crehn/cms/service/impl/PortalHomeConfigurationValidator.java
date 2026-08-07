@@ -28,21 +28,34 @@ final class PortalHomeConfigurationValidator {
     );
 
     private static final Map<String, Set<String>> COMPETITION_CONFIG_KEYS = Map.ofEntries(
-        Map.entry("competition-nav", Set.of("brand", "edition", "actionLabel", "sticky")),
-        Map.entry("competition-hero", Set.of("eyebrow", "title", "summary", "primaryActionLabel",
-            "secondaryActionLabel", "status", "visualStyle", "organizer", "groups", "fee", "uploadDeadline")),
-        Map.entry("competition-key-facts", Set.of("title", "item1", "item2", "item3", "item4")),
-        Map.entry("competition-tracks", Set.of("eyebrow", "title", "summary", "showLimits", "trackATitle",
-            "trackADescription", "trackADirections", "trackBTitle", "trackBDescription", "trackBDirections")),
+        Map.entry("competition-nav", Set.of(
+            "brand", "slogan", "brandMark", "navItems", "loginLabel", "actionLabel", "menuOpenLabel",
+            "menuCloseLabel", "sticky", "portalModalEyebrow", "portalModalTitle", "portalModalBody",
+            "portalModalPromptLabel", "portalModalPrompt", "portalModalButton", "noticeModalEyebrow",
+            "noticeModalTitle", "noticeModalBody", "noticeModalRules", "noticeModalButton", "modalCloseLabel")),
+        Map.entry("competition-hero", Set.of(
+            "documentTitle", "motto", "mottoEn", "artText", "yearText", "editionText", "editionEn",
+            "competitionTitle", "summary", "primaryActionLabel", "secondaryActionLabel", "organizerLabel",
+            "organizer", "groupsLabel", "groups", "feeLabel", "fee", "uploadDeadlineLabel", "uploadDeadline",
+            "trackCardLabel", "trackCardValue", "statusLabel", "status", "axisStart", "axisEnd", "axisArt",
+            "axisTech", "artAlt")),
+        Map.entry("competition-key-facts", Set.of(
+            "deadlineAt", "invalidCountdownValue", "countdownLabel", "countdownValue", "countdownSuffix", "fact1Label", "fact1Value", "fact2Label",
+            "fact2Value", "fact3Label", "fact3Value", "fact4Label", "fact4Value")),
+        Map.entry("competition-tracks", Set.of(
+            "eyebrow", "title", "summary", "trackALabel", "trackAMark", "trackABadge", "trackATitle", "trackAEnglish",
+            "trackADescription", "trackAQuota", "trackAAuthorQuota", "trackADirections", "trackBLabel", "trackBMark",
+            "trackBBadge", "trackBTitle", "trackBEnglish", "trackBDescription", "trackBQuota",
+            "trackBAuthorQuota", "trackBDirections")),
         Map.entry("competition-art-tech", Set.of("eyebrow", "title", "summary", "items")),
-        Map.entry("competition-journey", Set.of("eyebrow", "title", "summary", "items")),
-        Map.entry("competition-file-specs", Set.of("eyebrow", "title", "summary", "actionLabel", "items")),
-        Map.entry("competition-timeline", Set.of("eyebrow", "title", "summary", "items")),
-        Map.entry("competition-notice-downloads", Set.of("eyebrow", "title", "summary", "actionLabel",
-            "noticeDate", "noticeTitle", "noticeSummary", "items")),
-        Map.entry("competition-contact", Set.of("eyebrow", "title", "summary", "showOrganizers",
-            "contacts", "organizers")),
-        Map.entry("competition-footer", Set.of("brand", "slogan", "copyright"))
+        Map.entry("competition-journey", Set.of("eyebrow", "title", "summary", "statusLabel", "status", "deskTitle", "deskSummary", "actionLabel", "stepPrefix", "items")),
+        Map.entry("competition-file-specs", Set.of("eyebrow", "title", "summary", "items")),
+        Map.entry("competition-timeline", Set.of("eyebrow", "title", "summary", "axisLabels", "actionLabel", "items")),
+        Map.entry("competition-notice-downloads", Set.of("eyebrow", "title", "summary", "actionLabel", "noticeActionLabel", "noticeArtMark",
+            "noticeEyebrow", "noticeDate", "noticeTitle", "noticeSummary", "items")),
+        Map.entry("competition-contact", Set.of("eyebrow", "title", "summary", "contacts", "organizers")),
+        Map.entry("competition-footer", Set.of("brand", "brandMark", "slogan", "organizerLabel", "organizer", "contractorLabel",
+            "contractors", "disclaimer", "signature", "versionV1Label", "versionV2Label", "backTopLabel"))
     );
 
     private static final Set<String> DATA_SOURCES = Set.of(

@@ -3,10 +3,19 @@
 ## 状态
 
 - 需求：用户 2026-08-07 确认将 PORTAL-004 两版首页改造成后台可维护的可视化组件页面
-- 当前状态：`IMPLEMENTED / STATIC_VERIFIED / LOCAL_BROWSER_VERIFIED / TEST_DB_VERIFIED / TEST_DEPLOYED / TEST_PUBLIC_BROWSER_VERIFIED / CMS_ROLE_FLOW_NEEDS_BROWSER`
+- 当前状态：`IMPLEMENTED / CONTRACT_VERIFIED / VUE_TSC_VERIFIED / PORTAL_VITE_BUILD_VERIFIED / LOCAL_BROWSER_VERIFIED / VITEST_BLOCKED_DEPENDENCY_FETCH / JAVA_NARROW_CHECK_NOT_RUN / CMS_ROLE_FLOW_NEEDS_BROWSER`
 - 唯一主任务编号：`PORTAL-005`
 - 2026-08-07 专项授权：TEST V006、迁移前备份和数据库回读已完成；TEST 部署与公共浏览器验收也已授权并完成。
 - 本地 Git提交：已授权；仍未授权：Git push、生产连接/验收、其他 SQL、外部发送和文件删除。
+- 2026-08-07 本轮实施：以 `.tmp/creative-henan-both-final-reference/creative-henan-both-final/` 中 `01-liquid-glass` 与 `02-art-tech` 最终确认稿为唯一视觉基准，收敛发布快照和内置回退的视觉分叉；扩充可编辑白名单字段、补齐 v1/v2 独立预设与跨端契约。仅修改 PORTAL-005 指定文件，不执行数据库、部署、Git 提交/推送或删除操作。
+
+### 2026-08-07 本轮本地实现与验证
+
+- 已实施：11 个白名单组件保持不变；v1/v2 采用独立字段预设。公共门户仅在**不存在**发布快照时生成回退；已发布但全部 `disabled` 的空渲染不再误回退。共享 Canvas 同时消费顺序、显隐和 `gridX/gridY/gridW/gridH`。
+- 已实施：导航、主视觉、ART/年份/届次、浮卡、受控截止时间动态倒计时/数据轨、赛道、流程、文件规范、时间线、通知、联系、页脚和两种弹窗的可见文案均进入受控标量字段；v1 的艺术×科技组件默认禁用，v2 默认启用；显式空字符串保留为空，仅缺失字段使用版本默认值。
+- 已实施：`creative-henan-hero.png` 从最终参考包复制（1448×1086）；`arttech-hero.png` 从最终参考包复制并在模板中按真实 1584×990 声明。
+- PASS：`portal005-componentized-home-contract.ps1`；`git diff --check`（仅 Git CRLF 提示，无空白错误）。
+- 初始阻塞（后续已由本卡末尾隔离副本验证部分更新/取代）：本轮定向 Vitest 触发 pnpm 补依赖，受网络/权限限制失败（未更改 lockfile）；当时门户无 `node_modules`，typecheck/build、浏览器复测尚未执行。Vitest、Java/Maven/wrapper 与后端 Java 窄编译、CMS 真实保存—启用—发布闭环仍未完成；服务器、部署、数据库、Git 提交/推送均未执行。
 
 ## 目标
 
@@ -93,3 +102,33 @@
 - 公共首页浏览器：`PASS`，URL 为 `http://192.168.2.229:28181/crehn/`。公共 CMS API 返回 200，全部静态请求返回 200；JS 为 `application/javascript`、CSS 为 `text/css`、`config.js` 为 `application/javascript`，且均有 `nosniff`。控制台为 `0 errors / 0 warnings`。
 - 视觉与版本切换：V1/V2 切换 `PASS`；V1 在 `1440x1000`、`1280x800`、`768x1024`、`390x844` 视觉 `PASS`；V2 在 `1440x1000`、`390x844` 视觉 `PASS`。截图：`output/playwright/portal005-test-0.1.10-*.png`。
 - 仍未完成：真实 CMS 登录后的保存—启用—发布闭环为 `NEEDS_BROWSER`/未执行；`VerifyLocal` 的角色登录态 Browser smoke tests 也仍为 `NEEDS_BROWSER`，不得以公共匿名首页验收替代。
+
+## 2026-08-07 参考稿返工收口
+
+- 基准：重新按 `.tmp/creative-henan-both-final-reference/creative-henan-both-final/01-liquid-glass` 与 `02-art-tech` 的源码校正 V1/V2 默认文案、方向编码、版本专属模块和动作目标；两张主视觉仍使用同源原图。
+- CMS：切换组件类型时根据当前布局/组件键使用 `versionDefaultConfigs.v1/v2`；组件编辑框增加“门户显示”开关。服务端字段白名单同步 `documentTitle`、受控截止时间、报送提示、通知卡动作和页脚签名。
+- 门户：V1 模板默认禁用、V2 默认启用艺术×科技宣言；显式启用的 V1 快照可渲染；`deadlineAt` 计算 `Math.ceil((deadline - Date.now()) / 86_400_000)`，无效值显示受控占位；`document.title` 仅取受控纯文本字段。已发布空/全禁用快照保持空渲染，未发布快照才使用内置回退。
+- PASS：`powershell -ExecutionPolicy Bypass -File .\backend\ruoyi-modules\ruoyi-crehn\src\test\contract\portal005-componentized-home-contract.ps1`；`git diff --check`（仅 CRLF 提示，无空白错误）。
+- BLOCKED/NOT_RUN：`pnpm test competitionHomeRegistry.test.ts` 尝试补依赖时网络/权限下载失败；门户 typecheck/build 因无本地依赖未运行；Java 窄编译、浏览器、服务器、数据库、部署、Git 提交/推送均未执行。本轮不得引用历史构建或浏览器记录替代当前改动验收。
+
+## 2026-08-07 最终定点修复
+
+- 交互：V1 主视觉双按钮分别滚动至报送流程/通知；V2 保持报送流程/赛道；关键数据箭头在 V1 指向时间线、V2 指向赛道。页脚恢复 V1/V2 可访问版本切换按钮。
+- 回退与显隐：`value`、`flag`、`rows` 支持显式组件类型回退，导航组件未出现时弹窗仍读取当前版本受控文案；V1 默认及回退不出现艺术×科技，但 CMS 显式启用的 V1 快照仍可渲染并有独立样式。
+- 配置与无障碍：`DAYS`、步骤前缀、V2 通知图案文字、页脚品牌缩写均入注册表、回退与服务端白名单；通知图案保留换行。弹窗补齐打开焦点、Escape、Tab 焦点陷阱、关闭焦点恢复；报送弹窗主按钮关闭后滚动至联系区，通知按钮仍滚动时间线。
+- PASS：最终静态契约与 `git diff --check`；已复用主检出已有 `@vue/compiler-sfc` 3.5.30，对 Canvas/Page 执行 parse、compileScript、compileTemplate 均 `PASS`。完整 typecheck/build 仍为 `BLOCKED_NO_LOCAL_DEPS`；依赖型 Vitest、Java 编译及浏览器验收保持未执行/阻断，不以历史证据代替。
+- 收口补正：页脚说明、赛事签名和版本切换使用三列栅格（移动端仍单列）；页脚品牌缩写与 V2 通知图案文字在显式空字符串时不渲染对应装饰节点。
+
+## 2026-08-07 390×844 浏览器发现与 CSS 修复
+
+- 浏览器发现（待 Sol 复测）：真实 Playwright 390×844 截图 `C:\Users\A\AppData\Local\Temp\crehn-portal005-verify-019fda97\.playwright-cli\page-2026-08-07T13-24-56-547Z.png`（V2）及同目录 `page-2026-08-07T13-25-01-869Z.png`（V1）显示首屏从约 x=170 向右裁切；不得据此标记 `BROWSER_PASS`。
+- 修复：仅在 `max-width: 520px` 下为 `hero-section` 与 `hero-copy` 设置 `min-width: 0`，并将 `hero-visual` 的布局宽度限制为 `100%/max-width:100%`、`min-width:0`；保留绝对定位主视觉与 `.7` 缩放/居中，避免 620px 未缩放布局宽度撑开移动端单列。桌面规则未改。
+- 历史记录：该时点仅完成静态契约和差异检查，移动端浏览器复测尚未执行。
+
+## 2026-08-07 隔离副本 typecheck/build 与本地静态预览复测
+
+- 隔离方式：Sol 在 `C:\Users\A\AppData\Local\Temp\crehn-portal005-verify-019fda97` 建立隔离副本，并通过只读 junction 复用主检出 `portal/node_modules`；未修改主检出依赖或其他工作树。
+- 静态检查：`vue-tsc --noEmit` `PASS`；Vite `6.4.3` build `PASS`（40 modules）。
+- Playwright 仅针对本地静态预览：1440×1000 V1/V2 首屏视觉与页脚版本切换 `PASS`；390×844 CSS 修复后 V1 截图 `C:\Users\A\AppData\Local\Temp\crehn-portal005-verify-019fda97\.playwright-cli\page-2026-08-07T13-28-52-666Z.png`、V2 截图 `C:\Users\A\AppData\Local\Temp\crehn-portal005-verify-019fda97\.playwright-cli\page-2026-08-07T13-29-00-619Z.png`，两版 `document/body.scrollWidth = innerWidth = 390`，`PASS`。
+- 本地静态预览交互：版本切换、登录弹窗打开焦点落在关闭按钮、Escape 关闭并恢复登录按钮焦点、移动菜单、赛道 B 显示 5 个方向均 `PASS`。控制台唯一错误为静态预览无后端导致 `/prod-api/crehn/cms/public/site/code/crehn` 返回 404；回退页正常，不计为集成、TEST 或部署通过。
+- 仍未完成：Vitest 受依赖获取阻断；Java 窄编译 `NOT_RUN`；真实 CMS 登录后的保存—启用—发布闭环 `NEEDS_BROWSER`。上述本地静态预览不替代服务端、部署或角色登录态验收。

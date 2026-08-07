@@ -70,10 +70,11 @@ function normalizeModule(value: unknown, index: number): CompetitionHomeModule |
 const runtimeComponents =
   typeof window === "undefined" ? undefined : window.CREHN_PORTAL_CONFIG?.homeComponents;
 
-export const competitionHomeModules = Array.isArray(runtimeComponents)
-  ? runtimeComponents
-      .map(normalizeModule)
-      .filter((item): item is CompetitionHomeModule => item !== null)
-      .filter((item, index, items) => items.findIndex((other) => other.componentKey === item.componentKey) === index)
-      .sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX || a.sortOrder - b.sortOrder)
-  : [];
+export const hasPublishedCompetitionHomeSnapshot = Array.isArray(runtimeComponents);
+const publishedRuntimeComponents = Array.isArray(runtimeComponents) ? runtimeComponents : [];
+
+export const competitionHomeModules = publishedRuntimeComponents
+  .map(normalizeModule)
+  .filter((item): item is CompetitionHomeModule => item !== null)
+  .filter((item, index, items) => items.findIndex((other) => other.componentKey === item.componentKey) === index)
+  .sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX || a.sortOrder - b.sortOrder);

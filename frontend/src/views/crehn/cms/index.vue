@@ -209,6 +209,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="数据源"><el-select v-model="componentForm.dataSourceCode"><el-option v-for="item in dataSources" :key="item" :label="item" :value="item" /></el-select></el-form-item>
+        <el-form-item label="门户显示"><el-switch v-model="componentForm.enabled" active-text="显示" inactive-text="隐藏" /></el-form-item>
         <el-form-item label="栅格宽度"><el-slider v-model="componentForm.gridW" :min="1" :max="12" show-input /></el-form-item>
         <template v-if="activeComponentDefinition">
           <el-alert class="mb-3" type="success" :closable="false" :title="activeComponentDefinition.description" />
@@ -397,6 +398,7 @@ const themePresets = [
 const currentSite = computed(() => sites.value.find((item) => String(item.id) === String(siteId.value)));
 const canEditHome = computed(() => checkPermi(['crehn:cms:home:edit']));
 const activeComponentDefinition = computed(() => findCompetitionComponent(componentForm.componentType));
+const componentFormVersion = computed(() => selectedLayout.value?.renderVersion === 'v2' || componentForm.componentKey?.startsWith('v2-') ? 'v2' : 'v1');
 
 const replaceForm = <T extends object>(target: T, source: Partial<T>) => {
   Object.keys(target).forEach((key) => delete (target as any)[key]);
@@ -542,7 +544,7 @@ const changeComponentType = () => {
   if (!definition) return;
   componentForm.dataSourceCode = 'manual';
   componentForm.gridH = definition.defaultHeight;
-  replaceForm(componentConfigDraft, definition.defaultConfig);
+  replaceForm(componentConfigDraft, definition.versionDefaultConfigs[componentFormVersion.value]);
 };
 const submitComponent = async () => {
   componentForm.configJson = activeComponentDefinition.value
