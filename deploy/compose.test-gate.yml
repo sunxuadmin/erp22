@@ -1,0 +1,18 @@
+# Installed only by the TEST root-gate bootstrap.  These absolute paths prevent
+# trusted Compose files in /usr/local/libexec from resolving build inputs above
+# the staged immutable source root.
+services:
+  db:
+    build:
+      context: /srv/crehn-test/source
+      dockerfile: deploy/db/Dockerfile
+
+  backend:
+    build:
+      context: /srv/crehn-test/source/backend
+      dockerfile: Dockerfile
+
+  web:
+    build:
+      context: /srv/crehn-test/source
+      dockerfile: deploy/web/Dockerfile

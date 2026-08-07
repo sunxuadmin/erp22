@@ -9,9 +9,11 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-${PWD}/crehn-deploy.sh}"
 if [[ -f "${SCRIPT_DIR}/compose.yml" ]]; then
   readonly DEPLOY_DIR="${SCRIPT_DIR}"
   readonly SOURCE_PROJECT_DIR="/srv/crehn-test/source"
+  readonly TRUSTED_TEST_BUILD_COMPOSE="${SCRIPT_DIR}/compose.test-gate.yml"
 else
   readonly DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
   readonly SOURCE_PROJECT_DIR="${DEPLOY_DIR}/.."
+  readonly TRUSTED_TEST_BUILD_COMPOSE=""
 fi
 readonly BASE_COMPOSE="${DEPLOY_DIR}/compose.yml"
 readonly TEST_COMPOSE="${DEPLOY_DIR}/compose.test.yml"
@@ -174,7 +176,13 @@ load_runtime_context() {
     OVERLAY_COMPOSE="${PROD_COMPOSE}"
   fi
   ACTIVE_ENV_FILE="${DEPLOY_ROOT}/runtime/${RUNTIME_ENV}.env"
-  COMPOSE=(docker compose --project-directory "${SOURCE_PROJECT_DIR}" --env-file "${ENV_FILE}" -p "${COMPOSE_PROJECT}" -f "${BASE_COMPOSE}" -f "${OVERLAY_COMPOSE}")
+  if [[ "${RUNTIME_ENV}" == "test" && -n "${TRUSTED_TEST_BUILD_COMPOSE}" ]]; then
+    [[ -f "${TRUSTED_TEST_BUILD_COMPOSE}" && ! -L "${TRUSTED_TEST_BUILD_COMPOSE}" && "$(stat -c '%U:%G:%a' "${TRUSTED_TEST_BUILD_COMPOSE}")" == 'root:root:644' ]] ||
+      blocked "Trusted TEST build override is missing or unsafe"
+    COMPOSE=(docker compose --project-directory "${SOURCE_PROJECT_DIR}" --env-file "${ENV_FILE}" -p "${COMPOSE_PROJECT}" -f "${BASE_COMPOSE}" -f "${OVERLAY_COMPOSE}" -f "${TRUSTED_TEST_BUILD_COMPOSE}")
+  else
+    COMPOSE=(docker compose --project-directory "${SOURCE_PROJECT_DIR}" --env-file "${ENV_FILE}" -p "${COMPOSE_PROJECT}" -f "${BASE_COMPOSE}" -f "${OVERLAY_COMPOSE}")
+  fi
 }
 
 require_runtime_secrets() {

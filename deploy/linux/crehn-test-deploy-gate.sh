@@ -27,7 +27,7 @@ for trusted in "${TRUSTED_ROOT}/crehn-test-stage-candidate.sh" "${TRUSTED_ROOT}/
   [[ -f "${trusted}" && ! -L "${trusted}" ]] || blocked "trusted script is missing: ${trusted}"
   [[ "$(stat -c '%U:%G:%a' "${trusted}")" =~ ^root:root:(700|750|755)$ ]] || blocked "trusted script permissions are unsafe: ${trusted}"
 done
-for compose_file in "${TRUSTED_ROOT}/compose.yml" "${TRUSTED_ROOT}/compose.test.yml"; do
+for compose_file in "${TRUSTED_ROOT}/compose.yml" "${TRUSTED_ROOT}/compose.test.yml" "${TRUSTED_ROOT}/compose.test-gate.yml"; do
   [[ -f "${compose_file}" && ! -L "${compose_file}" && "$(stat -c '%U:%G:%a' "${compose_file}")" == 'root:root:644' ]] ||
     blocked "trusted Compose file is missing or unsafe: ${compose_file}"
 done

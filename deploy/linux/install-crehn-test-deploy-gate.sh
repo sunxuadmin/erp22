@@ -25,9 +25,9 @@ done
 SNAPSHOT_DIR="$(mktemp -d /root/crehn-test-gate-bootstrap.XXXXXX)"
 chown root:root "${SNAPSHOT_DIR}"
 chmod 0700 "${SNAPSHOT_DIR}"
-for path in linux compose.yml compose.test.yml sudoers; do cp -a -- "${SOURCE_DEPLOY_DIR}/${path}" "${SNAPSHOT_DIR}/"; done
+for path in linux compose.yml compose.test.yml compose.test-gate.yml sudoers; do cp -a -- "${SOURCE_DEPLOY_DIR}/${path}" "${SNAPSHOT_DIR}/"; done
 SOURCE_DEPLOY_DIR="${SNAPSHOT_DIR}"
-for file in linux/crehn-test-deploy-gate.sh linux/crehn-test-stage-candidate.sh linux/install-assets.sh linux/crehn-deploy.sh compose.yml compose.test.yml; do
+for file in linux/crehn-test-deploy-gate.sh linux/crehn-test-stage-candidate.sh linux/install-assets.sh linux/crehn-deploy.sh compose.yml compose.test.yml compose.test-gate.yml; do
   [[ -f "${SOURCE_DEPLOY_DIR}/${file}" && ! -L "${SOURCE_DEPLOY_DIR}/${file}" ]] || fail "missing reviewed bootstrap asset: ${file}"
 done
 SUDOERS_TEMPLATE="${SOURCE_DEPLOY_DIR}/sudoers/crehn-test-deploy-gate"
@@ -38,6 +38,7 @@ for script in crehn-test-deploy-gate.sh crehn-test-stage-candidate.sh install-as
 done
 install -o root -g root -m 0644 "${SOURCE_DEPLOY_DIR}/compose.yml" /usr/local/libexec/crehn-test/compose.yml
 install -o root -g root -m 0644 "${SOURCE_DEPLOY_DIR}/compose.test.yml" /usr/local/libexec/crehn-test/compose.test.yml
+install -o root -g root -m 0644 "${SOURCE_DEPLOY_DIR}/compose.test-gate.yml" /usr/local/libexec/crehn-test/compose.test-gate.yml
 install -o root -g root -m 0755 "${SOURCE_DEPLOY_DIR}/linux/crehn-test-deploy-gate.sh" /usr/local/sbin/crehn-test-deploy-gate
 printf 'CREHN_TEST_OPERATOR=%q\n' "${OPERATOR}" > /etc/crehn-test-deploy-gate.conf
 chown root:root /etc/crehn-test-deploy-gate.conf

@@ -62,6 +62,13 @@
 - 首次 `StageTestAssets`：`BLOCKED`，控制器对已存在的固定 `/home/dyz/crehn-test-inbox` 使用非幂等 `mkdir -m 700`，在进入 gate 前以 `File exists` 退出；未执行 stage、build、deploy 或 SQL。
 - 本次修复：改为固定路径 `mkdir -p -- <inbox>` 后紧接 `chmod 700 -- <inbox>`，不含通配、删除或路径参数；静态验证通过，待主线程授权后重试 stage。
 
+### 2026-08-07 BuildLocal 路径修复
+
+- 已知服务器证据：`BuildLocal` 已通过 root gate 进入构建，但在 `crehn-db:0.1.10-test` 的 Docker build context 解析前失败：`lstat /srv/crehn-test/deploy: no such file or directory`；现网未部署。
+- 根因：可信 Compose 位于 `/usr/local/libexec/crehn-test`，而 helper 同时使用 `/srv/crehn-test/source` project directory，基础 Compose 的相对 `context: ..` 和 `dockerfile: deploy/...` 被解析到 `/srv/crehn-test/deploy`。
+- 修复：新增仅由 root bootstrap 安装并由 gate 校验的 `compose.test-gate.yml`，为 db/backend/web 覆盖为固定 `/srv/crehn-test/source...` build context/dockerfile；普通源码布局与 PROD 不加载该 overlay。
+- `NEEDS_SERVER`：重新执行管理员 bootstrap 后，先用 gate 的 Compose config/build 复验三个绝对构建路径，再重试 BuildLocal；不应把静态检查表述为 Docker 构建或部署成功。
+
 ### 管理员 bootstrap（后续已授权服务器步骤）
 
 1. 使用独立管理员认证进入 TEST；SSH 认证不推定为 sudo 认证。

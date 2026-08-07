@@ -21,6 +21,7 @@ Require-Match $gate 'readonly DEPLOY_ROOT=/srv/crehn-test' 'gate must bind the T
 Require-Match $gate 'readonly PROJECT=crehn-test' 'gate must bind the TEST project'
 Require-Match $gate 'readonly TRUSTED_ROOT=/usr/local/libexec/crehn-test' 'gate must use trusted libexec scripts'
 Require-Match $gate 'trusted Compose file is missing or unsafe' 'gate must validate root-owned Compose files'
+Require-Match $gate ([regex]::Escape('compose.test-gate.yml')) 'gate must validate the trusted TEST build override'
 Require-Match $gate 'readlink -f' 'gate must verify its fixed resolved path'
 Require-Match $gate 'safe_root_dir' 'gate must validate trusted parent directories'
 Require-NoMatch $gate '(?im)(deploy-prod|database|rollback|backup-maintenance|sudo\s+-n|/srv/crehn-test/source/.+\.sh)' 'gate must not expose prod, database, rollback, cleanup, nested sudo, or source scripts'
@@ -45,8 +46,15 @@ Require-NoMatch (Get-Content -LiteralPath (Join-Path $root 'deploy\linux\install
 Require-Match $stage 'install -o root -g root -m 0600 "\$\{ARCHIVE\}" "\$\{WORK_ARCHIVE\}"' 'stage must copy archive root-owned before validation'
 Require-Match $stage 'safe_root_dir' 'stage must validate root-owned deployment directories'
 Require-Match (Get-Content -LiteralPath (Join-Path $root 'deploy\linux\crehn-deploy.sh') -Raw) 'SOURCE_PROJECT_DIR="/srv/crehn-test/source"' 'trusted helper must use the fixed source project directory'
+Require-Match (Get-Content -LiteralPath (Join-Path $root 'deploy\linux\crehn-deploy.sh') -Raw) 'TRUSTED_TEST_BUILD_COMPOSE' 'trusted TEST helper must use its root-owned build override'
+$trustedOverride = Get-Content -LiteralPath (Join-Path $root 'deploy\compose.test-gate.yml') -Raw
+foreach ($path in @('/srv/crehn-test/source', '/srv/crehn-test/source/backend', 'deploy/db/Dockerfile', 'deploy/web/Dockerfile')) {
+    Require-Match $trustedOverride ([regex]::Escape($path)) "trusted TEST override lacks fixed build path: $path"
+}
+Require-NoMatch $trustedOverride '(?m)^\s*context:\s*\.\.' 'trusted TEST override must not use a relative parent build context'
 Require-Match (Get-Content -LiteralPath (Join-Path $root 'deploy\linux\install-assets.sh') -Raw) 'TEST staged input must be root-owned non-symlink mode 600' 'TEST installer must recheck root-owned inputs'
 $bootstrap = Get-Content -LiteralPath (Join-Path $root 'deploy\linux\install-crehn-test-deploy-gate.sh') -Raw
+Require-Match $bootstrap ([regex]::Escape('compose.test-gate.yml')) 'bootstrap must install the trusted TEST build override'
 Require-Match $bootstrap 'sudoers template must be a non-symlink regular file' 'bootstrap must reject symlinked sudoers templates'
 Require-Match $bootstrap 'mktemp -d /root/crehn-test-gate-bootstrap\.XXXXXX' 'bootstrap must create a root-owned asset snapshot'
 Require-Match $bootstrap 'mktemp /etc/sudoers\.d/\.crehn-test-deploy-gate\.XXXXXX' 'bootstrap must use a sudoers temporary file'
