@@ -44,7 +44,12 @@ async function loadPublishedHomeConfig() {
     if (!homeResponse.ok) return;
     const homePayload = (await homeResponse.json()) as {
       code?: number;
-      data?: { renderVersion?: string; theme?: Record<string, unknown> };
+      data?: {
+        layoutCode?: string;
+        renderVersion?: string;
+        theme?: Record<string, unknown>;
+        components?: unknown[];
+      };
     };
     if (homePayload.code !== 200 || !homePayload.data) return;
 
@@ -55,7 +60,9 @@ async function loadPublishedHomeConfig() {
       version: {
         ...current.version,
         ...(homePayload.data.renderVersion ? { active: homePayload.data.renderVersion } : {})
-      }
+      },
+      homeComponents: Array.isArray(homePayload.data.components) ? homePayload.data.components : [],
+      ...(homePayload.data.layoutCode ? { publishedLayoutCode: homePayload.data.layoutCode } : {})
     };
   } catch {
     // Public pages must retain the static config.js/default theme when CMS is unavailable.

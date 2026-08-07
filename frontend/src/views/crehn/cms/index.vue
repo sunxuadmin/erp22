@@ -79,14 +79,25 @@
         <el-tab-pane label="首页组件" name="home">
           <div class="cms-toolbar mb-2">
             <el-button v-hasPermi="['crehn:cms:home:edit']" type="primary" @click="editComponent()">新增组件</el-button>
+            <el-dropdown v-hasPermi="['crehn:cms:home:edit']" @command="applyCompetitionTemplate">
+              <el-button>套用首页模板</el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="v1">液态玻璃版</el-dropdown-item>
+                  <el-dropdown-item command="v2">艺术 × 科技明亮版</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+            <el-button v-hasPermi="['crehn:cms:home:edit']" @click="editLayout()">将当前画布保存为布局</el-button>
             <el-button v-hasPermi="['crehn:cms:home:publish']" type="success" @click="publishHome">发布当前首页版本</el-button>
           </div>
+          <el-alert class="mb-2" type="info" :closable="false" title="拖拽或缩放组件后，请保存为布局；发布只读取已保存布局的不可变快照。" />
           <div ref="homeGridRef" class="component-grid grid-stack">
             <div
               v-for="component in components"
-              :key="String(component.id)"
+              :key="component.componentKey"
               class="grid-stack-item"
-              :gs-id="String(component.id)"
+              :gs-id="component.componentKey"
               :gs-x="component.gridX || 0"
               :gs-y="component.gridY || 0"
               :gs-w="Math.min(component.gridW || 12, 12)"
@@ -189,15 +200,30 @@
       <template #footer><el-button @click="mediaVisible = false">取消</el-button><el-button type="primary" @click="submitMedia">保存</el-button></template>
     </el-dialog>
 
-    <el-dialog v-model="componentVisible" title="首页组件" width="620px">
+    <el-dialog v-model="componentVisible" title="首页组件" width="680px">
       <el-form label-width="100px">
         <el-form-item label="组件标识"><el-input v-model="componentForm.componentKey" /></el-form-item>
-        <el-form-item label="组件类型"><el-select v-model="componentForm.componentType"><el-option v-for="item in componentTypes" :key="item" :label="item" :value="item" /></el-select></el-form-item>
+        <el-form-item label="组件类型">
+          <el-select v-model="componentForm.componentType" filterable @change="changeComponentType">
+            <el-option v-for="item in componentTypes" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="数据源"><el-select v-model="componentForm.dataSourceCode"><el-option v-for="item in dataSources" :key="item" :label="item" :value="item" /></el-select></el-form-item>
         <el-form-item label="栅格宽度"><el-slider v-model="componentForm.gridW" :min="1" :max="12" show-input /></el-form-item>
-        <el-form-item label="组件配置"><el-input v-model="componentForm.configJson" type="textarea" :rows="6" placeholder='JSON对象，例如 {"title":"通知公告"}' /></el-form-item>
+        <template v-if="activeComponentDefinition">
+          <el-alert class="mb-3" type="success" :closable="false" :title="activeComponentDefinition.description" />
+          <el-form-item v-for="field in activeComponentDefinition.fields" :key="field.key" :label="field.label">
+            <el-switch v-if="field.kind === 'switch'" v-model="componentConfigDraft[field.key]" />
+            <el-select v-else-if="field.kind === 'select'" v-model="componentConfigDraft[field.key]">
+              <el-option v-for="option in field.options" :key="option.value" :label="option.label" :value="option.value" />
+            </el-select>
+            <el-input v-else-if="field.kind === 'textarea'" v-model="componentConfigDraft[field.key]" type="textarea" :rows="3" :placeholder="field.placeholder" />
+            <el-input v-else v-model="componentConfigDraft[field.key]" :placeholder="field.placeholder" />
+          </el-form-item>
+        </template>
+        <el-form-item v-else label="组件配置"><el-input v-model="componentForm.configJson" type="textarea" :rows="6" placeholder='JSON对象，例如 {"title":"通知公告"}' /></el-form-item>
       </el-form>
-      <template #footer><el-button @click="componentVisible = false">取消</el-button><el-button type="primary" @click="submitComponent">保存</el-button></template>
+      <template #footer><el-button @click="componentVisible = false">取消</el-button><el-button type="primary" @click="submitComponent">应用到画布</el-button></template>
     </el-dialog>
 
     <el-dialog v-model="layoutVisible" title="门户主题与布局" width="720px">
@@ -206,8 +232,8 @@
         <el-form-item label="布局名称"><el-input v-model="layoutForm.layoutName" maxlength="128" /></el-form-item>
         <el-form-item label="视觉版本">
           <el-select v-model="layoutForm.renderVersion">
-            <el-option label="参考稿版" value="v1" />
-            <el-option label="竖卡展厅版" value="v2" />
+            <el-option label="液态玻璃版" value="v1" />
+            <el-option label="艺术 × 科技明亮版" value="v2" />
           </el-select>
         </el-form-item>
         <el-form-item label="主题预设">
@@ -290,6 +316,13 @@ import {
 } from '@/api/crehn/cms';
 import { checkPermi } from '@/utils/permission';
 import { clonePortalLayoutComponents, createPortalLayoutComponentDraft, parsePortalLayoutComponents } from './portalLayoutDraft';
+import {
+  competitionComponentRegistry,
+  createCompetitionHomePreset,
+  findCompetitionComponent,
+  parseCompetitionComponentConfig,
+  type CompetitionComponentConfig
+} from './competitionHomeRegistry';
 
 const activeTab = ref('channel');
 const sites = ref<PortalSite[]>([]);
@@ -304,7 +337,11 @@ const layouts = ref<PortalPageLayout[]>([]);
 const selectedLayout = ref<PortalPageLayout>();
 const articleQuery = reactive({ status: '' });
 const articleStatuses = ['DRAFT', 'IN_REVIEW', 'SCHEDULED', 'PUBLISHED', 'OFFLINE'];
-const componentTypes = ['hero', 'news', 'notice', 'activity', 'schedule', 'media', 'stat', 'showcase', 'links'];
+const legacyComponentTypes = ['hero', 'news', 'notice', 'activity', 'schedule', 'media', 'stat', 'showcase', 'links'];
+const componentTypes = [
+  ...competitionComponentRegistry.map((item) => ({ label: item.label, value: item.type })),
+  ...legacyComponentTypes.map((item) => ({ label: `通用 · ${item}`, value: item }))
+];
 const dataSources = ['manual', 'public_articles', 'public_notices', 'public_activity', 'public_results', 'public_stats'];
 const siteVisible = ref(false);
 const channelVisible = ref(false);
@@ -319,6 +356,7 @@ const channelForm = reactive<PortalChannel>({});
 const articleForm = reactive<PortalArticle>({});
 const mediaForm = reactive<PortalMediaAsset>({});
 const componentForm = reactive<PortalHomeComponent>({});
+const componentConfigDraft = reactive<CompetitionComponentConfig>({});
 const layoutForm = reactive<PortalPageLayout>({});
 const layoutComponentDraft = ref<PortalHomeComponent[]>([]);
 const publishForm = reactive({ articleId: '' as string | number, scheduledAt: '', reason: '' });
@@ -358,6 +396,7 @@ const themePresets = [
 ];
 const currentSite = computed(() => sites.value.find((item) => String(item.id) === String(siteId.value)));
 const canEditHome = computed(() => checkPermi(['crehn:cms:home:edit']));
+const activeComponentDefinition = computed(() => findCompetitionComponent(componentForm.componentType));
 
 const replaceForm = <T extends object>(target: T, source: Partial<T>) => {
   Object.keys(target).forEach((key) => delete (target as any)[key]);
@@ -408,7 +447,7 @@ const refreshHomeGrid = () => {
   );
   homeGrid.on('change', (_event, nodes) => {
     nodes.forEach((node) => {
-      const target = components.value.find((item) => String(item.id) === String(node.id));
+      const target = components.value.find((item) => item.componentKey === String(node.id));
       if (!target) return;
       Object.assign(target, {
         gridX: node.x ?? target.gridX ?? 0,
@@ -494,14 +533,45 @@ const approveMedia = async (row: PortalMediaAsset) => {
   await changeSite();
 };
 const editComponent = (row?: PortalHomeComponent) => {
-  replaceForm(componentForm, row ? { ...row } : { siteId: siteId.value, pageCode: 'home', componentType: 'news', dataSourceCode: 'public_articles', gridW: 12, gridH: 1, enabled: true, configJson: '{}' });
+  replaceForm(componentForm, row ? { ...row } : { siteId: siteId.value, pageCode: 'home', componentKey: `component-${Date.now()}`, componentType: 'competition-hero', dataSourceCode: 'manual', gridW: 12, gridH: 5, enabled: true, configJson: '{}' });
+  replaceForm(componentConfigDraft, parseCompetitionComponentConfig(componentForm));
   componentVisible.value = true;
 };
+const changeComponentType = () => {
+  const definition = activeComponentDefinition.value;
+  if (!definition) return;
+  componentForm.dataSourceCode = 'manual';
+  componentForm.gridH = definition.defaultHeight;
+  replaceForm(componentConfigDraft, definition.defaultConfig);
+};
 const submitComponent = async () => {
-  JSON.parse(componentForm.configJson || '{}');
-  await savePortalHomeComponent(componentForm);
+  componentForm.configJson = activeComponentDefinition.value
+    ? JSON.stringify(componentConfigDraft)
+    : componentForm.configJson || '{}';
+  JSON.parse(componentForm.configJson);
+  const index = components.value.findIndex((item) => item.componentKey === componentForm.componentKey);
+  if (selectedLayout.value || activeComponentDefinition.value || !componentForm.id) {
+    const next = { ...componentForm };
+    if (index >= 0) components.value.splice(index, 1, next);
+    else components.value.push(next);
+    await nextTick();
+    refreshHomeGrid();
+    ElMessage.success('组件已应用到当前画布，请保存为布局');
+  } else {
+    await savePortalHomeComponent(componentForm);
+    await changeSite();
+  }
   componentVisible.value = false;
-  await changeSite();
+};
+const applyCompetitionTemplate = async (command: 'v1' | 'v2') => {
+  await ElMessageBox.confirm('套用模板会替换当前未保存画布，已保存布局和已发布版本不会受影响。', '套用首页模板', {
+    type: 'warning'
+  });
+  selectedLayout.value = undefined;
+  components.value = createCompetitionHomePreset(command, siteId.value);
+  await nextTick();
+  refreshHomeGrid();
+  ElMessage.success(`已载入${command === 'v1' ? '液态玻璃版' : '艺术 × 科技明亮版'}模板，请继续调整并保存为布局`);
 };
 const applyThemePreset = (presetId = selectedThemePreset.value) => {
   const preset = themePresets.find((item) => item.id === presetId);
@@ -537,8 +607,9 @@ const applyLayoutComponents = async (layout?: PortalPageLayout) => {
   refreshHomeGrid();
   return true;
 };
-const selectLayout = (layout?: PortalPageLayout) => {
-  if (layout) selectedLayout.value = layout;
+const selectLayout = async (layout?: PortalPageLayout) => {
+  if (!layout) return;
+  if (await applyLayoutComponents(layout)) selectedLayout.value = layout;
 };
 const editLayout = (layout?: PortalPageLayout) => {
   const componentDraft = createPortalLayoutComponentDraft(layout, components.value);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import BackgroundLayer from "./components/BackgroundLayer.vue";
+import CompetitionHomePage from "./components/competition-home/CompetitionHomePage.vue";
 import EntryCard from "./components/EntryCard.vue";
 import GlassTuner from "./components/GlassTuner.vue";
 import HeroTitle from "./components/HeroTitle.vue";
@@ -20,6 +21,7 @@ import {
   type EntryItem,
   type MotionSettings
 } from "./config/entries";
+import { competitionHomeContent } from "./config/competitionHome";
 
 const MOTION_STORAGE_KEY = "art-entry-motion";
 const GLASS_STORAGE_KEY = "art-entry-glass-settings-v1";
@@ -132,6 +134,7 @@ const brandLogoUrl = heroContent.brandLogo || "./assets/logo-icon.png";
 const isEditorPreview =
   ["127.0.0.1", "localhost"].includes(window.location.hostname) &&
   new URLSearchParams(window.location.search).get("editorPreview") === "1";
+const useCompetitionHome = new URLSearchParams(window.location.search).get("view") !== "legacy";
 let noticeTimer: number | undefined;
 let logoClickTimer: number | undefined;
 let logoClickStartedAt = 0;
@@ -334,7 +337,9 @@ function handleGlobalKeydown(event: KeyboardEvent) {
 }
 
 onMounted(() => {
-  document.title = heroContent.documentTitle;
+  document.title = useCompetitionHome
+    ? competitionHomeContent.variants[activeVersion === "v2" ? "v2" : "v1"].documentTitle
+    : heroContent.documentTitle;
   window.addEventListener("resize", handleViewportChange, { passive: true });
   window.addEventListener("keydown", handleGlobalKeydown);
   reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
@@ -417,7 +422,8 @@ function selectVersion(versionId: string) {
 </script>
 
 <template>
-  <main :class="pageClasses" :style="motionStyles">
+  <CompetitionHomePage v-if="useCompetitionHome" />
+  <main v-else :class="pageClasses" :style="motionStyles">
     <BackgroundLayer
       :motion="renderedMotion"
       :version="activeVersion"

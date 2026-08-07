@@ -268,6 +268,9 @@ export interface ArtEntryVariantConfig {
 export interface ArtEntryRuntimeConfig extends ArtEntryVariantConfig {
   version?: Partial<Omit<VersionSettings, "options">> & { options?: VersionOption[] };
   variants?: Record<string, ArtEntryVariantConfig>;
+  competitionHome?: unknown;
+  homeComponents?: unknown[];
+  publishedLayoutCode?: string;
 }
 
 declare global {

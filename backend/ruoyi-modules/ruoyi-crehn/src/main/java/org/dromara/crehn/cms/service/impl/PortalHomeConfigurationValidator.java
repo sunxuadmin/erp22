@@ -21,7 +21,28 @@ final class PortalHomeConfigurationValidator {
     private static final int MAX_LAYOUT_COMPONENTS = 100;
 
     private static final Set<String> COMPONENT_TYPES = Set.of(
-        "hero", "news", "notice", "activity", "schedule", "media", "stat", "showcase", "links"
+        "hero", "news", "notice", "activity", "schedule", "media", "stat", "showcase", "links",
+        "competition-nav", "competition-hero", "competition-key-facts", "competition-tracks",
+        "competition-art-tech", "competition-journey", "competition-file-specs", "competition-timeline",
+        "competition-notice-downloads", "competition-contact", "competition-footer"
+    );
+
+    private static final Map<String, Set<String>> COMPETITION_CONFIG_KEYS = Map.ofEntries(
+        Map.entry("competition-nav", Set.of("brand", "edition", "actionLabel", "sticky")),
+        Map.entry("competition-hero", Set.of("eyebrow", "title", "summary", "primaryActionLabel",
+            "secondaryActionLabel", "status", "visualStyle", "organizer", "groups", "fee", "uploadDeadline")),
+        Map.entry("competition-key-facts", Set.of("title", "item1", "item2", "item3", "item4")),
+        Map.entry("competition-tracks", Set.of("eyebrow", "title", "summary", "showLimits", "trackATitle",
+            "trackADescription", "trackADirections", "trackBTitle", "trackBDescription", "trackBDirections")),
+        Map.entry("competition-art-tech", Set.of("eyebrow", "title", "summary", "items")),
+        Map.entry("competition-journey", Set.of("eyebrow", "title", "summary", "items")),
+        Map.entry("competition-file-specs", Set.of("eyebrow", "title", "summary", "actionLabel", "items")),
+        Map.entry("competition-timeline", Set.of("eyebrow", "title", "summary", "items")),
+        Map.entry("competition-notice-downloads", Set.of("eyebrow", "title", "summary", "actionLabel",
+            "noticeDate", "noticeTitle", "noticeSummary", "items")),
+        Map.entry("competition-contact", Set.of("eyebrow", "title", "summary", "showOrganizers",
+            "contacts", "organizers")),
+        Map.entry("competition-footer", Set.of("brand", "slogan", "copyright"))
     );
 
     private static final Set<String> DATA_SOURCES = Set.of(
@@ -116,6 +137,7 @@ final class PortalHomeConfigurationValidator {
         if (!DATA_SOURCES.contains(component.getDataSourceCode())) {
             throw new ServiceException("首页组件数据源不在白名单：" + component.getDataSourceCode());
         }
+        validateComponentConfig(component);
     }
 
     static String normalizeComponentSnapshotJson(String componentJson, Long siteId) {
@@ -132,7 +154,37 @@ final class PortalHomeConfigurationValidator {
         }
         List<PortalHomeComponent> components = new ArrayList<>(parsed);
         components.forEach(component -> normalizeComponent(component, siteId));
+        Set<String> componentKeys = new HashSet<>();
+        for (PortalHomeComponent component : components) {
+            if (!componentKeys.add(component.getComponentKey())) {
+                throw new ServiceException("布局组件标识重复：" + component.getComponentKey());
+            }
+        }
         return components;
+    }
+
+    private static void validateComponentConfig(PortalHomeComponent component) {
+        Set<String> allowedKeys = COMPETITION_CONFIG_KEYS.get(component.getComponentType());
+        if (allowedKeys == null || StringUtils.isBlank(component.getConfigJson())) {
+            return;
+        }
+        Map<String, Object> config = JsonUtils.parseObject(component.getConfigJson(), Map.class);
+        if (config == null || !allowedKeys.containsAll(config.keySet())) {
+            throw new ServiceException("首页组件配置包含未登记字段：" + component.getComponentKey());
+        }
+        for (Map.Entry<String, Object> entry : config.entrySet()) {
+            Object value = entry.getValue();
+            if (!(value instanceof String) && !(value instanceof Boolean) && !(value instanceof Number)) {
+                throw new ServiceException("首页组件配置字段类型不正确：" + entry.getKey());
+            }
+            if (value instanceof String text) {
+                String normalized = text.toLowerCase(Locale.ROOT);
+                if (text.length() > 2000 || normalized.contains("<script")
+                    || normalized.contains("javascript:") || normalized.contains("data:text/html")) {
+                    throw new ServiceException("首页组件配置文本不安全或过长：" + entry.getKey());
+                }
+            }
+        }
     }
 
     static void validateThemeJson(String themeJson) {
