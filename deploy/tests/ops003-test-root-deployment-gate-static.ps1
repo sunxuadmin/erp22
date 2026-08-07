@@ -52,6 +52,14 @@ foreach ($path in @('/srv/crehn-test/source', '/srv/crehn-test/source/backend', 
     Require-Match $trustedOverride ([regex]::Escape($path)) "trusted TEST override lacks fixed build path: $path"
 }
 Require-NoMatch $trustedOverride '(?m)^\s*context:\s*\.\.' 'trusted TEST override must not use a relative parent build context'
+$webDocker = Get-Content -LiteralPath (Join-Path $root 'deploy\web\Dockerfile') -Raw
+$pnpmInstallCommands = [regex]::Matches($webDocker, '(?ms)^RUN pnpm install --frozen-lockfile.*?(?=\r?\n(?:COPY|RUN|WORKDIR|FROM)\b)')
+if ($pnpmInstallCommands.Count -ne 2) { throw "FAILED expected exactly two pnpm install commands, found $($pnpmInstallCommands.Count)" }
+foreach ($pnpmInstall in $pnpmInstallCommands) {
+    foreach ($setting in @('--network-concurrency=8', '--fetch-retries=5', '--fetch-retry-maxtimeout=120000', '--fetch-timeout=300000')) {
+        Require-Match $pnpmInstall.Value ([regex]::Escape($setting)) "pnpm install lacks network setting: $setting"
+    }
+}
 Require-Match (Get-Content -LiteralPath (Join-Path $root 'deploy\linux\install-assets.sh') -Raw) 'TEST staged input must be root-owned non-symlink mode 600' 'TEST installer must recheck root-owned inputs'
 $bootstrap = Get-Content -LiteralPath (Join-Path $root 'deploy\linux\install-crehn-test-deploy-gate.sh') -Raw
 Require-Match $bootstrap ([regex]::Escape('compose.test-gate.yml')) 'bootstrap must install the trusted TEST build override'

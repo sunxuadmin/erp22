@@ -4,14 +4,16 @@ ARG CREHN_PORTAL_NODE_OPTIONS="--max-old-space-size=1024"
 RUN corepack enable
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --network-concurrency=8 --fetch-retries=5 \
+    --fetch-retry-maxtimeout=120000 --fetch-timeout=300000
 COPY frontend/ .
 RUN NODE_OPTIONS="${CREHN_ADMIN_NODE_OPTIONS}" pnpm test \
     && NODE_OPTIONS="${CREHN_ADMIN_NODE_OPTIONS}" pnpm build:prod
 
 WORKDIR /src/portal
 COPY portal/package.json portal/pnpm-lock.yaml portal/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --network-concurrency=8 --fetch-retries=5 \
+    --fetch-retry-maxtimeout=120000 --fetch-timeout=300000
 COPY portal/ .
 RUN NODE_OPTIONS="${CREHN_PORTAL_NODE_OPTIONS}" pnpm build
 

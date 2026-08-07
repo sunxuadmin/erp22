@@ -69,6 +69,12 @@
 - 修复：新增仅由 root bootstrap 安装并由 gate 校验的 `compose.test-gate.yml`，为 db/backend/web 覆盖为固定 `/srv/crehn-test/source...` build context/dockerfile；普通源码布局与 PROD 不加载该 overlay。
 - `NEEDS_SERVER`：重新执行管理员 bootstrap 后，先用 gate 的 Compose config/build 复验三个绝对构建路径，再重试 BuildLocal；不应把静态检查表述为 Docker 构建或部署成功。
 
+### 2026-08-07 Web pnpm 网络超时韧性修复
+
+- 服务器证据：两次受控 `BuildLocal` 均已完成 db/backend 的 `0.1.10-test` 构建，但 Web 构建在 pnpm 约第 536/538 个依赖请求附近持续发生 registry 网络超时；未部署现网。
+- 修复：管理端与门户两处 `pnpm install --frozen-lockfile` 均显式加入 `--network-concurrency=8 --fetch-retries=5 --fetch-retry-maxtimeout=120000 --fetch-timeout=300000`。未改变 registry、SSL、依赖版本或 lockfile。
+- `NEEDS_SERVER`：静态契约仅证明两个 Dockerfile install 命令都具备四项设置；仍需后续已授权的 TEST BuildLocal 复验网络下载与完整 Web 镜像构建，不能声明构建或部署成功。
+
 ### 管理员 bootstrap（后续已授权服务器步骤）
 
 1. 使用独立管理员认证进入 TEST；SSH 认证不推定为 sudo 认证。
