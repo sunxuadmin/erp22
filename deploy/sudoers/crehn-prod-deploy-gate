@@ -1,0 +1,3 @@
+# Bootstrap substitutes @CREHN_PROD_OPERATOR@ after validating the local account.
+Cmnd_Alias CREHN_PROD_DEPLOY_GATE = /usr/local/sbin/crehn-prod-deploy-gate prepare --apply *, /usr/local/sbin/crehn-prod-deploy-gate stage --apply *, /usr/local/sbin/crehn-prod-deploy-gate deploy --apply *
+@CREHN_PROD_OPERATOR@ ALL=(root) NOPASSWD: CREHN_PROD_DEPLOY_GATE

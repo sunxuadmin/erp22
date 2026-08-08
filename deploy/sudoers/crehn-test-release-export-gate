@@ -1,0 +1,3 @@
+# Bootstrap substitutes @CREHN_TEST_OPERATOR@ after validating the local account.
+# The gate independently validates the only variable argument as a release tag.
+@CREHN_TEST_OPERATOR@ ALL=(root) NOPASSWD: /usr/local/sbin/crehn-test-release-export-gate export --apply *

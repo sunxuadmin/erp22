@@ -8,8 +8,20 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-${PWD}/crehn-deploy.sh}"
 # A source checkout retains the historical deploy/linux/ layout.
 if [[ -f "${SCRIPT_DIR}/compose.yml" ]]; then
   readonly DEPLOY_DIR="${SCRIPT_DIR}"
-  readonly SOURCE_PROJECT_DIR="/srv/crehn-test/source"
-  readonly TRUSTED_TEST_BUILD_COMPOSE="${SCRIPT_DIR}/compose.test-gate.yml"
+  case "${SCRIPT_DIR}" in
+    /usr/local/libexec/crehn-test)
+      readonly SOURCE_PROJECT_DIR="/srv/crehn-test/source"
+      readonly TRUSTED_TEST_BUILD_COMPOSE="${SCRIPT_DIR}/compose.test-gate.yml"
+      ;;
+    /usr/local/libexec/crehn-prod)
+      readonly SOURCE_PROJECT_DIR="/srv/crehn-prod/source"
+      readonly TRUSTED_TEST_BUILD_COMPOSE=""
+      ;;
+    *)
+      printf '[BLOCKED] Trusted deployment entry must be installed below /usr/local/libexec/crehn-test or /usr/local/libexec/crehn-prod\n' >&2
+      exit "${EXIT_BLOCKED}"
+      ;;
+  esac
 else
   readonly DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
   readonly SOURCE_PROJECT_DIR="${DEPLOY_DIR}/.."
