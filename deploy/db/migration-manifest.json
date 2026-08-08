@@ -51,7 +51,9 @@
     "deploy/db/migrations/V004__crehn_menu_role_grants.sql",
     "deploy/db/migrations/V005__crehn_workbench_role_key.sql",
     "deploy/db/migrations/V006__crehn_portal_page_layout.sql",
-    "deploy/db/migrations/V007__crehn_role_permission_boundaries.sql"
+    "deploy/db/migrations/V007__crehn_role_permission_boundaries.sql",
+    "deploy/db/migrations/V008__crehn_sys_user_type_capacity.sql",
+    "deploy/db/migrations/V009__crehn_role_aware_activity_menus.sql"
   ],
   "excluded": [
     "backend/script/sql/art_review_seed_test.sql",

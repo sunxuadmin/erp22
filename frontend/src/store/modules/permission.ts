@@ -4,7 +4,7 @@ import store from '@/store';
 import { getRouters } from '@/api/menu';
 import { listAvailableActivity, listSchoolCategoryCatalog } from '@/api/crehn/activity';
 import type { ActivityCategoryVO, ActivityVO } from '@/api/crehn/types';
-import { ActivityCategoryTreeNode, buildSchoolCategoryMenuTree, isCategoryGroup, isCategoryMenuVisible } from '@/utils/artCategory';
+import { ActivityCategoryTreeNode, buildSchoolCategoryMenuTree, isCategoryGroup } from '@/utils/artCategory';
 import auth from '@/plugins/auth';
 import { RouteRecordRaw } from 'vue-router';
 import Layout from '@/layout/index.vue';
@@ -168,22 +168,33 @@ export const loadView = (view: any, name: string) => {
   return res;
 };
 
-const schoolReportingRootPath = 'school-reporting';
 const projectListComponent = 'crehn/project/index';
 const projectViewPath = 'project-view';
 const projectViewComponent = 'crehn/project-view/index';
 const projectAuditPath = 'audit';
 const projectAuditComponent = 'crehn/audit/index';
-const staticSchoolProjectPaths = new Set(['project', 'all', 'performance', 'artwork', 'workshop', 'achievement', 'principal']);
-const staticSchoolProjectTitles = new Set([
-  '我的项目',
-  '全部项目',
-  '艺术表演类',
-  '艺术作品类',
-  '艺术实践工作坊',
-  '高校美育改革创新优秀成果',
-  '高校校长书画作品'
-]);
+const artReviewRootPath = 'crehn';
+const participantReportingRootPath = 'project-submission';
+const legacyM70CategoryGroupPaths = new Set(['performance', 'artwork', 'workshop', 'achievement']);
+const legacyM70CategoryLeafCodesByParentPath: Record<string, Record<string, string>> = {
+  performance: {
+    vocal: 'performance_vocal',
+    instrumental: 'performance_instrumental',
+    dance: 'performance_dance',
+    drama: 'performance_drama',
+    recitation: 'performance_recitation',
+    personal: 'performance_personal'
+  },
+  artwork: {
+    'fine-art': 'artwork_fine_art',
+    'design-exhibition': 'artwork_grand_design',
+    design: 'artwork_design',
+    video: 'artwork_film'
+  },
+  workshop: { 'workshop-item': 'workshop' },
+  achievement: { paper: 'achievement_paper', 'teaching-case': 'achievement_case' }
+};
+const legacyM70PrincipalCategoryCode = 'artwork_principal';
 
 const reportGroupDefs = [
   { key: 'performance', label: '艺术表演类', aliases: ['艺术表演类', '表演类节目', '艺术表演类节目', '表演'] },
@@ -199,30 +210,40 @@ const reportGroupDefs = [
 const withArtReviewMenuAdjustments = async (routes: RouteRecordRaw[]): Promise<RouteRecordRaw[]> => {
   const artRoot = findArtReviewRoute(routes);
   if (artRoot) {
-    artRoot.children = normalizeProjectViewMenus(artRoot.children || []);
+    artRoot.children = stripStaticActivityCategoryMenus(normalizeProjectViewMenus(artRoot.children || []), trimPath(artRoot.path));
   }
-  return withSchoolReportingMenus(routes);
+  return withParticipantReportingMenus(routes);
 };
 
-const withSchoolReportingMenus = async (routes: RouteRecordRaw[]): Promise<RouteRecordRaw[]> => {
-  if (!isSchoolProjectUser()) {
+const withParticipantReportingMenus = async (routes: RouteRecordRaw[]): Promise<RouteRecordRaw[]> => {
+  if (!currentUserCanUseParticipantProjectMenus()) {
     return routes;
   }
   const artRoot = findArtReviewRoute(routes);
   if (!artRoot) {
     return routes;
   }
-  artRoot.children = stripStaticSchoolProjectMenus(artRoot.children || []);
-  const reportingMenus = await buildSchoolReportingMenus();
-  if (reportingMenus.length) {
-    artRoot.children = [...reportingMenus, ...(artRoot.children || []).filter((item) => item.path !== schoolReportingRootPath)];
+  const reportingMenu = await buildParticipantReportingMenu();
+  if (reportingMenu) {
+    artRoot.children = [reportingMenu, ...(artRoot.children || [])];
   }
   return routes;
 };
 
-const isSchoolProjectUser = () => {
+export const isParticipantProjectUser = (roleKeys?: readonly string[], hasProjectAddPermission?: boolean) => {
+  const normalizedRoles = [...new Set((roleKeys || []).map((role) => String(role).trim().toLowerCase()).filter(Boolean))];
+  return Boolean(hasProjectAddPermission) && normalizedRoles.length === 1 && normalizedRoles[0] === 'crehn_participant';
+};
+
+export const canUseParticipantProjectMenus = (
+  roleKeys: readonly string[] | undefined,
+  hasProjectAddPermission: boolean,
+  schoolId: string | number | undefined
+) => Boolean(schoolId) && isParticipantProjectUser(roleKeys, hasProjectAddPermission);
+
+const currentUserCanUseParticipantProjectMenus = () => {
   const userStore = useUserStore();
-  return Boolean(userStore.schoolId) && auth.hasPermi('crehn:project:add');
+  return canUseParticipantProjectMenus(userStore.roles, auth.hasPermi('crehn:project:add'), userStore.schoolId);
 };
 
 const ensureProjectAuditMenuForProjectViewers = (artRoot: RouteRecordRaw) => {
@@ -247,7 +268,7 @@ const ensureProjectAuditMenuForProjectViewers = (artRoot: RouteRecordRaw) => {
 };
 
 const findArtReviewRoute = (routes: RouteRecordRaw[]) => {
-  return routes.find((route) => trimPath(route.path) === 'crehn');
+  return routes.find((route) => trimPath(route.path) === artReviewRootPath);
 };
 
 const normalizeProjectViewMenus = (routes: RouteRecordRaw[]): RouteRecordRaw[] => {
@@ -274,29 +295,29 @@ const isProjectViewMenu = (route: RouteRecordRaw) => {
   );
 };
 
-const stripStaticSchoolProjectMenus = (routes: RouteRecordRaw[]): RouteRecordRaw[] => {
+export const stripStaticActivityCategoryMenus = (routes: RouteRecordRaw[], parentPath = ''): RouteRecordRaw[] => {
   return routes
-    .filter((route) => !isStaticSchoolProjectMenu(route))
+    .filter((route) => !isLegacyStaticActivityCategoryMenu(route, parentPath))
     .map((route) => ({
       ...route,
-      children: route.children ? stripStaticSchoolProjectMenus(route.children) : route.children
+      children: route.children ? stripStaticActivityCategoryMenus(route.children, trimPath(route.path)) : route.children
     }));
 };
 
-const isStaticSchoolProjectMenu = (route: RouteRecordRaw) => {
+const isLegacyStaticActivityCategoryMenu = (route: RouteRecordRaw, parentPath: string) => {
   const path = trimPath(route.path);
-  const title = String(route.meta?.title || '');
-  const query = String((route as any).query || '');
-  if (
-    staticSchoolProjectPaths.has(path) &&
-    (staticSchoolProjectTitles.has(title) || query.includes('"group"') || String(route.component || '') === projectListComponent)
-  ) {
+  const query = parseRouteJsonObject(String((route as any).query || ''));
+  const categoryCode = String(query.categoryCode || '');
+  if (parentPath === artReviewRootPath && legacyM70CategoryGroupPaths.has(path)) {
     return true;
   }
-  return route.path === schoolReportingRootPath;
+  if (parentPath === artReviewRootPath && path === 'principal') {
+    return categoryCode === legacyM70PrincipalCategoryCode;
+  }
+  return legacyM70CategoryLeafCodesByParentPath[parentPath]?.[path] === categoryCode;
 };
 
-const buildSchoolReportingMenus = async (): Promise<RouteRecordRaw[]> => {
+const buildParticipantReportingMenu = async (): Promise<RouteRecordRaw | undefined> => {
   try {
     const activityRes = await listAvailableActivity();
     const activities = activityRes.data || [];
@@ -309,41 +330,65 @@ const buildSchoolReportingMenus = async (): Promise<RouteRecordRaw[]> => {
               const categoryRes = await listSchoolCategoryCatalog(activity.id as string | number);
               return { activity, categories: categoryRes.data || [], index };
             } catch (error) {
-              console.warn('生成学校端活动菜单失败', activity.activityName || activity.id, error);
+              console.warn('生成参赛者活动菜单失败', activity.activityName || activity.id, error);
               return undefined;
             }
           })
       )
     ).filter((item): item is { activity: ActivityVO; categories: ActivityCategoryVO[]; index: number } => Boolean(item));
-    const availableCatalogs = activityCatalogs.filter((item) => schoolMenuTree(item.categories).length > 0);
-    if (!availableCatalogs.length) {
-      return [];
-    }
-    if (availableCatalogs.length === 1) {
-      const [catalog] = availableCatalogs;
-      return buildActivityCategoryMenus(catalog.activity, catalog.categories, catalog.index, 'ArtSchoolReportingSingle');
-    }
-    return availableCatalogs
-      .map((catalog) => buildActivityMenu(catalog.activity, catalog.categories, catalog.index))
-      .filter((item): item is RouteRecordRaw => Boolean(item));
+    return buildParticipantReportingMenuForCatalogs(activityCatalogs);
   } catch (error) {
-    console.warn('生成学校端项目填报菜单失败', error);
+    console.warn('生成参赛者项目填报菜单失败', error);
+    return undefined;
+  }
+};
+
+export const buildParticipantReportingMenuForCatalogs = (
+  activityCatalogs: Array<{ activity: ActivityVO; categories: ActivityCategoryVO[]; index: number }>
+): RouteRecordRaw | undefined => {
+  const children = buildParticipantReportingMenusForCatalogs(activityCatalogs);
+  if (!children.length) {
+    return undefined;
+  }
+  return {
+    path: participantReportingRootPath,
+    component: 'ParentView' as any,
+    name: 'ArtParticipantReporting',
+    alwaysShow: true,
+    redirect: 'noRedirect',
+    meta: { title: '项目报送', icon: 'form' },
+    children
+  };
+};
+
+export const buildParticipantReportingMenusForCatalogs = (
+  activityCatalogs: Array<{ activity: ActivityVO; categories: ActivityCategoryVO[]; index: number }>
+): RouteRecordRaw[] => {
+  const availableCatalogs = activityCatalogs.filter((item) => participantMenuTree(item.categories).length > 0);
+  if (!availableCatalogs.length) {
     return [];
   }
+  if (availableCatalogs.length === 1) {
+    const [catalog] = availableCatalogs;
+    return buildActivityCategoryMenus(catalog.activity, catalog.categories, catalog.index, 'ArtParticipantReportingSingle');
+  }
+  return availableCatalogs
+    .map((catalog) => buildActivityMenu(catalog.activity, catalog.categories, catalog.index))
+    .filter((item): item is RouteRecordRaw => Boolean(item));
 };
 
 const buildActivityMenu = (activity: ActivityVO, categories: ActivityCategoryVO[], activityIndex: number): RouteRecordRaw | undefined => {
   if (!activity.id) {
     return undefined;
   }
-  const menuNodes = schoolMenuTree(categories);
+  const menuNodes = participantMenuTree(categories);
   if (!menuNodes.length) {
     return undefined;
   }
   const activitySegment = routeSegment(`activity-${activity.id}`);
   const activityTitle = activityMenuTitle(activity, activityIndex);
   const activityFullTitle = activity.activityName || activityTitle;
-  const routeNamePrefix = `ArtSchoolReportingActivity${safeRouteName(activity.id, activityIndex)}`;
+  const routeNamePrefix = `ArtParticipantReportingActivity${safeRouteName(activity.id, activityIndex)}`;
   return {
     path: activitySegment,
     component: 'ParentView' as any,
@@ -361,7 +406,7 @@ const buildActivityCategoryMenus = (
   activityIndex: number,
   routeNamePrefix: string
 ): RouteRecordRaw[] => {
-  return schoolMenuTree(categories).map((node, nodeIndex) => {
+  return participantMenuTree(categories).map((node, nodeIndex) => {
     if (!isCategoryGroup(node)) {
       return buildCategoryMenu(activity, node, activityIndex, nodeIndex, 0, routeNamePrefix);
     }
@@ -421,7 +466,7 @@ const activityMenuTitle = (activity: ActivityVO, activityIndex: number) => {
   return activity.activityName || `活动${activityIndex + 1}`;
 };
 
-const schoolMenuTree = (categories: ActivityCategoryVO[]): ActivityCategoryTreeNode[] => buildSchoolCategoryMenuTree(categories);
+const participantMenuTree = (categories: ActivityCategoryVO[]): ActivityCategoryTreeNode[] => buildSchoolCategoryMenuTree(categories);
 
 const inferCategoryGroup = (name?: string) => {
   const text = name || '';
