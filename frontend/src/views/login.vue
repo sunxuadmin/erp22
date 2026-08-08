@@ -1,5 +1,5 @@
 <template>
-  <div class="login-page" :class="{ 'has-auth-popup': authPopupActive }">
+  <div class="login-page" :class="`login-page--${homeVersion}`">
     <div class="art-motion" aria-hidden="true">
       <span class="art-wash wash-a"></span>
       <span class="art-wash wash-b"></span>
@@ -28,13 +28,13 @@
 
     <header class="login-header">
       <button class="brand" type="button" @click="handleHomeRequest">
-        <img class="brand-logo" src="@/assets/logo/logo.png" alt="" />
+        <span class="brand-mark" aria-hidden="true">CH</span>
         <span class="brand-name">{{ loginBrandName }}</span>
       </button>
     </header>
 
     <main class="login-shell">
-      <section class="hero-copy" :class="{ 'is-home-hotspot': authPopupActive }" :aria-label="text.ariaLabels.heroInfo" @click="handleLeftAreaReturnHome">
+      <section class="hero-copy" :aria-label="text.ariaLabels.heroInfo">
         <span class="section-eyebrow">{{ text.brandKicker }}</span>
         <h1 class="slogan">
           <span v-for="(line, lineIndex) in text.sloganLines" :key="line" class="slogan-line">
@@ -56,44 +56,18 @@
         </div>
       </section>
 
-      <section class="login-panel" :class="{ 'is-popup-open': authPopupActive }" :aria-label="selectedEntry ? selectedEntry.loginTitle : text.entrySectionTitle">
-        <transition :name="entryTransitionName" mode="out-in">
-          <div v-if="!selectedEntry" key="entries" class="entry-picker">
-            <div class="entry-heading">
-              <span class="section-eyebrow">{{ text.dynamicLabel }}</span>
-              <h2>{{ text.entrySectionTitle }}</h2>
-              <p v-if="text.entrySectionDesc">{{ text.entrySectionDesc }}</p>
-            </div>
-
-            <button
-              v-for="(entry, index) in text.entryCards"
-              :key="entry.key"
-              class="entry-card"
-              type="button"
-              @click="openLogin(entry, index)"
-            >
-              <span class="entry-icon">
-                <el-icon><component :is="entry.icon" /></el-icon>
-              </span>
-              <span class="entry-title">{{ entry.title }}</span>
-              <span v-if="entry.desc" class="entry-desc">{{ entry.desc }}</span>
-            </button>
-          </div>
-
+      <section class="login-panel" :aria-label="text.formTitle">
           <el-form
-            v-else-if="!showRegisterCard"
+            v-if="!showRegisterCard"
             key="form"
             ref="loginRef"
             :model="loginForm"
             :rules="loginRules"
             class="login-form"
-            :class="entryOriginClass"
           >
-            <button class="login-card-close" type="button" :title="text.backToEntriesText" aria-label="关闭登录卡片" @click="backToEntries"></button>
-
             <div class="form-topline">
-              <span>{{ text.selectedEntryLabel }}</span>
-              <strong>{{ selectedEntry.title }}</strong>
+              <span>{{ text.formKicker }}</span>
+              <strong>{{ text.formTitle }}</strong>
             </div>
 
             <el-form-item prop="username">
@@ -150,7 +124,6 @@
             :model="registerForm"
             :rules="registerRules"
             class="login-form register-card"
-            :class="entryOriginClass"
           >
             <div class="form-topline">
               <span>{{ text.registerCard.currentLabel }}</span>
@@ -278,7 +251,6 @@
               </button>
             </div>
           </el-form>
-        </transition>
       </section>
     </main>
 
@@ -297,24 +269,13 @@ import { loginPageText } from '@/config/loginPage';
 
 const text = loginPageText;
 const registerIntentKey = 'CREHN_OPEN_REGISTER_CARD';
-const portalHomePath = '/portal/';
+const portalHomePath = '/crehn/';
 const sloganColorClasses = ['c-blue', 'c-blue', 'c-teal', 'c-green', 'c-green', 'c-lime', 'c-gold', 'c-coral'];
 const sloganColorClass = (lineIndex: number, charIndex: number) => sloganColorClasses[(lineIndex * 4 + charIndex) % sloganColorClasses.length];
-const loginBrandName = computed(() => {
-  const name = text.brandName || '河南省第八届大学生艺术展演';
-  return name.endsWith('活动') ? name : `${name}活动`;
-});
+const loginBrandName = computed(() => text.brandName);
 const userStore = useUserStore();
 const router = useRouter();
-type LoginEntry = (typeof loginPageText.entryCards)[number];
-const unifiedLoginEntry: LoginEntry = {
-  key: 'unified',
-  title: '统一登录',
-  desc: '',
-  icon: 'UserFilled',
-  loginTitle: '统一登录',
-  loginSubtitle: ''
-};
+const homeVersion = computed<'v1' | 'v2'>(() => router.currentRoute.value.query.homeVersion === 'v2' ? 'v2' : 'v1');
 
 const loginForm = ref<LoginData>({
   tenantId: '000000',
@@ -341,10 +302,7 @@ const registerEnabled = ref(true);
 const redirect = ref('/');
 const loginRef = ref<ElFormInstance>();
 const tenantList = ref<TenantVO[]>([]);
-const selectedEntry = ref<LoginEntry | null>(null);
-const selectedEntryIndex = ref(1);
 const showRegisterCard = ref(false);
-const disableEntryTransition = ref(false);
 
 const registerForm = ref<RegisterForm>({
   tenantId: '000000',
@@ -398,10 +356,6 @@ const registerRules: ElFormRules = {
   code: [{ required: true, trigger: 'change', message: text.validation.codeRequired }]
 };
 
-const entryOriginClass = computed(() => `entry-origin-${selectedEntryIndex.value}`);
-const entryTransitionName = computed(() => (disableEntryTransition.value ? 'entry-switch-none' : 'entry-switch'));
-const authPopupActive = computed(() => selectedEntry.value !== null || disableEntryTransition.value);
-
 const prepareRegisterCard = async () => {
   if (registerCaptchaEnabled.value && !registerCodeUrl.value) {
     await getRegisterCode();
@@ -411,34 +365,12 @@ const prepareRegisterCard = async () => {
   }
 };
 
-const openLogin = async (_entry: LoginEntry, index: number) => {
-  disableEntryTransition.value = false;
-  selectedEntryIndex.value = index;
-  selectedEntry.value = unifiedLoginEntry;
-  showRegisterCard.value = false;
-  if (captchaEnabled.value) {
-    await getCode();
-  }
-};
-
-const backToEntries = () => {
-  disableEntryTransition.value = true;
-  selectedEntry.value = null;
-  showRegisterCard.value = false;
-  nextTick(() => {
-    disableEntryTransition.value = false;
-  });
-};
-
 const openRegisterCard = async () => {
-  disableEntryTransition.value = false;
-  selectedEntry.value = unifiedLoginEntry;
   showRegisterCard.value = true;
   await prepareRegisterCard();
 };
 
 const backToLogin = async () => {
-  selectedEntry.value = unifiedLoginEntry;
   showRegisterCard.value = false;
   if (captchaEnabled.value && !codeUrl.value) {
     await getCode();
@@ -507,7 +439,7 @@ const confirmDiscardRegister = async () => {
 };
 
 const goPortalHome = () => {
-  window.location.href = portalHomePath;
+  window.location.href = `${portalHomePath}?version=${homeVersion.value}`;
 };
 
 const handleHomeRequest = async () => {
@@ -516,19 +448,21 @@ const handleHomeRequest = async () => {
   }
 };
 
-const handleLeftAreaReturnHome = async () => {
-  if (!authPopupActive.value) return;
-  await handleHomeRequest();
-};
-
 const handlePageShow = async () => {
   await openRegisterCardFromIntent();
+};
+
+const safeInternalRedirect = (value: unknown) => {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
+    return '/';
+  }
+  return value;
 };
 
 watch(
   () => router.currentRoute.value,
   (newRoute: any) => {
-    redirect.value = newRoute.query && newRoute.query.redirect && decodeURIComponent(newRoute.query.redirect);
+    redirect.value = safeInternalRedirect(newRoute.query?.redirect);
   },
   { immediate: true }
 );
@@ -549,8 +483,7 @@ const handleLogin = () => {
       localStorage.removeItem('password');
       const [err] = await to(userStore.login(loginForm.value));
       if (!err) {
-        const redirectUrl = '/';
-        await router.push(redirectUrl);
+        await router.push(redirect.value);
         loading.value = false;
       } else {
         loading.value = false;
@@ -651,7 +584,6 @@ const handleRegister = () => {
           type: 'success'
         });
         registerLoading.value = false;
-        selectedEntry.value = unifiedLoginEntry;
         showRegisterCard.value = false;
         await getCode();
       } else {
@@ -686,24 +618,67 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .login-page {
   --login-white: #ffffff;
-  --login-paper: #f7fbff;
-  --login-ink: #102a43;
-  --login-text: #526577;
-  --login-muted: #8a9aab;
-  --login-blue-deep: #005ea8;
-  --login-blue: #0a8edb;
-  --login-green: #00bfa6;
-  --login-line: rgba(10, 142, 219, 0.16);
-  --login-shadow: 0 24px 60px rgba(5, 86, 148, 0.12);
+  --login-paper: #f8f5ff;
+  --login-ink: #33245d;
+  --login-text: #645b7d;
+  --login-muted: #8d82a4;
+  --login-blue-deep: #5743b7;
+  --login-blue: #7b65dc;
+  --login-green: #ed7b9c;
+  --login-line: rgba(102, 79, 194, 0.16);
+  --login-shadow: 0 24px 60px rgba(80, 56, 155, 0.14);
 
   position: relative;
   min-height: 100%;
   overflow: hidden;
   color: var(--login-ink);
   background:
-    radial-gradient(circle at 70% 16%, rgba(0, 191, 166, 0.12), transparent 24%),
-    radial-gradient(circle at 18% 22%, rgba(10, 142, 219, 0.08), transparent 28%),
-    linear-gradient(180deg, #ffffff 0%, #f9fdff 48%, #f4fbff 100%);
+    radial-gradient(circle at 74% 16%, rgba(243, 133, 161, 0.22), transparent 26%),
+    radial-gradient(circle at 18% 22%, rgba(124, 99, 222, 0.18), transparent 30%),
+    linear-gradient(150deg, #fcfaff 0%, #f6f2ff 52%, #fff7fa 100%);
+}
+
+.login-page--v2 {
+  --login-paper: #f7f8ff;
+  --login-ink: #172b78;
+  --login-text: #4d5f93;
+  --login-muted: #7787b6;
+  --login-blue-deep: #2346c9;
+  --login-blue: #4e6cf5;
+  --login-green: #913fe7;
+  --login-line: rgba(57, 85, 227, 0.18);
+  --login-shadow: 0 24px 60px rgba(35, 70, 201, 0.14);
+  background-color: #f7f8ff;
+  background-image:
+    linear-gradient(rgba(84, 104, 236, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(84, 104, 236, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 76% 16%, rgba(141, 74, 241, 0.18), transparent 27%),
+    radial-gradient(circle at 18% 74%, rgba(67, 133, 255, 0.16), transparent 28%);
+  background-size: 36px 36px, 36px 36px, auto, auto;
+}
+
+.login-page--v1 .wash-a {
+  background:
+    radial-gradient(circle at 44% 42%, rgba(128, 96, 224, 0.28), transparent 48%),
+    radial-gradient(circle at 62% 62%, rgba(238, 121, 155, 0.22), transparent 58%);
+}
+
+.login-page--v1 .wash-b {
+  background:
+    radial-gradient(circle at 42% 38%, rgba(239, 132, 160, 0.26), transparent 50%),
+    radial-gradient(circle at 58% 62%, rgba(114, 88, 211, 0.18), transparent 60%);
+}
+
+.login-page--v2 .wash-a,
+.login-page--v2 .wash-b {
+  background:
+    radial-gradient(circle at 44% 42%, rgba(69, 103, 248, 0.26), transparent 48%),
+    radial-gradient(circle at 62% 62%, rgba(145, 63, 231, 0.2), transparent 58%);
+}
+
+.login-page--v2 .art-ribbon,
+.login-page--v2 .line {
+  border-color: rgba(54, 82, 222, 0.16);
 }
 
 .login-page,
@@ -985,7 +960,7 @@ onUnmounted(() => {
   position: relative;
   z-index: 3;
   height: 82px;
-  border-bottom: 1px solid rgba(10, 142, 219, 0.08);
+  border-bottom: 1px solid var(--login-line);
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -1016,10 +991,19 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.brand-logo {
+.brand-mark {
   width: 54px;
   height: 54px;
-  object-fit: contain;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 18px 18px 18px 4px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--login-blue-deep), var(--login-blue) 58%, var(--login-green));
+  box-shadow: 0 12px 26px var(--login-shadow);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
 }
 
 .login-line-art {
@@ -1032,7 +1016,7 @@ onUnmounted(() => {
 
 .line {
   position: absolute;
-  border: 1px solid rgba(0, 94, 168, 0.08);
+  border: 1px solid var(--login-line);
   border-radius: 50%;
 }
 
@@ -1189,15 +1173,6 @@ onUnmounted(() => {
     filter 0.18s ease;
 }
 
-.hero-copy.is-home-hotspot {
-  cursor: pointer;
-}
-
-.login-page.has-auth-popup .hero-copy {
-  opacity: 0.68;
-  filter: blur(2px);
-}
-
 .section-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -1245,27 +1220,27 @@ onUnmounted(() => {
 }
 
 .slogan-char.c-blue {
-  color: #137dda;
+  color: var(--login-blue-deep);
 }
 
 .slogan-char.c-teal {
-  color: #2e9fc1;
+  color: var(--login-blue);
 }
 
 .slogan-char.c-green {
-  color: #74b761;
+  color: #9a5bc8;
 }
 
 .slogan-char.c-lime {
-  color: #b8c944;
+  color: #c76cb2;
 }
 
 .slogan-char.c-gold {
-  color: #e4ae4c;
+  color: #e083a1;
 }
 
 .slogan-char.c-coral {
-  color: #e06d55;
+  color: var(--login-green);
 }
 
 .slogan-char::after {
@@ -1305,197 +1280,19 @@ onUnmounted(() => {
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 13px;
-  color: #477085;
+  color: var(--login-text);
   background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(10, 142, 219, 0.12);
+  border: 1px solid var(--login-line);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .login-panel {
   position: relative;
-  min-height: 690px;
-  height: clamp(690px, 78vh, 740px);
+  min-height: 540px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.login-panel::before {
-  content: '';
-  position: absolute;
-  inset: -18px;
-  z-index: 0;
-  border-radius: 34px;
-  pointer-events: none;
-  opacity: 0;
-  background: rgba(245, 251, 255, 0.38);
-  transform: scale(0.98);
-  transition:
-    opacity 0.16s ease,
-    transform 0.18s ease;
-}
-
-@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .login-panel::before {
-    background: rgba(245, 251, 255, 0.22);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-}
-
-.login-panel.is-popup-open::before {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.entry-switch-enter-active,
-.entry-switch-leave-active {
-  will-change: opacity, transform, filter;
-}
-
-.entry-switch-enter-active {
-  transition:
-    opacity 0.07s ease-out,
-    transform 0.08s cubic-bezier(0.18, 0.9, 0.28, 1),
-    filter 0.07s ease-out;
-}
-
-.entry-switch-leave-active {
-  position: absolute;
-  width: 100%;
-  transition:
-    opacity 0.08s ease,
-    transform 0.08s ease,
-    filter 0.08s ease;
-}
-
-.entry-switch-enter-from {
-  opacity: 0;
-  filter: blur(1px);
-  transform: translate3d(0, 5px, 0) scale(0.985);
-}
-
-.entry-switch-leave-to {
-  opacity: 0;
-  filter: blur(1px);
-  transform: translate3d(0, 4px, 0) scale(0.99);
-}
-
-.entry-switch-enter-to,
-.entry-switch-leave-from {
-  opacity: 1;
-  filter: blur(0);
-  transform: translate3d(0, 0, 0) scale(1);
-}
-
-.entry-switch-none-enter-active,
-.entry-switch-none-leave-active {
-  transition: none;
-}
-
-.entry-switch-none-enter-from,
-.entry-switch-none-enter-to {
-  opacity: 1;
-  filter: none;
-  transform: none;
-}
-
-.entry-switch-none-leave-from,
-.entry-switch-none-leave-to {
-  opacity: 1;
-  filter: none;
-}
-
-.entry-picker {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.entry-heading {
-  grid-column: 1 / -1;
-  margin-bottom: 4px;
-  padding: 0 4px;
-}
-
-.entry-heading h2 {
-  margin: 12px 0 8px;
-  font-size: 30px;
-  line-height: 1.2;
-  font-weight: 900;
-  color: var(--login-ink);
-}
-
-.entry-heading p {
-  margin: 0;
-  color: var(--login-text);
-  line-height: 1.8;
-}
-
-.entry-card {
-  min-height: 166px;
-  padding: 22px 14px 18px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid rgba(10, 142, 219, 0.14);
-  border-radius: 20px;
-  color: var(--login-ink);
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 14px 34px rgba(14, 82, 131, 0.09);
-  cursor: pointer;
-  transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    background 0.22s ease;
-}
-
-@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .entry-card {
-    background: rgba(255, 255, 255, 0.54);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-}
-
-.entry-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(0, 191, 166, 0.28);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 24px 54px rgba(5, 86, 148, 0.14);
-}
-
-.entry-icon {
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  color: #ffffff;
-  font-size: 28px;
-  background: linear-gradient(145deg, var(--login-blue), var(--login-green));
-  box-shadow: 0 14px 28px rgba(10, 142, 219, 0.24);
-}
-
-.entry-title {
-  color: var(--login-ink);
-  font-size: 18px;
-  font-weight: 900;
-}
-
-.entry-desc {
-  max-width: 150px;
-  color: var(--login-text);
-  font-size: 13px;
-  line-height: 1.55;
-  text-align: center;
 }
 
 .emblem-stage {
@@ -1583,9 +1380,9 @@ onUnmounted(() => {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78)),
     rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(10, 142, 219, 0.15);
+  border: 1px solid rgba(87, 67, 183, 0.18);
   box-shadow:
-    0 26px 72px rgba(5, 86, 148, 0.16),
+    0 26px 72px rgba(80, 56, 155, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.76);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -1600,100 +1397,20 @@ onUnmounted(() => {
   }
 }
 
-.login-panel.is-popup-open .login-form {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate3d(-50%, -50%, 0);
-}
-
-.entry-switch-none-leave-active.login-form,
-.entry-switch-none-leave-from.login-form,
-.entry-switch-none-leave-to.login-form {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  opacity: 1;
-  filter: none;
-  transform: translate3d(-50%, -50%, 0) scale(1) !important;
-}
-
-.login-form.entry-origin-0 {
-  transform-origin: 12% 20%;
-}
-
-.login-form.entry-origin-1 {
-  transform-origin: 50% 20%;
-}
-
-.login-form.entry-origin-2 {
-  transform-origin: 88% 20%;
-}
-
-.login-card-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid rgba(10, 142, 219, 0.18);
-  border-radius: 999px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(238, 248, 255, 0.78)),
-    rgba(255, 255, 255, 0.86);
-  box-shadow: 0 8px 18px rgba(5, 86, 148, 0.12);
-  cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease;
-}
-
-.login-card-close::before,
-.login-card-close::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 11px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--login-blue-deep);
-}
-
-.login-card-close::before {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.login-card-close::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.login-card-close:hover {
-  transform: translateY(-1px);
-  border-color: rgba(0, 191, 166, 0.34);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.login-card-close + .form-topline {
-  margin-right: 34px;
-}
-
 @keyframes loginCardFloatIn {
   from {
     opacity: 0;
-    transform: translate3d(-50%, calc(-50% + 3px), 0) scale(0.992);
+    transform: translateY(3px) scale(0.992);
     box-shadow:
-      0 12px 32px rgba(5, 86, 148, 0.1),
+      0 12px 32px rgba(80, 56, 155, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.64);
   }
 
   to {
     opacity: 1;
-    transform: translate3d(-50%, -50%, 0) scale(1);
+    transform: translateY(0) scale(1);
     box-shadow:
-      0 26px 72px rgba(5, 86, 148, 0.16),
+      0 26px 72px rgba(80, 56, 155, 0.16),
       inset 0 1px 0 rgba(255, 255, 255, 0.76);
   }
 }
@@ -1706,9 +1423,9 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: 12px;
   border-radius: 999px;
-  color: #477085;
-  background: rgba(238, 248, 255, 0.78);
-  border: 1px solid rgba(10, 142, 219, 0.12);
+  color: var(--login-text);
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--login-line);
 }
 
 .form-topline span {
@@ -1755,12 +1472,29 @@ onUnmounted(() => {
   min-height: 46px;
   border-radius: 18px;
   background-color: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 0 0 1px rgba(10, 142, 219, 0.15);
+  box-shadow: 0 0 0 1px rgba(87, 67, 183, 0.16);
 }
 
 .login-form :deep(.el-input__wrapper.is-focus),
 .login-form :deep(.el-select__wrapper.is-focused) {
-  box-shadow: 0 0 0 2px rgba(10, 142, 219, 0.22);
+  box-shadow: 0 0 0 2px rgba(123, 101, 220, 0.26);
+}
+
+.login-page--v2 .login-form {
+  border-color: rgba(35, 70, 201, 0.2);
+  box-shadow:
+    0 26px 72px rgba(35, 70, 201, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+.login-page--v2 .login-form :deep(.el-input__wrapper),
+.login-page--v2 .login-form :deep(.el-select__wrapper) {
+  box-shadow: 0 0 0 1px rgba(35, 70, 201, 0.16);
+}
+
+.login-page--v2 .login-form :deep(.el-input__wrapper.is-focus),
+.login-page--v2 .login-form :deep(.el-select__wrapper.is-focused) {
+  box-shadow: 0 0 0 2px rgba(78, 108, 245, 0.28);
 }
 
 .captcha-item :deep(.el-form-item__content) {
@@ -1781,7 +1515,7 @@ onUnmounted(() => {
   height: 46px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(10, 142, 219, 0.15);
+  border: 1px solid var(--login-line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.82);
   cursor: pointer;
@@ -1888,7 +1622,8 @@ onUnmounted(() => {
   border: none;
   border-radius: 999px;
   color: var(--login-blue-deep);
-  background: rgba(10, 142, 219, 0.07);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 1px var(--login-line);
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -1898,7 +1633,7 @@ onUnmounted(() => {
 
 .back-entry:hover {
   color: var(--login-blue);
-  background: rgba(10, 142, 219, 0.12);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .login-footer {
@@ -1913,57 +1648,6 @@ onUnmounted(() => {
   color: var(--login-muted);
   font-family: Arial, serif;
   font-size: 12px;
-}
-
-:global(html.dark) {
-  .login-page {
-    background:
-      radial-gradient(circle at 70% 16%, rgba(0, 191, 166, 0.12), transparent 24%),
-      linear-gradient(180deg, #0f172a 0%, #111827 100%);
-  }
-
-  .art-motion {
-    opacity: 0.46;
-    mix-blend-mode: screen;
-  }
-
-  .login-header,
-  .login-form,
-  .entry-card {
-    background: rgba(17, 24, 39, 0.82);
-    border-color: rgba(148, 163, 184, 0.22);
-  }
-
-  .login-form :deep(.el-input__wrapper),
-  .login-form :deep(.el-select__wrapper) {
-    background-color: rgba(17, 24, 39, 0.74);
-    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.22);
-  }
-
-  .hero-desc,
-  .entry-heading p,
-  .entry-desc,
-  .form-subtitle {
-    color: #94a3b8;
-  }
-
-  .title,
-  .entry-heading h2,
-  .entry-title,
-  .brand {
-    color: #e5e7eb;
-  }
-
-  .art-glass {
-    border-color: rgba(255, 255, 255, 0.24);
-    opacity: 0.2;
-  }
-
-  .blur-shape,
-  .blur-spark {
-    opacity: 0.24;
-    mix-blend-mode: screen;
-  }
 }
 
 @media (max-width: 1100px) {
@@ -2014,7 +1698,7 @@ onUnmounted(() => {
     white-space: normal;
   }
 
-  .brand-logo {
+  .brand-mark {
     width: 46px;
     height: 46px;
   }
@@ -2040,20 +1724,8 @@ onUnmounted(() => {
     height: auto;
   }
 
-  .login-panel.is-popup-open {
-    height: auto;
-  }
-
   .login-form {
     padding: 28px 20px 26px;
-  }
-
-  .entry-picker {
-    grid-template-columns: 1fr;
-  }
-
-  .entry-card {
-    min-height: 128px;
   }
 
   .art-wash {

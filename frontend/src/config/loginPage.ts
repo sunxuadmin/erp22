@@ -1,50 +1,17 @@
 export const loginPageText = {
-  pageTitle: '后台登陆',
-  brandName: '河南省第八届大学生艺术展演',
-  brandKicker: 'DYZ / ART EXHIBITION',
-  sloganLines: ['向美而行', '逐梦未来'],
-  subtitle: '',
-  description: '',
+  pageTitle: '创意河南艺术设计大赛登录',
+  brandName: '创意河南',
+  brandKicker: 'CREATIVE HENAN',
+  sloganLines: ['设计创新', '赋能河南'],
+  subtitle: '设计创新·赋能河南',
+  description: '全省高等学校第六届“创意河南”艺术设计大赛',
   meta: [],
-  dynamicLabel: '艺术展演',
   ariaLabels: {
-    heroInfo: '系统信息'
+    heroInfo: '创意河南艺术设计大赛信息'
   },
 
-  entrySectionTitle: '请选择登录入口',
-  entrySectionDesc: '',
-  entryCards: [
-    {
-      key: 'submit',
-      title: '上报入口',
-      desc: '',
-      icon: 'UploadFilled',
-      loginTitle: '上报登录',
-      loginSubtitle: '   '
-    },
-    {
-      key: 'admin',
-      title: '管理入口',
-      desc: '',
-      icon: 'Management',
-      loginTitle: '管理入口登录',
-      loginSubtitle: '适用于管理员账号登录后进入后台管理。'
-    },
-    {
-      key: 'expert',
-      title: '专家入口',
-      desc: '',
-      icon: 'UserFilled',
-      loginTitle: '专家入口登录',
-      loginSubtitle: '任务工作台。'
-    }
-  ],
-
-  formKicker: '',
-  formTitle: '账号登录',
-  formSubtitle: '',
-  selectedEntryLabel: '当前入口',
-  backToEntriesText: '返回选择入口',
+  formKicker: 'CREATIVE HENAN',
+  formTitle: '统一账号登录',
   tenantPlaceholder: '请选择所属单位',
   usernamePlaceholder: '请输入账号',
   passwordPlaceholder: '请输入密码',

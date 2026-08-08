@@ -116,6 +116,10 @@ function scrollTo(id: string) {
   menuOpen.value = false;
 }
 
+function goToLogin() {
+  window.location.href = `/admin/login?redirect=/index&homeVersion=${props.version}`;
+}
+
 function openDialog(kind: DialogKind) {
   menuOpen.value = false;
   previousFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -182,7 +186,7 @@ function handleDialogKeydown(event: KeyboardEvent) {
               <button v-for="item in navigation" :key="item.join('|')" type="button" @click="scrollTo(item[1])">{{ item[0] }}</button>
             </nav>
             <div class="nav-actions">
-              <button type="button" class="quiet-button" @click="openDialog('portal')">{{ value(module, 'loginLabel') }}</button>
+              <button type="button" class="quiet-button" @click="goToLogin">{{ value(module, 'loginLabel') }}</button>
               <button type="button" class="primary-button primary-button--compact" @click="scrollTo('journey')">{{ value(module, 'actionLabel') }} <span aria-hidden="true">↗</span></button>
               <button type="button" class="menu-button" :aria-label="menuOpen ? value(module, 'menuCloseLabel') : value(module, 'menuOpenLabel')" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen"><i /><i /></button>
             </div>
