@@ -3,10 +3,10 @@
 ## 状态
 
 - 需求：用户 2026-08-07 确认将 PORTAL-004 两版首页改造成后台可维护的可视化组件页面
-- 当前状态：`IMPLEMENTED / CONTRACT_VERIFIED / VUE_TSC_VERIFIED / PORTAL_VITE_BUILD_VERIFIED / LOCAL_BROWSER_VERIFIED / VITEST_BLOCKED_DEPENDENCY_FETCH / JAVA_NARROW_CHECK_NOT_RUN / CMS_ROLE_FLOW_NEEDS_BROWSER`
+- 当前状态：`IMPLEMENTED / CONTRACT_VERIFIED / VUE_TSC_VERIFIED / PORTAL_VITE_BUILD_VERIFIED / LOCAL_BROWSER_VERIFIED / TEST_0.1.12_DEPLOYED / TEST_PUBLIC_BROWSER_VERIFIED / FRONTEND_VITEST_VERIFIED_IN_IMAGE_BUILD / JAVA_NARROW_CHECK_NOT_RUN / CMS_ROLE_FLOW_NEEDS_BROWSER`
 - 唯一主任务编号：`PORTAL-005`
 - 2026-08-07 专项授权：TEST V006、迁移前备份和数据库回读已完成；TEST 部署与公共浏览器验收也已授权并完成。
-- 本地 Git提交：已授权；仍未授权：Git push、生产连接/验收、其他 SQL、外部发送和文件删除。
+- 本地 Git提交/推送：已授权并执行；仍未授权：生产连接/验收、其他 SQL、外部发送。2026-08-08 本次精确清理已按授权完成，不得泛化为其他镜像、缓存、容器、卷或项目清理。
 - 2026-08-07 本轮实施：以 `.tmp/creative-henan-both-final-reference/creative-henan-both-final/` 中 `01-liquid-glass` 与 `02-art-tech` 最终确认稿为唯一视觉基准，收敛发布快照和内置回退的视觉分叉；扩充可编辑白名单字段、补齐 v1/v2 独立预设与跨端契约。仅修改 PORTAL-005 指定文件，不执行数据库、部署、Git 提交/推送或删除操作。
 
 ### 2026-08-07 本轮本地实现与验证
@@ -31,7 +31,7 @@
 ## 保护与禁止范围
 
 - 保留 PORTAL-003、PORTAL-004、GridStack、V006、任务卡和测试产物的全部未提交修改；不覆盖 `portal/src/components/PortalContent.vue`。
-- 不新增迁移或执行 V006 之外的 SQL；PORTAL-005 实施本身不自动授权部署，本次 TEST 部署由后续 OPS-003 专项授权完成。仍不得生产、其他 SQL、Git push、外部发送或文件删除。
+- 不新增迁移或执行 V006 之外的 SQL；PORTAL-005 实施本身不自动授权部署，本次 TEST 部署由后续 OPS-003 专项授权完成。仍不得生产、其他 SQL 或外部发送；Git 提交/推送已按当前授权完成。精确清理仅限本次已批准对象，不得泛化。
 - 禁止 `git reset`、`git checkout`、`git clean`。
 - 不开放任意 HTML、CSS、JavaScript、iframe 或未登记的跳转动作；组件类型、字段和主题令牌均使用服务端白名单。
 
@@ -132,3 +132,14 @@
 - Playwright 仅针对本地静态预览：1440×1000 V1/V2 首屏视觉与页脚版本切换 `PASS`；390×844 CSS 修复后 V1 截图 `C:\Users\A\AppData\Local\Temp\crehn-portal005-verify-019fda97\.playwright-cli\page-2026-08-07T13-28-52-666Z.png`、V2 截图 `C:\Users\A\AppData\Local\Temp\crehn-portal005-verify-019fda97\.playwright-cli\page-2026-08-07T13-29-00-619Z.png`，两版 `document/body.scrollWidth = innerWidth = 390`，`PASS`。
 - 本地静态预览交互：版本切换、登录弹窗打开焦点落在关闭按钮、Escape 关闭并恢复登录按钮焦点、移动菜单、赛道 B 显示 5 个方向均 `PASS`。控制台唯一错误为静态预览无后端导致 `/prod-api/crehn/cms/public/site/code/crehn` 返回 404；回退页正常，不计为集成、TEST 或部署通过。
 - 仍未完成：Vitest 受依赖获取阻断；Java 窄编译 `NOT_RUN`；真实 CMS 登录后的保存—启用—发布闭环 `NEEDS_BROWSER`。上述本地静态预览不替代服务端、部署或角色登录态验收。
+
+## 2026-08-08 TEST 0.1.12-test 部署与公共首页浏览器验收
+
+- 部署版本：`0.1.12-test`，revision `40e4fe1ee9a849141e8add90ed29a6394d3aa3b8`。`BuildLocal`、`DeployLocal` 与 `VerifyLocal` 均 `PASS`；构建过程未执行 SQL、生产操作或 DYZ 写入，且未影响 `dyz-current-shadow`。
+- 发布资产：manifest `/srv/crehn-test/releases/0.1.12-test/crehn-images-0.1.12-test.json`，SHA-256 `72fb1a19c19d04caaa943fb138ff0843dd04364196b3252b47b1ddca8893b031`；部署前备份 `/srv/crehn-test/backups/20260807T235419Z-0.1.10-test-pre-deploy`。
+- 镜像回读：backend `6241849f...`、db `9696c7a...`、web `405fffcd...`；CREHN 服务、应用 health、`protected_web_entry` 与 `protected_storage_entry` 均 `PASS`。TEST MinIO live-data 不复制 warning 保留并已记录。
+- 构建证据：Web 镜像构建内 `frontend pnpm test` `PASS`；管理端 Vite `PASS`；portal `vue-tsc` 与 Vite `PASS`。chunk/config 提示仅为 warning。此前 `0.1.11-test` 首次构建因空间门槛与依赖测试上下文阻塞，修复提交 `40e4fe1` 仅补齐 Validator 测试输入，未将失败版本宣称为已部署。
+- 公共首页浏览器：URL `http://192.168.2.229:28181/crehn/`；CMS 公共 API `200`；JS `application/javascript`、CSS `text/css`、两张 PNG `image/png`，均带 `nosniff`；控制台 `0 error / 0 warning`。
+- 视觉与响应式：V1/V2 在 `1440x1000` 与 `390x844` 均 `PASS`；移动端 `scrollWidth=390`；版本切换、移动菜单、登录弹窗初始焦点、Escape 关闭并恢复登录焦点均 `PASS`。稳定截图：`output/playwright/portal005-test-0.1.12-v1-1440x1000.png`、`output/playwright/portal005-test-0.1.12-v2-1440x1000.png`、`output/playwright/portal005-test-0.1.12-v2-390x844.png`、`output/playwright/portal005-test-0.1.12-v1-390x844.png`。
+- 未完成项：真实 CMS 登录后的保存—启用—发布—匿名回读闭环仍为 `NEEDS_BROWSER`，不能由公共首页替代；后端 Java 窄编译仍为 `NOT_RUN`。
+- Git：代码提交 `1ac25d4` 与修复提交 `40e4fe1` 均已非强制推送到 `origin` 与 `github` 同名分支，并通过远端回读验证。
