@@ -3,11 +3,11 @@
 ## 状态
 
 - 需求：用户 2026-08-09 明确要求“v2 样式作为首页”，并计划经 229 TEST 验证后部署至 `cre.blog56.top` 生产环境。
-- 当前状态：`IMPLEMENTED / STATIC_VERIFIED / NEEDS_TEST_RELEASE / NEEDS_BROWSER / NOT_PROD_DEPLOYED`
-- Git 提交：未授权
-- Git 推送：未授权
+- 当前状态：`TEST_VERIFIED / NEEDS_BROWSER / NEEDS_PROD_PROMOTION`
+- Git 提交：`0954db30e488ca7cf0a60977b366fc49bd7f10da`
+- Git 推送：`origin/github 非强制推送 PASS`
 - 数据库执行：未授权
-- 229 TEST 构建/部署：需独立授权
+- 229 TEST 构建/部署：`0.1.15-test PASS`
 - 阿里云生产部署：需独立授权
 
 ## 目标
@@ -50,7 +50,8 @@
 - [x] `?version=v1` 仍可预览 V1。
 - [x] `?version=v2` 为 V2；非法 `version` 回退 V2。
 - [x] 定向静态三断言通过；目标文件无空白错误。
-- [ ] 新 TEST 不可变版本在 229 完成构建、部署、健康检查和浏览器验收。
+- [x] 新 TEST 不可变版本 `0.1.15-test` 在 229 完成 Preflight、Stage、Build、Deploy、Verify；backend/db/minio/redis/web 健康，`minio-init` 完成，DYZ 保护端点前后健康，HTTP/MIME 检查通过。
+- [ ] 新 TEST 版本完成浏览器验收；当前仍为 `NEEDS_BROWSER`。
 - [ ] 生产晋级仅使用同 revision/同镜像摘要的 TEST 产物；未复制 TEST 数据卷。
 - [ ] 生产 DNS/TLS/反向代理/安全组、生产数据库初始化及真实运行配置均有独立门禁证据。
 
@@ -59,9 +60,9 @@
 | 证据层级 | 状态 | 说明 |
 | --- | --- | --- |
 | 静态/定向检查 | `PASS` | 三项版本断言通过；目标文件 `git diff --check` 通过。 |
-| 构建 | `NOT_RUN` | 本地 `portal/node_modules` 缺失，且本轮禁止联网安装依赖；需在 229 生成新 TEST 不可变产物。 |
+| 构建 | `PASS` | 229 `0.1.15-test` Build PASS；产物 manifest SHA-256 为 `d02fa9dbe08973d12bc7b53569b863306cc9cf04e77590addda46581ff5a5a06`。 |
 | 浏览器 | `NEEDS_BROWSER` | 需验证无 query、V1/V2 显式参数及登录入口视觉连续性。 |
-| 229 TEST | `NEEDS_TEST_RELEASE` | 尚未连接服务器；需独立授权后执行 Preflight、Stage、Build、Deploy、Verify。 |
+| 229 TEST | `PASS` | `0.1.15-test` Preflight/Stage/Build/Deploy/Verify PASS；回滚点：`/srv/crehn-test/backups/20260809T060927Z-0.1.14-test-pre-deploy`。 |
 | 阿里云生产 | `NOT_PROD_DEPLOYED` | 尚未连接或部署；需确认主机、指纹、运行配置、门禁与晋级授权。 |
 | 数据库/SQL | `NOT_RUN / NOT_AUTHORIZED` | 本任务不执行 SQL，不复制 TEST 数据卷。 |
 | DNS/TLS/安全组 | `NOT_RUN / NEEDS_GATE` | 由生产运维门禁单独验证。 |
@@ -75,5 +76,9 @@
 ### 证据与授权
 
 - 静态版本三断言及目标文件 `git diff --check`：`PASS`。
-- 本地构建：`NOT_RUN`；`portal/node_modules` 缺失，且本轮禁止联网安装依赖。
-- 服务器连接、229 TEST 构建/部署、阿里云生产部署、Git 提交/推送、SQL/数据库操作：均未执行。
+- Git 提交 `0954db30e488ca7cf0a60977b366fc49bd7f10da`，并向 `origin` 与 `github` 完成非强制推送：`PASS`。
+- 229 `crehn-test` `0.1.15-test`：Preflight、Stage、Build、Deploy、Verify 均 `PASS`；manifest SHA-256：`d02fa9dbe08973d12bc7b53569b863306cc9cf04e77590addda46581ff5a5a06`。
+- 229 运行回读：backend、db、minio、redis、web 健康，`minio-init` 完成；DYZ 保护端点部署前后均健康；HTTP/MIME 检查 `PASS`。
+- 229 回滚点：`/srv/crehn-test/backups/20260809T060927Z-0.1.14-test-pre-deploy`。
+- 浏览器验收：`NEEDS_BROWSER`；尚未完成无 query、V1/V2 显式参数及登录入口视觉连续性回读。
+- 阿里云生产部署、SQL/数据库操作：未执行；生产晋级仍需独立门禁。
