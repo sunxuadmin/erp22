@@ -283,7 +283,7 @@ const sourceRuntimeConfig: ArtEntryRuntimeConfig =
   typeof window === "undefined" ? {} : window.CREHN_PORTAL_CONFIG ?? {};
 
 const defaultVersionSettings: VersionSettings = {
-  active: "v1",
+  active: "v2",
   allowQueryOverride: true,
   userToggle: false,
   options: [
